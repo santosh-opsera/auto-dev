@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { healthCheckSchema } from './index';
+import { errorResponseSchema, healthCheckSchema } from './index';
 
 describe('healthCheckSchema', () => {
   it('validates a correct health check response', () => {
@@ -16,5 +16,18 @@ describe('healthCheckSchema', () => {
       timestamp: new Date().toISOString(),
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('errorResponseSchema', () => {
+  it('validates structured error responses', () => {
+    const result = errorResponseSchema.safeParse({
+      error: 'ValidationError',
+      message: 'Invalid payload',
+      supportReferenceId: 'abc-123',
+      suggestedAction: 'Fix the payload and retry.',
+    });
+
+    expect(result.success).toBe(true);
   });
 });

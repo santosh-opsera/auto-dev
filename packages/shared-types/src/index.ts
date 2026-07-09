@@ -16,3 +16,12 @@ export const userFixtureSchema = z.object({
 });
 
 export type UserFixture = z.infer<typeof userFixtureSchema>;
+
+export const errorResponseSchema = z.object({
+  error: z.string(),
+  message: z.string(),
+  supportReferenceId: z.string(),
+  suggestedAction: z.string(),
+});
+
+export type ErrorResponse = z.infer<typeof errorResponseSchema>;
