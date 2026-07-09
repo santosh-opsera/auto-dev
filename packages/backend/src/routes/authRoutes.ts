@@ -23,6 +23,11 @@ import {
   createGitHubPkcePair,
   exchangeGitHubCode,
 } from '../services/auth/githubAuthService.js';
+import {
+  buildAtlassianAuthorizationUrl,
+  createAtlassianPkcePair,
+  exchangeAtlassianCode,
+} from '../services/auth/atlassianAuthService.js';
 import { upsertUserFromOAuth } from '../services/auth/userAuthService.js';
 
 const REFRESH_COOKIE_NAME = 'autodev_refresh';
@@ -35,6 +40,21 @@ function getCookieValue(req: Request, name: string): string | undefined {
   const cookies = req.cookies as Record<string, unknown>;
   const value = cookies[name];
   return typeof value === 'string' ? value : undefined;
+}
+
+function getAtlassianConfig(): {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+  frontendUrl: string;
+} {
+  return {
+    clientId: process.env.ATLASSIAN_CLIENT_ID ?? 'atlassian-client-id',
+    clientSecret: process.env.ATLASSIAN_CLIENT_SECRET ?? 'atlassian-client-secret',
+    redirectUri:
+      process.env.ATLASSIAN_REDIRECT_URI ?? 'http://localhost:3001/api/v1/auth/atlassian/callback',
+    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+  };
 }
 
 function getGitHubConfig(): {
@@ -161,6 +181,116 @@ export function createAuthRouter(): Router {
       try {
         const config = getGitHubConfig();
         const profile = await exchangeGitHubCode({
+          code,
+          codeVerifier,
+          clientId: config.clientId,
+          clientSecret: config.clientSecret,
+          redirectUri: config.redirectUri,
+        });
+
+        const user = await upsertUserFromOAuth(profile);
+        const session = await createSession(String(user._id));
+
+        clearAuthFailures(getClientIp(req));
+        clearPkceCookie(res);
+        setSessionCookie(res, session.sessionId);
+        res.cookie(REFRESH_COOKIE_NAME, session.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          path: '/',
+        });
+
+        res.redirect(`${config.frontendUrl}/dashboard`);
+      } catch {
+        handleAuthFailure(req);
+      }
+    }),
+  );
+
+  router.get('/atlassian/start', (_req, res) => {
+    const { clientId, redirectUri } = getAtlassianConfig();
+    const { codeVerifier, codeChallenge } = createAtlassianPkcePair();
+    const state = generateStateToken();
+    setPkceCookie(res, codeVerifier);
+
+    const authorizationUrl = buildAtlassianAuthorizationUrl(
+      clientId,
+      redirectUri,
+      codeChallenge,
+      state,
+    );
+
+    res.redirect(authorizationUrl);
+  });
+
+  router.post(
+    '/atlassian/callback',
+    asyncHandler(async (req, res) => {
+      ensureNotLocked(req);
+
+      const { code, code_verifier: bodyVerifier } = req.body as {
+        code?: string;
+        code_verifier?: string;
+      };
+      const codeVerifier = bodyVerifier ?? getCookieValue(req, PKCE_COOKIE_NAME);
+
+      if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
+        handleAuthFailure(req);
+      }
+
+      try {
+        const config = getAtlassianConfig();
+        const profile = await exchangeAtlassianCode({
+          code,
+          codeVerifier,
+          clientId: config.clientId,
+          clientSecret: config.clientSecret,
+          redirectUri: config.redirectUri,
+        });
+
+        const user = await upsertUserFromOAuth(profile);
+        const session = await createSession(String(user._id));
+
+        clearAuthFailures(getClientIp(req));
+        clearPkceCookie(res);
+        setSessionCookie(res, session.sessionId);
+        res.cookie(REFRESH_COOKIE_NAME, session.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          path: '/',
+        });
+
+        res.status(200).json({
+          user: {
+            email: user.email,
+            displayName: user.displayName,
+            connectedProviders: user.connectedProviders,
+          },
+          session: session.metadata,
+        });
+      } catch {
+        handleAuthFailure(req);
+      }
+    }),
+  );
+
+  router.get(
+    '/atlassian/callback',
+    asyncHandler(async (req, res) => {
+      ensureNotLocked(req);
+
+      const code = req.query.code;
+      const codeVerifier = getCookieValue(req, PKCE_COOKIE_NAME);
+
+      if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
+        handleAuthFailure(req);
+      }
+
+      try {
+        const config = getAtlassianConfig();
+        const profile = await exchangeAtlassianCode({
           code,
           codeVerifier,
           clientId: config.clientId,

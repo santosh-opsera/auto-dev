@@ -4,6 +4,8 @@ import { LOCKOUT_THRESHOLD } from '../auth/constants.js';
 import { resetAuthRateLimits } from '../auth/rateLimitMiddleware.js';
 import { resetLockouts } from '../auth/lockoutService.js';
 import {
+  mockAtlassianTokenResponse,
+  mockAtlassianUserResponse,
   mockGitHubTokenResponse,
   mockGitHubUserResponse,
 } from '../fixtures/auth.js';
@@ -20,7 +22,16 @@ vi.mock('../services/auth/githubAuthService.js', async (importOriginal) => {
   };
 });
 
+vi.mock('../services/auth/atlassianAuthService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/auth/atlassianAuthService.js')>();
+  return {
+    ...actual,
+    exchangeAtlassianCode: vi.fn(),
+  };
+});
+
 import { exchangeGitHubCode } from '../services/auth/githubAuthService.js';
+import { exchangeAtlassianCode } from '../services/auth/atlassianAuthService.js';
 
 describe('auth routes', () => {
   beforeAll(async () => {
@@ -44,6 +55,15 @@ describe('auth routes', () => {
       accessToken: mockGitHubTokenResponse.access_token,
       refreshToken: mockGitHubTokenResponse.refresh_token,
       scopes: ['read:user', 'user:email'],
+    });
+    vi.mocked(exchangeAtlassianCode).mockResolvedValue({
+      provider: 'atlassian',
+      providerUserId: mockAtlassianUserResponse.account_id,
+      email: mockAtlassianUserResponse.email,
+      displayName: mockAtlassianUserResponse.name,
+      accessToken: mockAtlassianTokenResponse.access_token,
+      refreshToken: mockAtlassianTokenResponse.refresh_token,
+      scopes: ['read:jira-work', 'read:jira-user', 'offline_access'],
     });
   });
 
@@ -113,5 +133,38 @@ describe('auth routes', () => {
       .send({ code: 'bad-code', code_verifier: 'bad-verifier' });
 
     expect(locked.status).toBe(423);
+  });
+
+  it('creates a session cookie on Atlassian callback', async () => {
+    const app = createApp();
+    const response = await request(app)
+      .post('/api/v1/auth/atlassian/callback')
+      .send({ code: 'mock-code', code_verifier: 'mock-verifier' });
+
+    expect(response.status).toBe(200);
+    const body = response.body as { user: { email: string; connectedProviders: string[] } };
+    expect(body.user.email).toBe('alex.dev@example.com');
+    expect(body.user.connectedProviders).toContain('atlassian');
+  });
+
+  it('links Atlassian provider to an existing GitHub user by email', async () => {
+    const app = createApp();
+
+    await request(app)
+      .post('/api/v1/auth/github/callback')
+      .send({ code: 'mock-code', code_verifier: 'mock-verifier' });
+
+    const linked = await request(app)
+      .post('/api/v1/auth/atlassian/callback')
+      .send({ code: 'mock-code', code_verifier: 'mock-verifier' });
+
+    const body = linked.body as { user: { connectedProviders: string[] } };
+    expect(linked.status).toBe(200);
+    expect(body.user.connectedProviders).toEqual(
+      expect.arrayContaining(['github', 'atlassian']),
+    );
+
+    const users = await getUserModel().find({ email: 'alex.dev@example.com' }).exec();
+    expect(users).toHaveLength(1);
   });
 });
