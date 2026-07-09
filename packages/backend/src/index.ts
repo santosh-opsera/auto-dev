@@ -1,5 +1,6 @@
 import './config/loadEnv.js';
 import express, { type Application, type Request, type Response } from 'express';
+import cookieParser from 'cookie-parser';
 import {
   dbHealthConnectedSchema,
   dbHealthDisconnectedSchema,
@@ -10,11 +11,13 @@ import { correlationIdMiddleware } from './middleware/correlationId.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { AppError } from './utils/errors.js';
 import { logger } from './utils/logger.js';
+import { createAuthRouter } from './routes/authRoutes.js';
 
 export function createApp(): Application {
   const app = express();
 
   app.use(express.json());
+  app.use(cookieParser());
   app.use(correlationIdMiddleware);
 
   app.get('/api/v1/health', (_req: Request, res: Response) => {
@@ -51,6 +54,8 @@ export function createApp(): Application {
     });
     res.status(503).json(payload);
   });
+
+  app.use('/api/v1/auth', createAuthRouter());
 
   if (process.env.NODE_ENV === 'test') {
     app.get('/api/v1/test/error', () => {
