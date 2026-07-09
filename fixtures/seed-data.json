@@ -6,14 +6,22 @@
         "email": "alex.dev@example.com",
         "displayName": "Alex Developer",
         "role": "user",
-        "createdAt": "2026-01-15T10:00:00.000Z"
+        "dataClassification": "internal",
+        "createdBy": "seed@autodev.local",
+        "updatedBy": "seed@autodev.local",
+        "createdAt": "2026-01-15T10:00:00.000Z",
+        "updatedAt": "2026-01-15T10:00:00.000Z"
       },
       {
         "_id": "user-002",
         "email": "dana.lead@example.com",
         "displayName": "Dana Team Lead",
         "role": "admin",
-        "createdAt": "2026-01-15T10:00:00.000Z"
+        "dataClassification": "confidential",
+        "createdBy": "seed@autodev.local",
+        "updatedBy": "seed@autodev.local",
+        "createdAt": "2026-01-15T10:00:00.000Z",
+        "updatedAt": "2026-01-15T10:00:00.000Z"
       }
     ],
     "convention_settings": [],

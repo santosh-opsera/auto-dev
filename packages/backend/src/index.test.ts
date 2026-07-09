@@ -1,7 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import request from 'supertest';
-import { type ErrorResponse, type HealthCheckResponse, errorResponseSchema } from '@autodev/shared-types';
+import {
+  type ErrorResponse,
+  type HealthCheckResponse,
+  dbHealthConnectedSchema,
+  dbHealthDisconnectedSchema,
+  errorResponseSchema,
+} from '@autodev/shared-types';
 import { createApp } from './index.js';
+import { startMemoryMongo, stopMemoryMongo } from './testHelpers/memoryServer.js';
 
 describe('GET /api/v1/health', () => {
   it('returns 200 with status and timestamp', async () => {
@@ -24,6 +31,40 @@ describe('GET /api/v1/health', () => {
 
     expect(response.headers['x-correlation-id']).toBe('health-check-correlation');
   });
+});
+
+describe('GET /api/v1/health/db', () => {
+  beforeAll(async () => {
+    await startMemoryMongo();
+  }, 60_000);
+
+  afterAll(async () => {
+    await stopMemoryMongo();
+  });
+
+  it('returns connected status when MongoDB is reachable', async () => {
+    const app = createApp();
+    const response = await request(app).get('/api/v1/health/db');
+    const body = dbHealthConnectedSchema.parse(response.body);
+
+    expect(response.status).toBe(200);
+    expect(body.status).toBe('connected');
+    expect(body.latencyMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('returns disconnected status when MongoDB is stopped', async () => {
+    await stopMemoryMongo();
+
+    const app = createApp();
+    const response = await request(app).get('/api/v1/health/db');
+    const body = dbHealthDisconnectedSchema.parse(response.body);
+
+    expect(response.status).toBe(503);
+    expect(body.status).toBe('disconnected');
+    expect(body.error).toContain('not connected');
+
+    await startMemoryMongo();
+  }, 60_000);
 });
 
 describe('error handling integration', () => {
