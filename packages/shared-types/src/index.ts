@@ -25,3 +25,24 @@ export const errorResponseSchema = z.object({
 });
 
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
+
+export const dbHealthConnectedSchema = z.object({
+  status: z.literal('connected'),
+  latencyMs: z.number().nonnegative(),
+});
+
+export const dbHealthDisconnectedSchema = z.object({
+  status: z.literal('disconnected'),
+  error: z.string(),
+});
+
+export type DbHealthConnected = z.infer<typeof dbHealthConnectedSchema>;
+export type DbHealthDisconnected = z.infer<typeof dbHealthDisconnectedSchema>;
+
+export const auditDocumentSchema = z.object({
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  createdBy: z.string().optional(),
+  updatedBy: z.string().optional(),
+  dataClassification: z.enum(['public', 'internal', 'confidential', 'restricted']),
+});
