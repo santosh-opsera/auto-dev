@@ -1,3 +1,4 @@
+import './config/loadEnv.js';
 import express, { type Application, type Request, type Response } from 'express';
 import cookieParser from 'cookie-parser';
 import {
