@@ -1,0 +1,23 @@
+{
+  "collections": {
+    "users": [
+      {
+        "_id": "user-001",
+        "email": "alex.dev@example.com",
+        "displayName": "Alex Developer",
+        "role": "user",
+        "createdAt": "2026-01-15T10:00:00.000Z"
+      },
+      {
+        "_id": "user-002",
+        "email": "dana.lead@example.com",
+        "displayName": "Dana Team Lead",
+        "role": "admin",
+        "createdAt": "2026-01-15T10:00:00.000Z"
+      }
+    ],
+    "convention_settings": [],
+    "audit_events": []
+  },
+  "description": "MongoDB test data structure for AutoDev local development. Applied via scripts/mongo-init.js on Docker Compose startup."
+}

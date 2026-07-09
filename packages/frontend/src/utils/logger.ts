@@ -14,7 +14,7 @@ class Logger implements LogLevel {
       message,
       ...(meta && { meta }),
     };
-    
+
     if (level === 'error') {
       console.error(JSON.stringify(logEntry));
     } else if (level === 'warn') {
