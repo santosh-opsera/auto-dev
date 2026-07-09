@@ -5,6 +5,7 @@ export interface SampleUserDocument {
   email: string;
   displayName: string;
   role: 'user' | 'admin';
+  connectedProviders: ('github' | 'atlassian')[];
   dataClassification: DataClassification;
 }
 
@@ -13,12 +14,14 @@ export const sampleUserDocuments: SampleUserDocument[] = [
     email: 'alex.dev@example.com',
     displayName: 'Alex Developer',
     role: 'user',
+    connectedProviders: ['github'],
     dataClassification: 'internal',
   },
   {
     email: 'dana.lead@example.com',
     displayName: 'Dana Team Lead',
     role: 'admin',
+    connectedProviders: ['github'],
     dataClassification: 'confidential',
   },
 ];
