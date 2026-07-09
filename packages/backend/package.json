@@ -12,11 +12,13 @@
   },
   "dependencies": {
     "@autodev/shared-types": "*",
+    "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "mongoose": "^9.7.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^26.1.1",

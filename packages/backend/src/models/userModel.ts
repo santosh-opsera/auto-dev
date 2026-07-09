@@ -1,10 +1,23 @@
-import mongoose, { type HydratedDocument } from 'mongoose';
+import mongoose, { type HydratedDocument, type Model } from 'mongoose';
 import { createBaseSchema, type AuditFields } from '../database/baseSchema.js';
+
+export type AuthProvider = 'github' | 'atlassian';
+
+export interface ProviderTokens {
+  providerUserId: string;
+  encryptedAccessToken: string;
+  encryptedRefreshToken?: string;
+  tokenExpiresAt?: Date;
+  scopes: string[];
+}
 
 export interface UserDocument extends AuditFields {
   email: string;
   displayName: string;
   role: 'user' | 'admin';
+  connectedProviders: AuthProvider[];
+  github?: ProviderTokens;
+  atlassian?: ProviderTokens;
 }
 
 export type UserRecord = HydratedDocument<UserDocument>;
@@ -12,15 +25,48 @@ export type UserRecord = HydratedDocument<UserDocument>;
 const userSchema = createBaseSchema({
   email: { type: String, required: true },
   displayName: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin'], required: true },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  connectedProviders: {
+    type: [String],
+    enum: ['github', 'atlassian'],
+    default: [],
+  },
+  github: {
+    type: {
+      providerUserId: String,
+      encryptedAccessToken: String,
+      encryptedRefreshToken: String,
+      tokenExpiresAt: Date,
+      scopes: [String],
+    },
+    required: false,
+  },
+  atlassian: {
+    type: {
+      providerUserId: String,
+      encryptedAccessToken: String,
+      encryptedRefreshToken: String,
+      tokenExpiresAt: Date,
+      scopes: [String],
+    },
+    required: false,
+  },
 });
 
 userSchema.index({ email: 1 }, { unique: true });
 
-export function getUserModel(): mongoose.Model<UserDocument> {
+export function getUserModel(): Model<UserDocument> {
   if (mongoose.models.User) {
-    return mongoose.models.User as mongoose.Model<UserDocument>;
+    return mongoose.models.User as Model<UserDocument>;
   }
 
   return mongoose.model<UserDocument>('User', userSchema);
+}
+
+export async function findUserByEmail(email: string): Promise<UserRecord | null> {
+  return getUserModel().findOne({ email }).exec();
+}
+
+export async function findUserById(userId: string): Promise<UserRecord | null> {
+  return getUserModel().findById(userId).exec();
 }
