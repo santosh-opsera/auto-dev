@@ -29,6 +29,7 @@ export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 export const dbHealthConnectedSchema = z.object({
   status: z.literal('connected'),
   latencyMs: z.number().nonnegative(),
+  database: z.string().optional(),
 });
 
 export const dbHealthDisconnectedSchema = z.object({

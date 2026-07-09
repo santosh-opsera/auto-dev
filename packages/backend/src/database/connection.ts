@@ -1,7 +1,9 @@
-import mongoose, { ConnectionStates } from 'mongoose';
+import mongoose from 'mongoose';
 import { logger } from '../utils/logger.js';
 
 export const RETRY_DELAYS_MS = [1000, 2000, 4000] as const;
+
+const { STATES } = mongoose;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
@@ -10,7 +12,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 export async function connectMongo(uri: string): Promise<void> {
-  if (mongoose.connection.readyState === ConnectionStates.connected) {
+  if (mongoose.connection.readyState === STATES.connected) {
     return;
   }
 
@@ -42,7 +44,7 @@ export async function connectMongo(uri: string): Promise<void> {
 }
 
 export async function disconnectMongo(): Promise<void> {
-  if (mongoose.connection.readyState === ConnectionStates.disconnected) {
+  if (mongoose.connection.readyState === STATES.disconnected) {
     return;
   }
 
@@ -54,11 +56,12 @@ export async function disconnectMongo(): Promise<void> {
 }
 
 export function isMongoConnected(): boolean {
-  return mongoose.connection.readyState === ConnectionStates.connected;
+  return mongoose.connection.readyState === STATES.connected;
 }
 
 export async function checkMongoHealth(): Promise<
-  { status: 'connected'; latencyMs: number } | { status: 'disconnected'; error: string }
+  | { status: 'connected'; latencyMs: number; database?: string }
+  | { status: 'disconnected'; error: string }
 > {
   if (!isMongoConnected()) {
     return {
@@ -73,6 +76,7 @@ export async function checkMongoHealth(): Promise<
     return {
       status: 'connected',
       latencyMs: Date.now() - startedAt,
+      database: mongoose.connection.name || undefined,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'MongoDB ping failed';
