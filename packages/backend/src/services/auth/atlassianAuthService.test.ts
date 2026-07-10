@@ -3,7 +3,11 @@ import {
   mockAtlassianTokenResponse,
   mockAtlassianUserResponse,
 } from '../../fixtures/auth.js';
-import { exchangeAtlassianCode } from './atlassianAuthService.js';
+import {
+  buildAtlassianAuthorizationUrl,
+  exchangeAtlassianCode,
+  resolveAtlassianRetryPrompt,
+} from './atlassianAuthService.js';
 
 describe('atlassianAuthService', () => {
   it('exchanges OAuth code for a normalized profile using mocked Atlassian APIs', async () => {
@@ -22,7 +26,23 @@ describe('atlassianAuthService', () => {
     expect(profile.provider).toBe('atlassian');
     expect(profile.email).toBe('alex.dev@example.com');
     expect(profile.accessToken).toBe('atlassian_mock_access_token');
-    expect(profile.scopes).toContain('read:jira-work');
+    expect(profile.scopes).toContain('read:me');
+  });
+
+  it('defaults to prompt=login with identity-only scopes (no Jira site consent)', () => {
+    const url = buildAtlassianAuthorizationUrl(
+      'client-id',
+      'http://localhost/callback',
+      'challenge',
+      'state',
+    );
+    expect(url).toContain('prompt=login');
+    expect(url).toContain('read%3Ame');
+    expect(url).toContain('offline_access');
+    expect(url).not.toContain('read%3Ajira-work');
+    expect(resolveAtlassianRetryPrompt('consent_required')).toBe('consent');
+    expect(resolveAtlassianRetryPrompt('login_required')).toBe('login');
+    expect(resolveAtlassianRetryPrompt('unknown')).toBeNull();
   });
 });
 

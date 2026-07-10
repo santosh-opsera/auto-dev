@@ -1,11 +1,23 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 describe('App', () => {
-  it('renders the landing page', () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new Error('unauthenticated')),
+    );
+  });
+
+  it('renders the login page for unauthenticated users', async () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: 'AutoDev' })).toBeInTheDocument();
-    expect(screen.getByText('SDLC developer automation')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: 'Continue with GitHub' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue with Atlassian' })).toBeInTheDocument();
   });
 });

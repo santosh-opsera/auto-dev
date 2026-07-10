@@ -1,4 +1,5 @@
 import './config/loadEnv.js';
+import { validateEnv } from './config/validateEnv.js';
 import express, { type Application, type Request, type Response } from 'express';
 import cookieParser from 'cookie-parser';
 import {
@@ -100,14 +101,21 @@ async function startServer(): Promise<void> {
   });
 }
 
+function failStartup(error: unknown, fallback: string): never {
+  const message = error instanceof Error ? error.message : fallback;
+  logger.error(message, { resource: 'server', operation: 'startup' });
+  process.exit(1);
+}
+
 if (process.env.NODE_ENV !== 'test') {
+  try {
+    validateEnv();
+  } catch (error: unknown) {
+    failStartup(error, 'Environment validation failed');
+  }
+
   startServer().catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : 'Server startup failed';
-    logger.error(message, {
-      resource: 'server',
-      operation: 'startup',
-    });
-    process.exit(1);
+    failStartup(error, 'Server startup failed');
   });
 }
 

@@ -1,0 +1,8 @@
+title = "AutoDev gitleaks config"
+
+[allowlist]
+description = "Generated security scan artifacts (not application source)"
+paths = [
+  '''-report\.json$''',
+  '''^security-report-''',
+]

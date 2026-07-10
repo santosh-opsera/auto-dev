@@ -63,7 +63,7 @@ describe('auth routes', () => {
       displayName: mockAtlassianUserResponse.name,
       accessToken: mockAtlassianTokenResponse.access_token,
       refreshToken: mockAtlassianTokenResponse.refresh_token,
-      scopes: ['read:jira-work', 'read:jira-user', 'offline_access'],
+      scopes: ['read:me', 'offline_access'],
     });
   });
 

@@ -2,6 +2,8 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 12;
+const AUTH_TAG_LENGTH = 16;
+const GCM_OPTIONS = { authTagLength: AUTH_TAG_LENGTH };
 
 function getEncryptionKey(): Buffer {
   const secret = process.env.ENCRYPTION_KEY ?? 'dev-only-encryption-key-change-me';
@@ -10,7 +12,7 @@ function getEncryptionKey(): Buffer {
 
 export function encryptSecret(plaintext: string): string {
   const iv = randomBytes(IV_LENGTH);
-  const cipher = createCipheriv(ALGORITHM, getEncryptionKey(), iv);
+  const cipher = createCipheriv(ALGORITHM, getEncryptionKey(), iv, GCM_OPTIONS);
   const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
   const authTag = cipher.getAuthTag();
 
@@ -24,12 +26,18 @@ export function decryptSecret(payload: string): string {
     throw new Error('Invalid encrypted payload format');
   }
 
+  const authTag = Buffer.from(authTagPart, 'base64url');
+  if (authTag.length !== AUTH_TAG_LENGTH) {
+    throw new Error(`Invalid auth tag length: expected ${AUTH_TAG_LENGTH}, got ${authTag.length}`);
+  }
+
   const decipher = createDecipheriv(
     ALGORITHM,
     getEncryptionKey(),
     Buffer.from(ivPart, 'base64url'),
+    GCM_OPTIONS,
   );
-  decipher.setAuthTag(Buffer.from(authTagPart, 'base64url'));
+  decipher.setAuthTag(authTag);
 
   const decrypted = Buffer.concat([
     decipher.update(Buffer.from(encryptedPart, 'base64url')),
