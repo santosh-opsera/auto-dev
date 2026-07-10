@@ -17,7 +17,7 @@ export const mockAtlassianTokenResponse = {
   access_token: 'atlassian_mock_access_token',
   refresh_token: 'atlassian_mock_refresh_token',
   expires_in: 3600,
-  scope: 'read:jira-work read:jira-user offline_access',
+  scope: 'read:me offline_access',
   token_type: 'Bearer',
 };
 

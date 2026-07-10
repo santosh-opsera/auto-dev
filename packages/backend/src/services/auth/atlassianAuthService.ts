@@ -1,4 +1,4 @@
-import { ATLASSIAN_SCOPES } from '../../auth/constants.js';
+import { ATLASSIAN_LOGIN_SCOPES } from '../../auth/constants.js';
 import { generateCodeChallenge, generateCodeVerifier } from '../../auth/pkce.js';
 import type { OAuthProfile } from './userAuthService.js';
 
@@ -12,8 +12,9 @@ export interface AtlassianTokenResponse {
 
 export interface AtlassianUserResponse {
   account_id: string;
-  email: string;
-  name: string;
+  email?: string | null;
+  name?: string | null;
+  nickname?: string | null;
 }
 
 export interface AtlassianAuthExchangeInput {
@@ -70,25 +71,38 @@ const defaultUserFetcher: AtlassianUserFetcher = async (accessToken) => {
   return (await response.json()) as AtlassianUserResponse;
 };
 
+export type AtlassianAuthPrompt = 'none' | 'login' | 'consent';
+
 export function buildAtlassianAuthorizationUrl(
   clientId: string,
   redirectUri: string,
   codeChallenge: string,
   state: string,
+  prompt: AtlassianAuthPrompt = 'login',
+  scopes: readonly string[] = ATLASSIAN_LOGIN_SCOPES,
 ): string {
   const params = new URLSearchParams({
     audience: 'api.atlassian.com',
     client_id: clientId,
-    scope: ATLASSIAN_SCOPES.join(' '),
+    scope: scopes.join(' '),
     redirect_uri: redirectUri,
     state,
     response_type: 'code',
-    prompt: 'consent',
+    prompt,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
   });
 
   return `https://auth.atlassian.com/authorize?${params.toString()}`;
+}
+
+/** Map Atlassian OAuth callback errors to the next prompt to try. */
+export function resolveAtlassianRetryPrompt(error: string): AtlassianAuthPrompt | null {
+  if (error === 'consent_required') return 'consent';
+  if (error === 'login_required' || error === 'interaction_required' || error === 'unauthorized') {
+    return 'login';
+  }
+  return null;
 }
 
 export function createAtlassianPkcePair(): { codeVerifier: string; codeChallenge: string } {
@@ -106,19 +120,46 @@ export async function exchangeAtlassianCode(
 ): Promise<OAuthProfile> {
   const tokenResponse = await fetchToken(input);
   const user = await fetchUser(tokenResponse.access_token);
+  const email = user.email?.trim() || `${user.account_id}@atlassian.users.noreply`;
 
   return {
     provider: 'atlassian',
     providerUserId: user.account_id,
-    email: user.email,
-    displayName: user.name,
+    email,
+    displayName: user.name?.trim() || user.nickname?.trim() || email,
     accessToken: tokenResponse.access_token,
     refreshToken: tokenResponse.refresh_token,
-    scopes: tokenResponse.scope?.split(' ') ?? ATLASSIAN_SCOPES,
+    scopes: tokenResponse.scope?.split(' ') ?? [...ATLASSIAN_LOGIN_SCOPES],
     tokenExpiresAt: tokenResponse.expires_in
       ? new Date(Date.now() + tokenResponse.expires_in * 1000)
       : undefined,
   };
+}
+
+export async function refreshAtlassianAccessToken(input: {
+  refreshToken: string;
+  clientId: string;
+  clientSecret: string;
+}): Promise<AtlassianTokenResponse> {
+  const response = await fetch('https://auth.atlassian.com/oauth/token', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      grant_type: 'refresh_token',
+      client_id: input.clientId,
+      client_secret: input.clientSecret,
+      refresh_token: input.refreshToken,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Atlassian refresh token exchange failed');
+  }
+
+  return (await response.json()) as AtlassianTokenResponse;
 }
 
 export const atlassianAuthInternals = {

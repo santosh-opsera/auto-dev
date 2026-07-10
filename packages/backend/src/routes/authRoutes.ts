@@ -1,8 +1,14 @@
-import { Router, type Request } from 'express';
-import { SESSION_COOKIE_NAME, PKCE_COOKIE_NAME } from '../auth/constants.js';
+import { Router, type Request, type Response } from 'express';
 import {
+  ATLASSIAN_REMEMBER_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  PKCE_COOKIE_NAME,
+} from '../auth/constants.js';
+import {
+  clearAtlassianRememberCookie,
   clearPkceCookie,
   clearSessionCookie,
+  setAtlassianRememberCookie,
   setPkceCookie,
   setSessionCookie,
 } from '../auth/cookies.js';
@@ -11,13 +17,15 @@ import { authRateLimitMiddleware } from '../auth/rateLimitMiddleware.js';
 import { generateStateToken } from '../auth/pkce.js';
 import {
   createSession,
+  encryptOAuthToken,
   invalidateSession,
   rotateRefreshToken,
   touchSession,
 } from '../auth/sessionService.js';
+import { decryptSecret } from '../lib/encryption.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { AppError } from '../utils/errors.js';
-import { findUserById } from '../models/userModel.js';
+import { findUserById, getUserModel } from '../models/userModel.js';
 import {
   buildGitHubAuthorizationUrl,
   createGitHubPkcePair,
@@ -27,6 +35,9 @@ import {
   buildAtlassianAuthorizationUrl,
   createAtlassianPkcePair,
   exchangeAtlassianCode,
+  refreshAtlassianAccessToken,
+  resolveAtlassianRetryPrompt,
+  type AtlassianAuthPrompt,
 } from '../services/auth/atlassianAuthService.js';
 import { upsertUserFromOAuth } from '../services/auth/userAuthService.js';
 
@@ -70,6 +81,72 @@ function getGitHubConfig(): {
       process.env.GITHUB_REDIRECT_URI ?? 'http://localhost:3001/api/v1/auth/github/callback',
     frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3000',
   };
+}
+
+function issueSessionCookies(
+  res: Response,
+  session: { sessionId: string; refreshToken: string },
+): void {
+  setSessionCookie(res, session.sessionId);
+  res.cookie(REFRESH_COOKIE_NAME, session.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/',
+  });
+}
+
+/**
+ * Resume session via stored Atlassian refresh token (skips dev-mode grant screen).
+ */
+async function tryResumeAtlassianSession(req: Request, res: Response): Promise<boolean> {
+  const rememberedUserId = getCookieValue(req, ATLASSIAN_REMEMBER_COOKIE_NAME);
+  if (!rememberedUserId) {
+    return false;
+  }
+
+  const user = await findUserById(rememberedUserId);
+  const encryptedRefresh = user?.atlassian?.encryptedRefreshToken;
+  if (!user || !encryptedRefresh) {
+    clearAtlassianRememberCookie(res);
+    return false;
+  }
+
+  try {
+    const config = getAtlassianConfig();
+    const tokenResponse = await refreshAtlassianAccessToken({
+      refreshToken: decryptSecret(encryptedRefresh),
+      clientId: config.clientId,
+      clientSecret: config.clientSecret,
+    });
+
+    await getUserModel()
+      .findByIdAndUpdate(user._id, {
+        atlassian: {
+          providerUserId: user.atlassian?.providerUserId,
+          encryptedAccessToken: encryptOAuthToken(tokenResponse.access_token),
+          encryptedRefreshToken: tokenResponse.refresh_token
+            ? encryptOAuthToken(tokenResponse.refresh_token)
+            : encryptedRefresh,
+          tokenExpiresAt: tokenResponse.expires_in
+            ? new Date(Date.now() + tokenResponse.expires_in * 1000)
+            : user.atlassian?.tokenExpiresAt,
+          scopes: tokenResponse.scope?.split(' ') ?? user.atlassian?.scopes ?? [],
+        },
+        updatedBy: user.email,
+      })
+      .exec();
+
+    const session = await createSession(String(user._id));
+    clearAuthFailures(getClientIp(req));
+    issueSessionCookies(res, session);
+    setAtlassianRememberCookie(res, String(user._id));
+    res.redirect(`${config.frontendUrl}/dashboard`);
+    return true;
+  } catch {
+    clearAtlassianRememberCookie(res);
+    return false;
+  }
 }
 
 function ensureNotLocked(req: Request): void {
@@ -208,21 +285,22 @@ export function createAuthRouter(): Router {
     }),
   );
 
-  router.get('/atlassian/start', (_req, res) => {
+  router.get('/atlassian/start', asyncHandler(async (req, res) => {
+    if (await tryResumeAtlassianSession(req, res)) {
+      return;
+    }
+
     const { clientId, redirectUri } = getAtlassianConfig();
     const { codeVerifier, codeChallenge } = createAtlassianPkcePair();
     const state = generateStateToken();
     setPkceCookie(res, codeVerifier);
 
-    const authorizationUrl = buildAtlassianAuthorizationUrl(
-      clientId,
-      redirectUri,
-      codeChallenge,
-      state,
-    );
+    const requestedPrompt = req.query.prompt;
+    const prompt: AtlassianAuthPrompt =
+      requestedPrompt === 'none' || requestedPrompt === 'consent' ? requestedPrompt : 'login';
 
-    res.redirect(authorizationUrl);
-  });
+    res.redirect(buildAtlassianAuthorizationUrl(clientId, redirectUri, codeChallenge, state, prompt));
+  }));
 
   router.post(
     '/atlassian/callback',
@@ -261,6 +339,7 @@ export function createAuthRouter(): Router {
           sameSite: 'strict',
           path: '/',
         });
+        setAtlassianRememberCookie(res, String(user._id));
 
         res.status(200).json({
           user: {
@@ -280,6 +359,16 @@ export function createAuthRouter(): Router {
     '/atlassian/callback',
     asyncHandler(async (req, res) => {
       ensureNotLocked(req);
+
+      const oauthError = req.query.error;
+      if (typeof oauthError === 'string') {
+        const retryPrompt = resolveAtlassianRetryPrompt(oauthError);
+        if (retryPrompt) {
+          res.redirect(`/api/v1/auth/atlassian/start?prompt=${retryPrompt}`);
+          return;
+        }
+        handleAuthFailure(req);
+      }
 
       const code = req.query.code;
       const codeVerifier = getCookieValue(req, PKCE_COOKIE_NAME);
@@ -310,6 +399,7 @@ export function createAuthRouter(): Router {
           sameSite: 'strict',
           path: '/',
         });
+        setAtlassianRememberCookie(res, String(user._id));
 
         res.redirect(`${config.frontendUrl}/dashboard`);
       } catch {
