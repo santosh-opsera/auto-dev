@@ -10,6 +10,7 @@ coverage/
 
 # Security scan artifacts
 *-report.json
+npm-audit.json
 *-stderr.txt
 security-report-*.html
 security-report-*.md
