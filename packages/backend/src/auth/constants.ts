@@ -17,7 +17,13 @@ export const STANDARD_RATE_LIMIT_MAX = 1000;
 export const STANDARD_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
 export const GITHUB_LOGIN_SCOPES = ['read:user', 'user:email'];
-export const GITHUB_REPO_SCOPES = ['repo'];
+/** Minimum scope required to list and read repository contents. */
+export const GITHUB_REPO_ACCESS_SCOPES = ['repo'];
+/** Scopes requested when linking GitHub repository access (includes org membership). */
+export const GITHUB_REPO_CONNECT_SCOPES = ['repo', 'read:org'];
+
+/** @deprecated Use GITHUB_REPO_ACCESS_SCOPES or GITHUB_REPO_CONNECT_SCOPES. */
+export const GITHUB_REPO_SCOPES = [...GITHUB_REPO_CONNECT_SCOPES];
 
 /** Scopes requested during GitHub sign-in (repository access is granted separately). */
 export const GITHUB_SCOPES = [...GITHUB_LOGIN_SCOPES];

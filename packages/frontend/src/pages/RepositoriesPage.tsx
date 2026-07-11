@@ -54,7 +54,7 @@ export function RepositoriesPage({ onLogoutComplete }: RepositoriesPageProps) {
           <h2>GitHub repository access required</h2>
           <p>
             {hasGitHubProvider
-              ? 'Your GitHub account is linked, but repository permissions are not granted yet. Grant access to list and connect repositories.'
+              ? 'Your GitHub account is linked, but repository permissions may be missing or outdated. Reconnect to include organization repositories.'
               : 'Atlassian sign-in does not include GitHub repository access. Link GitHub and grant repository permissions to continue.'}
           </p>
           <a href={getGitHubReposConnectUrl()} className="primary-link">

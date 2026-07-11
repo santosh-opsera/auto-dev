@@ -1,4 +1,4 @@
-import { GITHUB_REPO_SCOPES } from '../../auth/constants.js';
+import { GITHUB_REPO_ACCESS_SCOPES } from '../../auth/constants.js';
 import type { UserDocument } from '../../models/userModel.js';
 
 export function userHasGitHubAccount(user: UserDocument): boolean {
@@ -7,5 +7,5 @@ export function userHasGitHubAccount(user: UserDocument): boolean {
 
 export function userHasGitHubRepoScopes(user: UserDocument): boolean {
   const scopes = user.github?.scopes ?? [];
-  return GITHUB_REPO_SCOPES.every((scope) => scopes.includes(scope));
+  return GITHUB_REPO_ACCESS_SCOPES.every((scope) => scopes.includes(scope));
 }
