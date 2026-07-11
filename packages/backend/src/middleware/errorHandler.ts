@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
-import { toErrorResponse } from '../utils/errors.js';
+import { AppError, toErrorResponse } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
+import { githubApiClient } from '../services/github/githubApiClient.js';
 
 export const errorHandler: ErrorRequestHandler = (
   err: unknown,
@@ -18,6 +19,11 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (res.headersSent) {
     return;
+  }
+
+  if (err instanceof AppError && err.error === 'GitHubCircuitOpen') {
+    const retryAfter = githubApiClient.getCircuitBreaker().getRetryAfterSeconds() ?? 30;
+    res.setHeader('Retry-After', String(retryAfter));
   }
 
   res.status(statusCode).json(body);
