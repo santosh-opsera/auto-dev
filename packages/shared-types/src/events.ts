@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const EVENT_TYPES = [
   'TICKET_PARSED',
   'ANALYSIS_STARTED',
+  'ANALYSIS_PROGRESS',
   'ANALYSIS_COMPLETED',
   'DIVERGENCE_DETECTED',
   'APPROVAL_REQUESTED',
@@ -31,13 +32,23 @@ const ticketParsedPayloadSchema = z.object({
 });
 
 const analysisStartedPayloadSchema = z.object({
-  ticketKey: z.string(),
+  ticketKey: z.string().optional(),
   workflowId: z.string(),
+  owner: z.string(),
+  repo: z.string(),
+});
+
+const analysisProgressPayloadSchema = z.object({
+  workflowId: z.string(),
+  progressPercent: z.number().min(0).max(100),
+  phase: z.string(),
 });
 
 const analysisCompletedPayloadSchema = z.object({
-  ticketKey: z.string(),
+  ticketKey: z.string().optional(),
   workflowId: z.string(),
+  owner: z.string(),
+  repo: z.string(),
   findingsCount: z.number().int().nonnegative(),
 });
 
@@ -81,6 +92,11 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('ANALYSIS_STARTED'),
     payload: analysisStartedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('ANALYSIS_PROGRESS'),
+    payload: analysisProgressPayloadSchema,
     metadata: eventMetadataSchema,
   }),
   z.object({

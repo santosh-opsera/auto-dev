@@ -239,3 +239,33 @@ export {
   sampleRepositoryFile,
   sampleRepositoryTree,
 } from './fixtures/repositories.js';
+
+export {
+  architecturalLayerSchema,
+  codebaseAnalysisRequestSchema,
+  codebaseAnalysisResponseSchema,
+  codebaseContextSchema,
+  dependencyEdgeSchema,
+  designPatternSchema,
+  fileStructureNodeSchema,
+  namingConventionSchema,
+} from './codebaseContext.js';
+
+export type {
+  ArchitecturalLayer,
+  CodebaseAnalysisRequest,
+  CodebaseAnalysisResponse,
+  CodebaseContext,
+  DependencyEdge,
+  DesignPattern,
+  FileStructureNode,
+  NamingConvention,
+} from './codebaseContext.js';
+
+export {
+  sampleExpectedSmallContext,
+  sampleFileStructureMap,
+  sampleMediumRepoTree,
+  sampleSmallRepoFiles,
+  sampleSmallRepoTree,
+} from './fixtures/codebaseContext.js';

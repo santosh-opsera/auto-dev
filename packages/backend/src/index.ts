@@ -23,6 +23,7 @@ import { createConventionRouter } from './routes/conventionRoutes.js';
 import { createEventRouter } from './routes/eventRoutes.js';
 import { createTicketRouter } from './routes/ticketRoutes.js';
 import { createRepositoryRouter } from './routes/repositoryRoutes.js';
+import { createAnalysisRouter } from './routes/analysisRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
 import { auditService } from './services/audit/auditService.js';
@@ -81,6 +82,7 @@ export function createApp(): Application {
   app.use('/api/v1/events', createEventRouter());
   app.use('/api/v1/tickets', createTicketRouter());
   app.use('/api/v1/repositories', createRepositoryRouter());
+  app.use('/api/v1/repositories/:owner/:repo/analyze', createAnalysisRouter());
 
   if (process.env.NODE_ENV === 'test') {
     app.post(
