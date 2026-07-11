@@ -1,6 +1,8 @@
 .app,
 .auth-page,
-.dashboard-page {
+.dashboard-page,
+.repositories-page,
+.tickets-page {
   min-height: 100vh;
 }
 
@@ -54,7 +56,9 @@
   outline-offset: 2px;
 }
 
-.dashboard-page {
+.dashboard-page,
+.repositories-page,
+.tickets-page {
   padding: 2rem;
   background: #f8fafc;
 }
@@ -493,4 +497,23 @@
   display: grid;
   gap: 0.5rem;
   margin-top: 0.75rem;
+}
+
+.repository-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.repository-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #f8fafc;
 }

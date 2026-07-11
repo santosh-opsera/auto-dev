@@ -100,6 +100,17 @@ describe('analysis routes', () => {
     const app = createApp();
     const { sessionCookie } = await loginAsUser(app);
 
+    await getRepositoryConnectionModel().create({
+      userId: String((await getUserModel().findOne({ email: 'alex.dev@example.com' }))!._id),
+      owner: 'santosh-opsera',
+      repo: 'auto-dev',
+      fullName: 'santosh-opsera/auto-dev',
+      defaultBranch: 'main',
+      connectedAt: new Date(),
+      createdBy: 'test',
+      updatedBy: 'test',
+    });
+
     const response = await request(app)
       .post('/api/v1/repositories/santosh-opsera/auto-dev/analyze')
       .set('Cookie', sessionCookie)
@@ -111,9 +122,35 @@ describe('analysis routes', () => {
     expect(response.body.cacheHit).toBe(false);
   });
 
+  it('returns 412 when analyzing an unconnected repository', async () => {
+    vi.mocked(repositoryService.getRepositoryTree).mockRestore();
+
+    const app = createApp();
+    const { sessionCookie } = await loginAsUser(app);
+
+    const response = await request(app)
+      .post('/api/v1/repositories/santosh-opsera/auto-dev/analyze')
+      .set('Cookie', sessionCookie)
+      .send({ workflowId: 'workflow-unconnected' });
+
+    expect(response.status).toBe(412);
+    expect(response.body.error).toBe('RepositoryNotConnected');
+  });
+
   it('returns cached analysis when tree fingerprint is unchanged', async () => {
     const app = createApp();
     const { sessionCookie } = await loginAsUser(app);
+
+    await getRepositoryConnectionModel().create({
+      userId: String((await getUserModel().findOne({ email: 'alex.dev@example.com' }))!._id),
+      owner: 'santosh-opsera',
+      repo: 'auto-dev',
+      fullName: 'santosh-opsera/auto-dev',
+      defaultBranch: 'main',
+      connectedAt: new Date(),
+      createdBy: 'test',
+      updatedBy: 'test',
+    });
 
     const first = await request(app)
       .post('/api/v1/repositories/santosh-opsera/auto-dev/analyze')
