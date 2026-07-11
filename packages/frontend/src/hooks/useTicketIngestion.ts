@@ -76,7 +76,7 @@ export function useTicketIngestion() {
     } catch (loadError) {
       const message =
         loadError instanceof ApiError
-          ? loadError.message
+          ? [loadError.message, loadError.suggestedAction].filter(Boolean).join(' ')
           : loadError instanceof Error
             ? loadError.message
             : 'Failed to ingest ticket.';

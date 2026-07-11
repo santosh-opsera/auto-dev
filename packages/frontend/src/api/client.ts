@@ -10,6 +10,8 @@ export class ApiError extends Error {
     message: string,
     public readonly status: number,
     public readonly fields?: FieldValidationError[],
+    public readonly errorCode?: string,
+    public readonly suggestedAction?: string,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -34,16 +36,27 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
       const body = (await response.json()) as {
         message?: string;
         fields?: FieldValidationError[];
+        error?: string;
+        suggestedAction?: string;
       };
       if (body.message) {
         message = body.message;
       }
       fields = body.fields;
-    } catch {
-      // ignore parse errors
-    }
 
-    throw new ApiError(message, response.status, fields);
+      throw new ApiError(
+        message,
+        response.status,
+        fields,
+        body.error,
+        body.suggestedAction,
+      );
+    } catch (parseError) {
+      if (parseError instanceof ApiError) {
+        throw parseError;
+      }
+      throw new ApiError(message, response.status, fields);
+    }
   }
 
   if (response.status === 204) {

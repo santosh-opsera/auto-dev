@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import {
   ATLASSIAN_JIRA_SCOPES,
+  ATLASSIAN_LOGIN_SCOPES,
   ATLASSIAN_REMEMBER_COOKIE_NAME,
   SESSION_COOKIE_NAME,
   PKCE_COOKIE_NAME,
@@ -27,6 +28,7 @@ import { decryptSecret } from '../lib/encryption.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { AppError } from '../utils/errors.js';
 import { findUserById, getUserModel } from '../models/userModel.js';
+import { userHasJiraScopes } from '../services/jira/jiraScopes.js';
 import {
   buildGitHubAuthorizationUrl,
   createGitHubPkcePair,
@@ -351,7 +353,7 @@ export function createAuthRouter(): Router {
           codeChallenge,
           state,
           'consent',
-          [...ATLASSIAN_JIRA_SCOPES, 'offline_access'],
+          [...ATLASSIAN_LOGIN_SCOPES, ...ATLASSIAN_JIRA_SCOPES],
         ),
       );
     }),
@@ -580,6 +582,9 @@ export function createAuthRouter(): Router {
           email: user.email,
           displayName: user.displayName,
           connectedProviders: user.connectedProviders,
+          integrations: {
+            jira: userHasJiraScopes(user),
+          },
         },
         session: metadata,
       });
