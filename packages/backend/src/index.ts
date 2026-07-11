@@ -169,3 +169,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export { connectMongo, disconnectMongo };
+export { eventBus } from './services/events/eventBus.js';

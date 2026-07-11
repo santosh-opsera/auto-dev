@@ -131,3 +131,26 @@ export type {
   ConventionSettingsListResponse,
   ConventionSettingsResponse,
 } from './conventions.js';
+
+export {
+  domainEventSchema,
+  eventMetadataSchema,
+  eventTypeSchema,
+  EVENT_TYPES,
+  publishEventOptionsSchema,
+} from './events.js';
+
+export type {
+  DomainEvent,
+  DomainEventByType,
+  EventMetadata,
+  EventType,
+  PublishEventOptions,
+} from './events.js';
+
+export {
+  sampleChunkProgressEvent,
+  sampleConventionUpdatedEvent,
+  sampleEventMetadata,
+  sampleTicketParsedEvent,
+} from './fixtures/events.js';
