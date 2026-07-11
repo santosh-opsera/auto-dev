@@ -3,6 +3,7 @@ import {
   mockAtlassianTokenResponse,
   mockAtlassianUserResponse,
 } from '../../fixtures/auth.js';
+import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
 import {
   buildAtlassianAuthorizationUrl,
   exchangeAtlassianCode,
@@ -43,6 +44,13 @@ describe('atlassianAuthService', () => {
     expect(resolveAtlassianRetryPrompt('consent_required')).toBe('consent');
     expect(resolveAtlassianRetryPrompt('login_required')).toBe('login');
     expect(resolveAtlassianRetryPrompt('unknown')).toBeNull();
+  });
+
+  it('uses SSRF-allowlisted URLs for outbound Atlassian API requests', () => {
+    expect(() =>
+      assertAllowedUrl('https://auth.atlassian.com/oauth/token'),
+    ).not.toThrow();
+    expect(() => assertAllowedUrl('https://api.atlassian.com/me')).not.toThrow();
   });
 });
 

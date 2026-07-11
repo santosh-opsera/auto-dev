@@ -3,6 +3,7 @@ import {
   mockGitHubTokenResponse,
   mockGitHubUserResponse,
 } from '../../fixtures/auth.js';
+import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
 import { exchangeGitHubCode } from './githubAuthService.js';
 
 describe('githubAuthService', () => {
@@ -23,6 +24,13 @@ describe('githubAuthService', () => {
     expect(profile.email).toBe('alex.dev@example.com');
     expect(profile.accessToken).toBe('gho_mock_access_token');
     expect(profile.scopes).toContain('read:user');
+  });
+
+  it('uses SSRF-allowlisted URLs for outbound GitHub API requests', () => {
+    expect(() =>
+      assertAllowedUrl('https://github.com/login/oauth/access_token'),
+    ).not.toThrow();
+    expect(() => assertAllowedUrl('https://api.github.com/user')).not.toThrow();
   });
 });
 

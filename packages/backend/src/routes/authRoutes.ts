@@ -13,7 +13,7 @@ import {
   setSessionCookie,
 } from '../auth/cookies.js';
 import { clearAuthFailures, isLockedOut, recordAuthFailure } from '../auth/lockoutService.js';
-import { authRateLimitMiddleware } from '../auth/rateLimitMiddleware.js';
+import { authRateLimitMiddleware } from '../middleware/appRateLimits.js';
 import { generateStateToken } from '../auth/pkce.js';
 import {
   createSession,
