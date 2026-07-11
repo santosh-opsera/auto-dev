@@ -26,6 +26,19 @@ export const errorResponseSchema = z.object({
 
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 
+export const fieldValidationErrorSchema = z.object({
+  path: z.string(),
+  message: z.string(),
+});
+
+export type FieldValidationError = z.infer<typeof fieldValidationErrorSchema>;
+
+export const validationErrorResponseSchema = errorResponseSchema.extend({
+  fields: z.array(fieldValidationErrorSchema),
+});
+
+export type ValidationErrorResponse = z.infer<typeof validationErrorResponseSchema>;
+
 export const dbHealthConnectedSchema = z.object({
   status: z.literal('connected'),
   latencyMs: z.number().nonnegative(),

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { errorResponseSchema, healthCheckSchema, dbHealthConnectedSchema, dbHealthDisconnectedSchema } from './index';
+import { errorResponseSchema, healthCheckSchema, dbHealthConnectedSchema, dbHealthDisconnectedSchema, validationErrorResponseSchema } from './index';
 
 describe('healthCheckSchema', () => {
   it('validates a correct health check response', () => {
@@ -26,6 +26,20 @@ describe('errorResponseSchema', () => {
       message: 'Invalid payload',
       supportReferenceId: 'abc-123',
       suggestedAction: 'Fix the payload and retry.',
+    });
+
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('validationErrorResponseSchema', () => {
+  it('validates field-level validation error responses', () => {
+    const result = validationErrorResponseSchema.safeParse({
+      error: 'ValidationError',
+      message: 'Request validation failed.',
+      supportReferenceId: 'abc-123',
+      suggestedAction: 'Review the field errors and correct the request payload.',
+      fields: [{ path: 'name', message: 'Name is required' }],
     });
 
     expect(result.success).toBe(true);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sampleErrorObjects, sampleRequestContext } from '../fixtures/logging.js';
-import { AppError, sanitizeErrorMessage, toErrorResponse } from './errors.js';
+import { AppError, RequestValidationError, sanitizeErrorMessage, toErrorResponse } from './errors.js';
 
 describe('errors', () => {
   it('maps AppError to structured response', () => {
@@ -19,6 +19,20 @@ describe('errors', () => {
       message: 'Invalid payload',
       supportReferenceId: 'support-123',
       suggestedAction: 'Fix the payload and retry.',
+    });
+  });
+
+  it('maps RequestValidationError to structured field errors', () => {
+    const err = new RequestValidationError([
+      { path: 'name', message: 'Name is required' },
+    ]);
+
+    const result = toErrorResponse(err, 'support-validation');
+
+    expect(result.statusCode).toBe(400);
+    expect(result.body).toMatchObject({
+      error: 'ValidationError',
+      fields: [{ path: 'name', message: 'Name is required' }],
     });
   });
 

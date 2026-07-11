@@ -12,6 +12,9 @@ export const LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
 export const AUTH_RATE_LIMIT_MAX = 100;
 export const AUTH_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
+export const STANDARD_RATE_LIMIT_MAX = 1000;
+export const STANDARD_RATE_LIMIT_WINDOW_MS = 60 * 1000;
+
 export const GITHUB_SCOPES = ['read:user', 'user:email'];
 
 export const ATLASSIAN_LOGIN_SCOPES = ['read:me', 'offline_access'];

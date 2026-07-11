@@ -9,7 +9,12 @@ import {
 } from '@autodev/shared-types';
 import { checkMongoHealth, connectMongo, disconnectMongo } from './database/connection.js';
 import { correlationIdMiddleware } from './middleware/correlationId.js';
+import { corsMiddleware } from './middleware/cors.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { standardRateLimitMiddleware } from './middleware/appRateLimits.js';
+import { securityHeadersMiddleware } from './middleware/securityHeaders.js';
+import { validateBody } from './middleware/validateRequest.js';
+import { sampleValidationPayloadSchema } from './fixtures/validation.js';
 import { AppError } from './utils/errors.js';
 import { logger } from './utils/logger.js';
 import { createAuthRouter } from './routes/authRoutes.js';
@@ -17,6 +22,9 @@ import { createAuthRouter } from './routes/authRoutes.js';
 export function createApp(): Application {
   const app = express();
 
+  app.use(corsMiddleware);
+  app.use(securityHeadersMiddleware);
+  app.use(standardRateLimitMiddleware);
   app.use(express.json());
   app.use(cookieParser());
   app.use(correlationIdMiddleware);
@@ -59,6 +67,14 @@ export function createApp(): Application {
   app.use('/api/v1/auth', createAuthRouter());
 
   if (process.env.NODE_ENV === 'test') {
+    app.post(
+      '/api/v1/test/validate',
+      validateBody(sampleValidationPayloadSchema),
+      (_req: Request, res: Response) => {
+        res.status(200).json({ ok: true });
+      },
+    );
+
     app.get('/api/v1/test/error', () => {
       throw new Error('Unexpected failure at /app/src/test.ts:10:5');
     });

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 import { LOCKOUT_THRESHOLD } from '../auth/constants.js';
-import { resetAuthRateLimits } from '../auth/rateLimitMiddleware.js';
+import { resetAuthRateLimits } from '../middleware/appRateLimits.js';
 import { resetLockouts } from '../auth/lockoutService.js';
 import {
   mockAtlassianTokenResponse,
