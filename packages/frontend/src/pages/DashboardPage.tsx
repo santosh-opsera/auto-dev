@@ -71,6 +71,14 @@ export function DashboardPage({ onLogoutComplete }: DashboardPageProps) {
           Open convention settings
         </Link>
       </section>
+
+      <section aria-labelledby="tickets-heading" className="profile-card">
+        <h2 id="tickets-heading">Tickets</h2>
+        <p>Ingest Jira tickets, review parsed intent, and resolve gaps before codebase analysis.</p>
+        <Link to="/tickets" className="primary-link">
+          Open ticket ingestion
+        </Link>
+      </section>
     </main>
   );
 }
