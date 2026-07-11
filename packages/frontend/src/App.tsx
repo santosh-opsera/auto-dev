@@ -4,6 +4,7 @@ import { fetchCurrentUser } from './api/auth';
 import { DashboardPage } from './pages/DashboardPage';
 import { ConventionsPage } from './pages/ConventionsPage';
 import { LoginPage } from './pages/LoginPage';
+import { TicketIngestPage } from './pages/TicketIngestPage';
 import { useAuthStore } from './store/authStore';
 import './App.css';
 
@@ -60,6 +61,16 @@ function AppRoutes() {
         element={
           isAuthenticated ? (
             <ConventionsPage onLogoutComplete={() => navigate('/login', { replace: true })} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/tickets"
+        element={
+          isAuthenticated ? (
+            <TicketIngestPage onLogoutComplete={() => navigate('/login', { replace: true })} />
           ) : (
             <Navigate to="/login" replace />
           )
