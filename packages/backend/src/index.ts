@@ -10,7 +10,7 @@ import {
 import { checkMongoHealth, connectMongo, disconnectMongo } from './database/connection.js';
 import { correlationIdMiddleware } from './middleware/correlationId.js';
 import { corsMiddleware } from './middleware/cors.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import { errorHandler, asyncHandler } from './middleware/errorHandler.js';
 import { standardRateLimitMiddleware } from './middleware/appRateLimits.js';
 import { securityHeadersMiddleware } from './middleware/securityHeaders.js';
 import { validateBody } from './middleware/validateRequest.js';
@@ -18,6 +18,10 @@ import { sampleValidationPayloadSchema } from './fixtures/validation.js';
 import { AppError } from './utils/errors.js';
 import { logger } from './utils/logger.js';
 import { createAuthRouter } from './routes/authRoutes.js';
+import { createAuditRouter } from './routes/auditRoutes.js';
+import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
+import { auditService } from './services/audit/auditService.js';
+import { sampleAuditMutationPayload } from './fixtures/audit.js';
 
 export function createApp(): Application {
   const app = express();
@@ -65,6 +69,7 @@ export function createApp(): Application {
   });
 
   app.use('/api/v1/auth', createAuthRouter());
+  app.use('/api/v1/audit', createAuditRouter());
 
   if (process.env.NODE_ENV === 'test') {
     app.post(
@@ -73,6 +78,22 @@ export function createApp(): Application {
       (_req: Request, res: Response) => {
         res.status(200).json({ ok: true });
       },
+    );
+
+    app.post(
+      '/api/v1/test/mutation',
+      asyncHandler(requireSession),
+      asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+        await auditService.log({
+          resource: sampleAuditMutationPayload.resource,
+          operation: 'create',
+          actor: req.user ? String(req.user._id) : undefined,
+          previousValue: sampleAuditMutationPayload.previousValue,
+          newValue: sampleAuditMutationPayload.newValue,
+          ipAddress: req.ip,
+        });
+        res.status(201).json({ ok: true });
+      }),
     );
 
     app.get('/api/v1/test/error', () => {

@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { errorResponseSchema, healthCheckSchema, dbHealthConnectedSchema, dbHealthDisconnectedSchema, validationErrorResponseSchema } from './index';
+import {
+  auditLogListQuerySchema,
+  auditLogListResponseSchema,
+  auditLogRecordSchema,
+  auditOperationSchema,
+  dbHealthConnectedSchema,
+  dbHealthDisconnectedSchema,
+  errorResponseSchema,
+  healthCheckSchema,
+  validationErrorResponseSchema,
+} from './index';
 
 describe('healthCheckSchema', () => {
   it('validates a correct health check response', () => {
@@ -65,5 +75,34 @@ describe('dbHealthDisconnectedSchema', () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+describe('audit log schemas', () => {
+  it('validates audit log records and list responses', () => {
+    const record = auditLogRecordSchema.safeParse({
+      id: 'audit-1',
+      actor: 'user-001',
+      timestamp: new Date().toISOString(),
+      resource: 'auth/sessions',
+      operation: 'login',
+      correlationId: 'corr-1',
+      ipAddress: '127.0.0.1',
+      newValue: { provider: 'github' },
+    });
+    expect(record.success).toBe(true);
+
+    const query = auditLogListQuerySchema.safeParse({ page: 1, limit: 25, operation: 'login' });
+    expect(query.success).toBe(true);
+
+    const response = auditLogListResponseSchema.safeParse({
+      records: [record.success ? record.data : {}],
+      page: 1,
+      limit: 25,
+      total: 1,
+      totalPages: 1,
+    });
+    expect(response.success).toBe(true);
+    expect(auditOperationSchema.options).toContain('token_refresh');
   });
 });

@@ -40,6 +40,7 @@ import {
   type AtlassianAuthPrompt,
 } from '../services/auth/atlassianAuthService.js';
 import { upsertUserFromOAuth } from '../services/auth/userAuthService.js';
+import { auditService } from '../services/audit/auditService.js';
 
 const REFRESH_COOKIE_NAME = 'autodev_refresh';
 
@@ -141,6 +142,7 @@ async function tryResumeAtlassianSession(req: Request, res: Response): Promise<b
     clearAuthFailures(getClientIp(req));
     issueSessionCookies(res, session);
     setAtlassianRememberCookie(res, String(user._id));
+    logAuthSuccess(req, String(user._id), 'atlassian');
     res.redirect(`${config.frontendUrl}/dashboard`);
     return true;
   } catch {
@@ -151,6 +153,12 @@ async function tryResumeAtlassianSession(req: Request, res: Response): Promise<b
 
 function ensureNotLocked(req: Request): void {
   if (isLockedOut(getClientIp(req))) {
+    void auditService.logSafe({
+      resource: 'auth/sessions',
+      operation: 'lockout',
+      actor: 'anonymous',
+      ipAddress: getClientIp(req),
+    });
     throw new AppError(
       'AccountLocked',
       'Too many failed authentication attempts. Try again later.',
@@ -160,7 +168,14 @@ function ensureNotLocked(req: Request): void {
   }
 }
 
-function handleAuthFailure(req: Request): never {
+function handleAuthFailure(req: Request, metadata?: Record<string, unknown>): never {
+  void auditService.logSafe({
+    resource: 'auth/sessions',
+    operation: 'login_failed',
+    actor: 'anonymous',
+    ipAddress: getClientIp(req),
+    newValue: metadata,
+  });
   recordAuthFailure(getClientIp(req));
   throw new AppError(
     'AuthenticationFailed',
@@ -168,6 +183,16 @@ function handleAuthFailure(req: Request): never {
     401,
     'Verify OAuth credentials and retry.',
   );
+}
+
+function logAuthSuccess(req: Request, userId: string, provider: 'github' | 'atlassian'): void {
+  void auditService.logSafe({
+    resource: 'auth/sessions',
+    operation: 'login',
+    actor: userId,
+    ipAddress: getClientIp(req),
+    newValue: { provider },
+  });
 }
 
 export function createAuthRouter(): Router {
@@ -203,7 +228,7 @@ export function createAuthRouter(): Router {
       const codeVerifier = bodyVerifier ?? getCookieValue(req, PKCE_COOKIE_NAME);
 
       if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'github', reason: 'missing_oauth_parameters' });
       }
 
       try {
@@ -228,6 +253,7 @@ export function createAuthRouter(): Router {
           sameSite: 'strict',
           path: '/',
         });
+        logAuthSuccess(req, String(user._id), 'github');
 
         res.status(200).json({
           user: {
@@ -238,7 +264,7 @@ export function createAuthRouter(): Router {
           session: session.metadata,
         });
       } catch {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'github' });
       }
     }),
   );
@@ -252,7 +278,7 @@ export function createAuthRouter(): Router {
       const codeVerifier = getCookieValue(req, PKCE_COOKIE_NAME);
 
       if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'github', reason: 'missing_oauth_parameters' });
       }
 
       try {
@@ -277,10 +303,11 @@ export function createAuthRouter(): Router {
           sameSite: 'strict',
           path: '/',
         });
+        logAuthSuccess(req, String(user._id), 'github');
 
         res.redirect(`${config.frontendUrl}/dashboard`);
       } catch {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'github' });
       }
     }),
   );
@@ -314,7 +341,7 @@ export function createAuthRouter(): Router {
       const codeVerifier = bodyVerifier ?? getCookieValue(req, PKCE_COOKIE_NAME);
 
       if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'atlassian', reason: 'missing_oauth_parameters' });
       }
 
       try {
@@ -340,6 +367,7 @@ export function createAuthRouter(): Router {
           path: '/',
         });
         setAtlassianRememberCookie(res, String(user._id));
+        logAuthSuccess(req, String(user._id), 'atlassian');
 
         res.status(200).json({
           user: {
@@ -350,7 +378,7 @@ export function createAuthRouter(): Router {
           session: session.metadata,
         });
       } catch {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'atlassian' });
       }
     }),
   );
@@ -367,14 +395,14 @@ export function createAuthRouter(): Router {
           res.redirect(`/api/v1/auth/atlassian/start?prompt=${retryPrompt}`);
           return;
         }
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'atlassian', reason: 'oauth_provider_error', error: oauthError });
       }
 
       const code = req.query.code;
       const codeVerifier = getCookieValue(req, PKCE_COOKIE_NAME);
 
       if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'atlassian', reason: 'missing_oauth_parameters' });
       }
 
       try {
@@ -400,10 +428,11 @@ export function createAuthRouter(): Router {
           path: '/',
         });
         setAtlassianRememberCookie(res, String(user._id));
+        logAuthSuccess(req, String(user._id), 'atlassian');
 
         res.redirect(`${config.frontendUrl}/dashboard`);
       } catch {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { provider: 'atlassian' });
       }
     }),
   );
@@ -421,7 +450,7 @@ export function createAuthRouter(): Router {
       const rotated = await rotateRefreshToken(sessionId, refreshToken);
 
       if (!rotated) {
-        handleAuthFailure(req);
+        handleAuthFailure(req, { reason: 'invalid_refresh_token' });
       }
 
       clearAuthFailures(getClientIp(req));
@@ -433,6 +462,14 @@ export function createAuthRouter(): Router {
         path: '/',
       });
 
+      void auditService.logSafe({
+        resource: 'auth/sessions',
+        operation: 'token_refresh',
+        actor: rotated.metadata.userId,
+        ipAddress: getClientIp(req),
+        newValue: { sessionId },
+      });
+
       res.status(200).json({ session: rotated.metadata });
     }),
   );
@@ -441,10 +478,19 @@ export function createAuthRouter(): Router {
     '/logout',
     asyncHandler(async (req, res) => {
       const sessionId = getCookieValue(req, SESSION_COOKIE_NAME);
+      const sessionMetadata = sessionId ? await touchSession(sessionId) : null;
 
       if (sessionId && typeof sessionId === 'string') {
         await invalidateSession(sessionId);
       }
+
+      void auditService.logSafe({
+        resource: 'auth/sessions',
+        operation: 'logout',
+        actor: sessionMetadata?.userId ?? 'anonymous',
+        ipAddress: getClientIp(req),
+        previousValue: sessionId ? { sessionId } : undefined,
+      });
 
       clearSessionCookie(res);
       res.clearCookie(REFRESH_COOKIE_NAME, { path: '/' });

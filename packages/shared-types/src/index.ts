@@ -60,3 +60,52 @@ export const auditDocumentSchema = z.object({
   updatedBy: z.string().optional(),
   dataClassification: z.enum(['public', 'internal', 'confidential', 'restricted']),
 });
+
+export const auditOperationSchema = z.enum([
+  'create',
+  'update',
+  'delete',
+  'login',
+  'logout',
+  'login_failed',
+  'token_refresh',
+  'lockout',
+]);
+
+export type AuditOperation = z.infer<typeof auditOperationSchema>;
+
+export const auditLogRecordSchema = z.object({
+  id: z.string(),
+  actor: z.string(),
+  timestamp: z.string().datetime(),
+  resource: z.string(),
+  operation: auditOperationSchema,
+  previousValue: z.unknown().optional(),
+  newValue: z.unknown().optional(),
+  correlationId: z.string(),
+  ipAddress: z.string().optional(),
+});
+
+export type AuditLogRecord = z.infer<typeof auditLogRecordSchema>;
+
+export const auditLogListQuerySchema = z.object({
+  resource: z.string().optional(),
+  actor: z.string().optional(),
+  operation: auditOperationSchema.optional(),
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export type AuditLogListQuery = z.infer<typeof auditLogListQuerySchema>;
+
+export const auditLogListResponseSchema = z.object({
+  records: z.array(auditLogRecordSchema),
+  page: z.number().int().min(1),
+  limit: z.number().int().min(1),
+  total: z.number().int().nonnegative(),
+  totalPages: z.number().int().nonnegative(),
+});
+
+export type AuditLogListResponse = z.infer<typeof auditLogListResponseSchema>;

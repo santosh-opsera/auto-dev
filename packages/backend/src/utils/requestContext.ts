@@ -16,3 +16,12 @@ export function getRequestContext(): RequestContext | undefined {
 export function runWithRequestContext<T>(context: RequestContext, fn: () => T): T {
   return storage.run(context, fn);
 }
+
+export function updateRequestContext(partial: Partial<RequestContext>): void {
+  const current = storage.getStore();
+  if (!current) {
+    return;
+  }
+
+  Object.assign(current, partial);
+}
