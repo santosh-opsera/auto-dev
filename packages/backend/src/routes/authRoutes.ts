@@ -3,14 +3,17 @@ import {
   ATLASSIAN_JIRA_SCOPES,
   ATLASSIAN_LOGIN_SCOPES,
   ATLASSIAN_REMEMBER_COOKIE_NAME,
+  OAUTH_LINK_USER_COOKIE_NAME,
   SESSION_COOKIE_NAME,
   PKCE_COOKIE_NAME,
 } from '../auth/constants.js';
 import {
   clearAtlassianRememberCookie,
+  clearOAuthLinkUserCookie,
   clearPkceCookie,
   clearSessionCookie,
   setAtlassianRememberCookie,
+  setOAuthLinkUserCookie,
   setPkceCookie,
   setSessionCookie,
 } from '../auth/cookies.js';
@@ -42,7 +45,7 @@ import {
   resolveAtlassianRetryPrompt,
   type AtlassianAuthPrompt,
 } from '../services/auth/atlassianAuthService.js';
-import { upsertUserFromOAuth } from '../services/auth/userAuthService.js';
+import { upsertUserFromOAuth, linkProviderToUser } from '../services/auth/userAuthService.js';
 import { auditService } from '../services/audit/auditService.js';
 import { sseManager } from '../services/events/sseManager.js';
 
@@ -341,10 +344,16 @@ export function createAuthRouter(): Router {
         throw new AppError('Unauthorized', 'Session not found.', 401, 'Sign in before connecting Jira.');
       }
 
+      const session = await touchSession(sessionId);
+      if (!session) {
+        throw new AppError('Unauthorized', 'Session expired.', 401, 'Sign in before connecting Jira.');
+      }
+
       const { clientId, redirectUri } = getAtlassianConfig();
       const { codeVerifier, codeChallenge } = createAtlassianPkcePair();
       const state = generateStateToken();
       setPkceCookie(res, codeVerifier);
+      setOAuthLinkUserCookie(res, session.userId);
 
       res.redirect(
         buildAtlassianAuthorizationUrl(
@@ -444,6 +453,26 @@ export function createAuthRouter(): Router {
           clientSecret: config.clientSecret,
           redirectUri: config.redirectUri,
         });
+
+        const linkUserId = getCookieValue(req, OAUTH_LINK_USER_COOKIE_NAME);
+        const sessionId = getCookieValue(req, SESSION_COOKIE_NAME);
+        const existingSession = sessionId ? await touchSession(sessionId) : null;
+
+        if (linkUserId && existingSession?.userId === linkUserId) {
+          const linked = await linkProviderToUser(linkUserId, profile);
+
+          if (!linked) {
+            handleAuthFailure(req, { provider: 'atlassian', reason: 'link_user_not_found' });
+          }
+
+          clearAuthFailures(getClientIp(req));
+          clearPkceCookie(res);
+          clearOAuthLinkUserCookie(res);
+          logAuthSuccess(req, linkUserId, 'atlassian');
+
+          res.redirect(`${config.frontendUrl}/tickets`);
+          return;
+        }
 
         const user = await upsertUserFromOAuth(profile);
         const session = await createSession(String(user._id));

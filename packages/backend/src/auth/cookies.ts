@@ -2,6 +2,7 @@ import type { CookieOptions, Response } from 'express';
 import {
   ATLASSIAN_REMEMBER_COOKIE_NAME,
   ATLASSIAN_REMEMBER_MS,
+  OAUTH_LINK_USER_COOKIE_NAME,
   PKCE_COOKIE_NAME,
   SESSION_COOKIE_NAME,
   SESSION_IDLE_MS,
@@ -50,4 +51,14 @@ export function setAtlassianRememberCookie(res: Response, userId: string): void 
 
 export function clearAtlassianRememberCookie(res: Response): void {
   res.clearCookie(ATLASSIAN_REMEMBER_COOKIE_NAME, getLaxCookieOptions(ATLASSIAN_REMEMBER_MS));
+}
+
+const OAUTH_LINK_USER_MAX_AGE_MS = 10 * 60 * 1000;
+
+export function setOAuthLinkUserCookie(res: Response, userId: string): void {
+  res.cookie(OAUTH_LINK_USER_COOKIE_NAME, userId, getLaxCookieOptions(OAUTH_LINK_USER_MAX_AGE_MS));
+}
+
+export function clearOAuthLinkUserCookie(res: Response): void {
+  res.clearCookie(OAUTH_LINK_USER_COOKIE_NAME, getLaxCookieOptions(OAUTH_LINK_USER_MAX_AGE_MS));
 }
