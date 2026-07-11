@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { SessionWarningModal } from '../components/SessionWarningModal';
 import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
@@ -59,6 +60,14 @@ export function DashboardPage({ onLogoutComplete }: DashboardPageProps) {
             </div>
           ) : null}
         </dl>
+      </section>
+
+      <section aria-labelledby="setup-heading" className="profile-card">
+        <h2 id="setup-heading">Setup</h2>
+        <p>Configure commit, branch, PR, and reviewer conventions before starting development.</p>
+        <Link to="/conventions" className="primary-link">
+          Open convention settings
+        </Link>
       </section>
     </main>
   );

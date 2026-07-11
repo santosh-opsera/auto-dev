@@ -24,7 +24,7 @@ export const branchNamingPatternSchema = z
   .max(200, 'Branch naming pattern must be 200 characters or fewer')
   .refine(
     isValidRegexPattern,
-    'Branch naming pattern must be valid regex. Example: ^feature/[A-Z]+-\\d+$',
+    'Branch naming pattern must be valid regex. Example: ^(feature|bugfix)/OPL-\\d+$',
   );
 
 export const nonEmptyTemplateSchema = (field: string, example: string) =>
@@ -47,13 +47,13 @@ export const reviewerAssignmentRulesSchema = z.discriminatedUnion('mode', [
 export const conventionSettingsInputSchema = z.object({
   commitMessageFormat: nonEmptyTemplateSchema(
     'Commit message format',
-    '{type}({scope}): {description} [{ticketKey}]',
+    'OPL-1234: commit description message',
   ),
   branchNamingPattern: branchNamingPatternSchema,
-  prTitleTemplate: nonEmptyTemplateSchema('PR title template', '[{ticketKey}] {summary}'),
+  prTitleTemplate: nonEmptyTemplateSchema('PR title template', 'OPL-1234 summary of pr'),
   prDescriptionTemplate: nonEmptyTemplateSchema(
     'PR description template',
-    '## Summary\\n{summary}',
+    'Context\\n{context}\\n\\nChanges in codebase\\n{changes}',
   ),
   reviewerAssignmentRules: reviewerAssignmentRulesSchema,
 });
@@ -76,14 +76,20 @@ export const conventionSettingsListResponseSchema = z.object({
   settings: conventionSettingsResponseSchema.nullable(),
 });
 
-export const conventionHistoryResponseSchema = z.object({
-  versions: z.array(conventionSettingsResponseSchema),
-});
+export type ConventionSettingsListResponse = z.infer<typeof conventionSettingsListResponseSchema>;
 
 export const conventionDefaultsResponseSchema = z.object({
   templates: conventionSettingsInputSchema,
   availableVariables: z.array(z.string()),
 });
+
+export type ConventionDefaultsResponse = z.infer<typeof conventionDefaultsResponseSchema>;
+
+export const conventionHistoryResponseSchema = z.object({
+  versions: z.array(conventionSettingsResponseSchema),
+});
+
+export type ConventionHistoryResponse = z.infer<typeof conventionHistoryResponseSchema>;
 
 export const conventionSettingsParamsSchema = z.object({
   id: z.string().min(1, 'Convention settings id is required'),

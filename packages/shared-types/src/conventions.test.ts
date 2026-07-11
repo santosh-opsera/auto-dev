@@ -8,8 +8,8 @@ import {
 
 describe('convention schemas', () => {
   it('accepts valid regex branch naming patterns', () => {
-    expect(isValidRegexPattern('^feature/[A-Z]+-\\d+$')).toBe(true);
-    expect(branchNamingPatternSchema.safeParse('^feature/[A-Z]+-\\d+$').success).toBe(true);
+    expect(isValidRegexPattern('^(feature|bugfix)/OPL-\\d+$')).toBe(true);
+    expect(branchNamingPatternSchema.safeParse('^(feature|bugfix)/OPL-\\d+$').success).toBe(true);
   });
 
   it('rejects invalid regex branch naming patterns', () => {
@@ -28,9 +28,9 @@ describe('convention schemas', () => {
   it('requires non-empty commit message format with example', () => {
     const result = conventionSettingsInputSchema.safeParse({
       commitMessageFormat: '',
-      branchNamingPattern: '^feature/[A-Z]+-\\d+$',
-      prTitleTemplate: '[{ticketKey}] {summary}',
-      prDescriptionTemplate: '## Summary\n{summary}',
+      branchNamingPattern: '^(feature|bugfix)/OPL-\\d+$',
+      prTitleTemplate: 'OPL-1234 summary of pr',
+      prDescriptionTemplate: 'Context\n{context}',
       reviewerAssignmentRules: { mode: 'code-owner-based' },
     });
 

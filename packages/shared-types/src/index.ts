@@ -125,6 +125,9 @@ export {
 } from './conventions.js';
 
 export type {
+  ConventionDefaultsResponse,
+  ConventionHistoryResponse,
   ConventionSettingsInput,
+  ConventionSettingsListResponse,
   ConventionSettingsResponse,
 } from './conventions.js';
