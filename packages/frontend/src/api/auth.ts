@@ -6,6 +6,7 @@ export interface AuthUser {
   connectedProviders: Array<'github' | 'atlassian'>;
   integrations?: {
     jira: boolean;
+    githubRepos: boolean;
   };
 }
 
@@ -35,6 +36,11 @@ export function getOAuthStartUrl(provider: 'github' | 'atlassian'): string {
 export function getJiraConnectUrl(): string {
   const base = import.meta.env.VITE_API_URL ?? '';
   return `${base}/api/v1/auth/atlassian/jira/connect`;
+}
+
+export function getGitHubReposConnectUrl(): string {
+  const base = import.meta.env.VITE_API_URL ?? '';
+  return `${base}/api/v1/auth/github/repos/connect`;
 }
 
 export async function fetchCurrentUser(): Promise<MeResponse> {

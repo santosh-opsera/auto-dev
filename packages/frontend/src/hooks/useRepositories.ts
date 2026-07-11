@@ -29,21 +29,28 @@ const initialState: RepositoryState = {
   analysisResults: {},
 };
 
-export function useRepositories() {
+interface UseRepositoriesOptions {
+  fetchAvailable?: boolean;
+}
+
+export function useRepositories({ fetchAvailable = true }: UseRepositoriesOptions = {}) {
   const [state, setState] = useState<RepositoryState>(initialState);
 
   const refresh = useCallback(async (): Promise<void> => {
     setState((previous) => ({ ...previous, loading: true, error: null }));
 
     try {
-      const [availableResponse, connectedResponse] = await Promise.all([
-        listGitHubRepositories(),
-        listConnectedRepositories(),
-      ]);
+      const connectedResponse = await listConnectedRepositories();
+      let available: GitHubRepository[] = [];
+
+      if (fetchAvailable) {
+        const availableResponse = await listGitHubRepositories();
+        available = availableResponse.repositories;
+      }
 
       setState((previous) => ({
         ...previous,
-        available: availableResponse.repositories,
+        available,
         connected: connectedResponse.connections,
         loading: false,
       }));
@@ -61,7 +68,7 @@ export function useRepositories() {
         error: message,
       }));
     }
-  }, []);
+  }, [fetchAvailable]);
 
   useEffect(() => {
     void refresh();

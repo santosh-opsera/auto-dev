@@ -3,6 +3,8 @@ import {
   ATLASSIAN_JIRA_SCOPES,
   ATLASSIAN_LOGIN_SCOPES,
   ATLASSIAN_REMEMBER_COOKIE_NAME,
+  GITHUB_LOGIN_SCOPES,
+  GITHUB_REPO_SCOPES,
   OAUTH_LINK_USER_COOKIE_NAME,
   SESSION_COOKIE_NAME,
   PKCE_COOKIE_NAME,
@@ -31,6 +33,7 @@ import { decryptSecret } from '../lib/encryption.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { AppError } from '../utils/errors.js';
 import { findUserById, getUserModel } from '../models/userModel.js';
+import { userHasGitHubRepoScopes } from '../services/github/githubScopes.js';
 import { userHasJiraScopes } from '../services/jira/jiraScopes.js';
 import {
   buildGitHubAuthorizationUrl,
@@ -223,6 +226,37 @@ export function createAuthRouter(): Router {
       res.redirect(authorizationUrl);
   });
 
+  router.get(
+    '/github/repos/connect',
+    asyncHandler(async (req, res) => {
+      const sessionId = getCookieValue(req, SESSION_COOKIE_NAME);
+      if (!sessionId) {
+        throw new AppError('Unauthorized', 'Session not found.', 401, 'Sign in before connecting GitHub.');
+      }
+
+      const session = await touchSession(sessionId);
+      if (!session) {
+        throw new AppError('Unauthorized', 'Session expired.', 401, 'Sign in before connecting GitHub.');
+      }
+
+      const { clientId, redirectUri } = getGitHubConfig();
+      const { codeVerifier, codeChallenge } = createGitHubPkcePair();
+      const state = generateStateToken();
+      setPkceCookie(res, codeVerifier);
+      setOAuthLinkUserCookie(res, session.userId);
+
+      const authorizationUrl = buildGitHubAuthorizationUrl(
+        clientId,
+        redirectUri,
+        codeChallenge,
+        state,
+        [...GITHUB_LOGIN_SCOPES, ...GITHUB_REPO_SCOPES],
+      );
+
+      res.redirect(authorizationUrl);
+    }),
+  );
+
   router.post(
     '/github/callback',
     asyncHandler(async (req, res) => {
@@ -297,6 +331,26 @@ export function createAuthRouter(): Router {
           clientSecret: config.clientSecret,
           redirectUri: config.redirectUri,
         });
+
+        const linkUserId = getCookieValue(req, OAUTH_LINK_USER_COOKIE_NAME);
+        const sessionId = getCookieValue(req, SESSION_COOKIE_NAME);
+        const existingSession = sessionId ? await touchSession(sessionId) : null;
+
+        if (linkUserId && existingSession?.userId === linkUserId) {
+          const linked = await linkProviderToUser(linkUserId, profile);
+
+          if (!linked) {
+            handleAuthFailure(req, { provider: 'github', reason: 'link_user_not_found' });
+          }
+
+          clearAuthFailures(getClientIp(req));
+          clearPkceCookie(res);
+          clearOAuthLinkUserCookie(res);
+          logAuthSuccess(req, linkUserId, 'github');
+
+          res.redirect(`${config.frontendUrl}/repositories`);
+          return;
+        }
 
         const user = await upsertUserFromOAuth(profile);
         const session = await createSession(String(user._id));
@@ -613,6 +667,7 @@ export function createAuthRouter(): Router {
           connectedProviders: user.connectedProviders,
           integrations: {
             jira: userHasJiraScopes(user),
+            githubRepos: userHasGitHubRepoScopes(user),
           },
         },
         session: metadata,

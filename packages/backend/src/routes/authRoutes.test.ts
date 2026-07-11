@@ -232,4 +232,55 @@ describe('auth routes', () => {
     const users = await getUserModel().find({ email: 'alex.dev@example.com' }).exec();
     expect(users).toHaveLength(1);
   });
+
+  it('links GitHub repo scopes to the current Atlassian session via github repos connect callback', async () => {
+    vi.mocked(exchangeGitHubCode).mockResolvedValueOnce({
+      provider: 'github',
+      providerUserId: String(mockGitHubUserResponse.id),
+      email: mockGitHubUserResponse.email ?? 'alex.dev@example.com',
+      displayName: mockGitHubUserResponse.name ?? mockGitHubUserResponse.login,
+      accessToken: mockGitHubTokenResponse.access_token,
+      refreshToken: mockGitHubTokenResponse.refresh_token,
+      scopes: ['read:user', 'user:email', 'repo'],
+    });
+
+    const app = createApp();
+    const login = await request(app)
+      .post('/api/v1/auth/atlassian/callback')
+      .send({ code: 'mock-code', code_verifier: 'mock-verifier' });
+
+    const sessionCookies = login.headers['set-cookie'];
+    const connect = await request(app)
+      .get('/api/v1/auth/github/repos/connect')
+      .set('Cookie', sessionCookies);
+
+    expect(connect.status).toBe(302);
+    expect(connect.headers.location).toContain('scope=read%3Auser');
+
+    const callback = await request(app)
+      .get('/api/v1/auth/github/callback?code=mock-code')
+      .set(
+        'Cookie',
+        mergeSetCookieHeaders(sessionCookies, connect.headers['set-cookie']),
+      );
+
+    expect(callback.status).toBe(302);
+    expect(callback.headers.location).toBe('http://localhost:3000/repositories');
+
+    const me = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Cookie', sessionCookies);
+
+    const meBody = me.body as {
+      user: { connectedProviders: string[]; integrations: { jira: boolean; githubRepos: boolean } };
+    };
+    expect(me.status).toBe(200);
+    expect(meBody.user.connectedProviders).toEqual(
+      expect.arrayContaining(['github', 'atlassian']),
+    );
+    expect(meBody.user.integrations.githubRepos).toBe(true);
+
+    const users = await getUserModel().find({ email: 'alex.dev@example.com' }).exec();
+    expect(users).toHaveLength(1);
+  });
 });

@@ -11,6 +11,7 @@ import { decryptSecret } from '../../lib/encryption.js';
 import { AppError } from '../../utils/errors.js';
 import type { UserDocument } from '../../models/userModel.js';
 import { getRepositoryConnectionModel } from '../../models/repositoryConnectionModel.js';
+import { userHasGitHubRepoScopes } from './githubScopes.js';
 import { GitHubApiClient, githubApiClient } from './githubApiClient.js';
 
 function resolveGitHubAccessToken(user: UserDocument): string {
@@ -19,9 +20,18 @@ function resolveGitHubAccessToken(user: UserDocument): string {
   if (!github?.encryptedAccessToken) {
     throw new AppError(
       'GitHubNotConnected',
-      'Connect GitHub before accessing repositories.',
+      'GitHub has not been linked to this account.',
       412,
-      'Sign in with GitHub and grant repository access, then retry.',
+      'Connect GitHub repository access from the repositories page, then retry.',
+    );
+  }
+
+  if (!userHasGitHubRepoScopes(user)) {
+    throw new AppError(
+      'GitHubRepoAccessRequired',
+      'GitHub repository access has not been granted for this account.',
+      412,
+      'Grant GitHub repository permissions from the repositories page, then retry.',
     );
   }
 

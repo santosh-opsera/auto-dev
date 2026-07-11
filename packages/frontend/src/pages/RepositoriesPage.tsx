@@ -1,14 +1,21 @@
 import { Link } from 'react-router-dom';
+import { getGitHubReposConnectUrl } from '../api/auth';
 import { SessionWarningModal } from '../components/SessionWarningModal';
 import { useRepositories } from '../hooks/useRepositories';
 import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
 import { useSSE } from '../hooks/useSSE';
+import { useAuthStore } from '../store/authStore';
 
 interface RepositoriesPageProps {
   onLogoutComplete: () => void;
 }
 
 export function RepositoriesPage({ onLogoutComplete }: RepositoriesPageProps) {
+  const user = useAuthStore((state) => state.user);
+  const githubReposReady = user?.integrations?.githubRepos ?? false;
+  const needsGitHubConnect = user !== null && !githubReposReady;
+  const hasGitHubProvider = user?.connectedProviders.includes('github') === true;
+
   const {
     available,
     connected,
@@ -21,7 +28,7 @@ export function RepositoriesPage({ onLogoutComplete }: RepositoriesPageProps) {
     refresh,
     connect,
     analyze,
-  } = useRepositories();
+  } = useRepositories({ fetchAvailable: githubReposReady });
 
   useSessionHeartbeat(true);
   useSSE({ enabled: true });
@@ -42,7 +49,21 @@ export function RepositoriesPage({ onLogoutComplete }: RepositoriesPageProps) {
         </nav>
       </header>
 
-      {error ? (
+      {needsGitHubConnect ? (
+        <section className="profile-card jira-connect-banner" role="status">
+          <h2>GitHub repository access required</h2>
+          <p>
+            {hasGitHubProvider
+              ? 'Your GitHub account is linked, but repository permissions are not granted yet. Grant access to list and connect repositories.'
+              : 'Atlassian sign-in does not include GitHub repository access. Link GitHub and grant repository permissions to continue.'}
+          </p>
+          <a href={getGitHubReposConnectUrl()} className="primary-link">
+            Connect GitHub repository access
+          </a>
+        </section>
+      ) : null}
+
+      {error && !needsGitHubConnect ? (
         <section className="profile-card" role="alert">
           <p className="page-error">{error}</p>
           <button type="button" className="secondary-button" onClick={() => void refresh()}>
@@ -55,7 +76,11 @@ export function RepositoriesPage({ onLogoutComplete }: RepositoriesPageProps) {
         <h2 id="connected-heading">Connected repositories</h2>
         {loading ? <p>Loading connected repositories…</p> : null}
         {!loading && connected.length === 0 ? (
-          <p>No repositories connected yet. Choose repositories from GitHub below.</p>
+          <p>
+            {needsGitHubConnect
+              ? 'Connect GitHub repository access above to browse and connect repositories.'
+              : 'No repositories connected yet. Choose repositories from GitHub below.'}
+          </p>
         ) : null}
         {!loading && connected.length > 0 ? (
           <ul className="repository-list">
@@ -91,40 +116,42 @@ export function RepositoriesPage({ onLogoutComplete }: RepositoriesPageProps) {
         ) : null}
       </section>
 
-      <section className="profile-card" aria-labelledby="available-heading">
-        <h2 id="available-heading">Available from GitHub</h2>
-        {loading ? <p>Loading GitHub repositories…</p> : null}
-        {!loading && available.length === 0 ? (
-          <p>No repositories returned from GitHub. Confirm GitHub is connected with repository access.</p>
-        ) : null}
-        {!loading && available.length > 0 ? (
-          <ul className="repository-list">
-            {available.map((repository) => {
-              const key = `${repository.owner}/${repository.name}`;
-              const isConnected = connectedKeys.has(key);
+      {githubReposReady ? (
+        <section className="profile-card" aria-labelledby="available-heading">
+          <h2 id="available-heading">Available from GitHub</h2>
+          {loading ? <p>Loading GitHub repositories…</p> : null}
+          {!loading && available.length === 0 ? (
+            <p>No repositories returned from GitHub for this account.</p>
+          ) : null}
+          {!loading && available.length > 0 ? (
+            <ul className="repository-list">
+              {available.map((repository) => {
+                const key = `${repository.owner}/${repository.name}`;
+                const isConnected = connectedKeys.has(key);
 
-              return (
-                <li key={repository.id} className="repository-list-item">
-                  <div>
-                    <strong>{repository.fullName}</strong>
-                    <p className="field-hint">
-                      {repository.private ? 'Private' : 'Public'} · branch {repository.defaultBranch}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className={isConnected ? 'secondary-button' : 'primary-button'}
-                    disabled={isConnected || connectingKey === key}
-                    onClick={() => void connect(repository)}
-                  >
-                    {isConnected ? 'Connected' : connectingKey === key ? 'Connecting…' : 'Connect'}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        ) : null}
-      </section>
+                return (
+                  <li key={repository.id} className="repository-list-item">
+                    <div>
+                      <strong>{repository.fullName}</strong>
+                      <p className="field-hint">
+                        {repository.private ? 'Private' : 'Public'} · branch {repository.defaultBranch}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className={isConnected ? 'secondary-button' : 'primary-button'}
+                      disabled={isConnected || connectingKey === key}
+                      onClick={() => void connect(repository)}
+                    >
+                      {isConnected ? 'Connected' : connectingKey === key ? 'Connecting…' : 'Connect'}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </section>
+      ) : null}
     </main>
   );
 }
