@@ -7,6 +7,7 @@ describe('event schemas', () => {
     expect(eventTypeSchema.options).toEqual([
       'TICKET_PARSED',
       'ANALYSIS_STARTED',
+      'ANALYSIS_PROGRESS',
       'ANALYSIS_COMPLETED',
       'DIVERGENCE_DETECTED',
       'APPROVAL_REQUESTED',
