@@ -1,6 +1,10 @@
 import { GITHUB_SCOPES } from '../../auth/constants.js';
+import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
 import { generateCodeChallenge, generateCodeVerifier } from '../../auth/pkce.js';
 import type { OAuthProfile } from './userAuthService.js';
+
+const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token';
+const GITHUB_USER_URL = 'https://api.github.com/user';
 
 export interface GitHubTokenResponse {
   access_token: string;
@@ -33,7 +37,8 @@ export type GitHubUserFetcher = (
 ) => Promise<GitHubUserResponse>;
 
 const defaultTokenFetcher: GitHubTokenFetcher = async (input) => {
-  const response = await fetch('https://github.com/login/oauth/access_token', {
+  assertAllowedUrl(GITHUB_TOKEN_URL);
+  const response = await fetch(GITHUB_TOKEN_URL, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -56,7 +61,8 @@ const defaultTokenFetcher: GitHubTokenFetcher = async (input) => {
 };
 
 const defaultUserFetcher: GitHubUserFetcher = async (accessToken) => {
-  const response = await fetch('https://api.github.com/user', {
+  assertAllowedUrl(GITHUB_USER_URL);
+  const response = await fetch(GITHUB_USER_URL, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/vnd.github+json',

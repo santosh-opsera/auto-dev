@@ -1,6 +1,10 @@
 import { ATLASSIAN_LOGIN_SCOPES } from '../../auth/constants.js';
+import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
 import { generateCodeChallenge, generateCodeVerifier } from '../../auth/pkce.js';
 import type { OAuthProfile } from './userAuthService.js';
+
+const ATLASSIAN_TOKEN_URL = 'https://auth.atlassian.com/oauth/token';
+const ATLASSIAN_USER_URL = 'https://api.atlassian.com/me';
 
 export interface AtlassianTokenResponse {
   access_token: string;
@@ -33,7 +37,8 @@ export type AtlassianUserFetcher = (
 ) => Promise<AtlassianUserResponse>;
 
 const defaultTokenFetcher: AtlassianTokenFetcher = async (input) => {
-  const response = await fetch('https://auth.atlassian.com/oauth/token', {
+  assertAllowedUrl(ATLASSIAN_TOKEN_URL);
+  const response = await fetch(ATLASSIAN_TOKEN_URL, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
@@ -57,7 +62,8 @@ const defaultTokenFetcher: AtlassianTokenFetcher = async (input) => {
 };
 
 const defaultUserFetcher: AtlassianUserFetcher = async (accessToken) => {
-  const response = await fetch('https://api.atlassian.com/me', {
+  assertAllowedUrl(ATLASSIAN_USER_URL);
+  const response = await fetch(ATLASSIAN_USER_URL, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/json',
@@ -141,7 +147,8 @@ export async function refreshAtlassianAccessToken(input: {
   clientId: string;
   clientSecret: string;
 }): Promise<AtlassianTokenResponse> {
-  const response = await fetch('https://auth.atlassian.com/oauth/token', {
+  assertAllowedUrl(ATLASSIAN_TOKEN_URL);
+  const response = await fetch(ATLASSIAN_TOKEN_URL, {
     method: 'POST',
     headers: {
       Accept: 'application/json',
