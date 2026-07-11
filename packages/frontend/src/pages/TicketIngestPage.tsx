@@ -38,8 +38,8 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
   const [showManualForm, setShowManualForm] = useState(false);
   const user = useAuthStore((state) => state.user);
   const jiraConnected = user?.integrations?.jira ?? false;
-  const needsJiraConnect =
-    user?.connectedProviders.includes('atlassian') === true && !jiraConnected;
+  const needsJiraConnect = user !== null && !jiraConnected;
+  const hasAtlassianProvider = user?.connectedProviders.includes('atlassian') === true;
 
   useSessionHeartbeat(true);
 
@@ -83,8 +83,9 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
         <section className="profile-card jira-connect-banner" role="status">
           <h2>Jira access required</h2>
           <p>
-            Your Atlassian account is signed in, but Jira read permissions are not granted yet.
-            Connect Jira before loading tickets.
+            {hasAtlassianProvider
+              ? 'Your Atlassian account is signed in, but Jira read permissions are not granted yet. Connect Jira before loading tickets.'
+              : 'GitHub sign-in does not include Jira access. Link your Atlassian account and grant Jira read permissions before loading tickets.'}
           </p>
           <a href={getJiraConnectUrl()} className="primary-link">
             Connect Jira permissions
@@ -128,7 +129,9 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
           onRetry={() => void retry()}
           onManualFallback={() => void retryWithManualFallback()}
           onManualEntry={() => setShowManualForm(true)}
-          onConnectJira={needsJiraConnect ? () => window.location.assign(getJiraConnectUrl()) : undefined}
+          onConnectJira={
+            needsJiraConnect ? () => window.location.assign(getJiraConnectUrl()) : undefined
+          }
         />
       ) : null}
 

@@ -33,6 +33,22 @@ vi.mock('../services/auth/atlassianAuthService.js', async (importOriginal) => {
 import { exchangeGitHubCode } from '../services/auth/githubAuthService.js';
 import { exchangeAtlassianCode } from '../services/auth/atlassianAuthService.js';
 
+function mergeSetCookieHeaders(...cookieHeaders: Array<string[] | undefined>): string {
+  const jar = new Map<string, string>();
+
+  for (const headers of cookieHeaders) {
+    for (const header of headers ?? []) {
+      const [pair] = header.split(';');
+      const [name, ...valueParts] = pair.split('=');
+      jar.set(name.trim(), valueParts.join('=').trim());
+    }
+  }
+
+  return Array.from(jar.entries())
+    .map(([name, value]) => `${name}=${value}`)
+    .join('; ');
+}
+
 describe('auth routes', () => {
   beforeAll(async () => {
     await startMemoryMongo();
@@ -163,6 +179,55 @@ describe('auth routes', () => {
     expect(body.user.connectedProviders).toEqual(
       expect.arrayContaining(['github', 'atlassian']),
     );
+
+    const users = await getUserModel().find({ email: 'alex.dev@example.com' }).exec();
+    expect(users).toHaveLength(1);
+  });
+
+  it('links Jira scopes to the current GitHub session via jira connect callback', async () => {
+    vi.mocked(exchangeAtlassianCode).mockResolvedValueOnce({
+      provider: 'atlassian',
+      providerUserId: mockAtlassianUserResponse.account_id,
+      email: mockAtlassianUserResponse.email,
+      displayName: mockAtlassianUserResponse.name,
+      accessToken: mockAtlassianTokenResponse.access_token,
+      refreshToken: mockAtlassianTokenResponse.refresh_token,
+      scopes: ['read:me', 'offline_access', 'read:jira-work', 'read:jira-user'],
+    });
+
+    const app = createApp();
+    const login = await request(app)
+      .post('/api/v1/auth/github/callback')
+      .send({ code: 'mock-code', code_verifier: 'mock-verifier' });
+
+    const sessionCookies = login.headers['set-cookie'];
+    const connect = await request(app)
+      .get('/api/v1/auth/atlassian/jira/connect')
+      .set('Cookie', sessionCookies);
+
+    expect(connect.status).toBe(302);
+    expect(connect.headers.location).toContain('read%3Ajira-work');
+
+    const callback = await request(app)
+      .get('/api/v1/auth/atlassian/callback?code=mock-code')
+      .set(
+        'Cookie',
+        mergeSetCookieHeaders(sessionCookies, connect.headers['set-cookie']),
+      );
+
+    expect(callback.status).toBe(302);
+    expect(callback.headers.location).toBe('http://localhost:3000/tickets');
+
+    const me = await request(app)
+      .get('/api/v1/auth/me')
+      .set('Cookie', sessionCookies);
+
+    const meBody = me.body as { user: { connectedProviders: string[]; integrations: { jira: boolean } } };
+    expect(me.status).toBe(200);
+    expect(meBody.user.connectedProviders).toEqual(
+      expect.arrayContaining(['github', 'atlassian']),
+    );
+    expect(meBody.user.integrations.jira).toBe(true);
 
     const users = await getUserModel().find({ email: 'alex.dev@example.com' }).exec();
     expect(users).toHaveLength(1);
