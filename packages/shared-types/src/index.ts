@@ -204,3 +204,38 @@ export {
   sampleVagueTicket,
   sampleWarningGaps,
 } from './fixtures/ticketIntent.js';
+
+export {
+  githubRateLimitStatusSchema,
+  githubRepositorySchema,
+  repositoryConnectResponseSchema,
+  repositoryConnectionSchema,
+  repositoryFileParamsSchema,
+  repositoryFileResponseSchema,
+  repositoryListResponseSchema,
+  repositoryNameSchema,
+  repositoryOwnerSchema,
+  repositoryParamsSchema,
+  repositoryTreeEntrySchema,
+  repositoryTreeResponseSchema,
+} from './repositories.js';
+
+export type {
+  GitHubRateLimitStatus,
+  GitHubRepository,
+  RepositoryConnectResponse,
+  RepositoryConnection,
+  RepositoryFileResponse,
+  RepositoryListResponse,
+  RepositoryTreeEntry,
+  RepositoryTreeResponse,
+} from './repositories.js';
+
+export {
+  mockGitHubApiFileResponse,
+  mockGitHubApiRepositoryResponse,
+  mockGitHubApiTreeResponse,
+  sampleGitHubRepositories,
+  sampleRepositoryFile,
+  sampleRepositoryTree,
+} from './fixtures/repositories.js';
