@@ -180,3 +180,27 @@ export {
   sampleNormalizedTicket,
   samplePartialJiraIssueResponse,
 } from './fixtures/tickets.js';
+
+export {
+  gapItemSchema,
+  gapSeveritySchema,
+  ticketIntentMetadataSchema,
+  ticketIntentSchema,
+  ticketParseResponseSchema,
+} from './ticketIntent.js';
+
+export type {
+  GapItem,
+  GapSeverity,
+  TicketIntent,
+  TicketParseResponse,
+} from './ticketIntent.js';
+
+export {
+  sampleCriticalGaps,
+  sampleStoryWithoutLinks,
+  sampleTicketIntent,
+  sampleTicketWithMissingAc,
+  sampleVagueTicket,
+  sampleWarningGaps,
+} from './fixtures/ticketIntent.js';
