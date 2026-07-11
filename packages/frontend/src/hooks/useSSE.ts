@@ -97,6 +97,7 @@ export function useSSE({ enabled, onEvent, onConnectionChange }: UseSSEOptions):
         'ANALYSIS_STARTED',
         'ANALYSIS_COMPLETED',
         'DIVERGENCE_DETECTED',
+        'DIVERGENCE_NONE',
         'APPROVAL_REQUESTED',
         'APPROVAL_RESOLVED',
         'CONVENTION_UPDATED',
