@@ -30,6 +30,7 @@ export interface TicketIntentRecordDocument extends AuditFields {
   };
   gaps: GapItemRecord[];
   canProceedToAnalysis: boolean;
+  latestDivergenceRecordId?: string;
 }
 
 export type TicketIntentRecord = HydratedDocument<TicketIntentRecordDocument>;
@@ -63,6 +64,7 @@ const ticketIntentSchema = createBaseSchema({
     },
   ],
   canProceedToAnalysis: { type: Boolean, required: true },
+  latestDivergenceRecordId: { type: String, required: false },
 });
 
 ticketIntentSchema.index({ userId: 1, ticketKey: 1, createdAt: -1 });

@@ -269,3 +269,30 @@ export {
   sampleSmallRepoFiles,
   sampleSmallRepoTree,
 } from './fixtures/codebaseContext.js';
+
+export {
+  divergenceDetectionRequestSchema,
+  divergenceDetectionResponseSchema,
+  divergenceSchema,
+  divergenceSeveritySchema,
+  divergenceTypeSchema,
+} from './divergence.js';
+
+export type {
+  Divergence,
+  DivergenceDetectionRequest,
+  DivergenceDetectionResponse,
+  DivergenceSeverity,
+  DivergenceType,
+} from './divergence.js';
+
+export {
+  sampleAlignedTicketIntent,
+  sampleArchitectureConflictTicketIntent,
+  sampleAutoDevLikeContext,
+  sampleExpectedArchitectureDivergence,
+  sampleExpectedNamingDivergence,
+  sampleExpectedPatternDivergence,
+  sampleNamingConflictTicketIntent,
+  samplePatternConflictTicketIntent,
+} from './fixtures/divergence.js';

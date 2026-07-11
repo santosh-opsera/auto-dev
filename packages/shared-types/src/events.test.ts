@@ -10,6 +10,7 @@ describe('event schemas', () => {
       'ANALYSIS_PROGRESS',
       'ANALYSIS_COMPLETED',
       'DIVERGENCE_DETECTED',
+      'DIVERGENCE_NONE',
       'APPROVAL_REQUESTED',
       'APPROVAL_RESOLVED',
       'CONVENTION_UPDATED',

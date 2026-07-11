@@ -6,6 +6,7 @@ export const EVENT_TYPES = [
   'ANALYSIS_PROGRESS',
   'ANALYSIS_COMPLETED',
   'DIVERGENCE_DETECTED',
+  'DIVERGENCE_NONE',
   'APPROVAL_REQUESTED',
   'APPROVAL_RESOLVED',
   'CONVENTION_UPDATED',
@@ -55,6 +56,16 @@ const analysisCompletedPayloadSchema = z.object({
 const divergenceDetectedPayloadSchema = z.object({
   ticketKey: z.string(),
   workflowId: z.string(),
+  summary: z.string(),
+  divergenceType: z.enum(['naming', 'pattern', 'architecture']).optional(),
+  severity: z.enum(['critical', 'suggestion']).optional(),
+});
+
+const divergenceNonePayloadSchema = z.object({
+  ticketKey: z.string(),
+  workflowId: z.string(),
+  owner: z.string(),
+  repo: z.string(),
   summary: z.string(),
 });
 
@@ -107,6 +118,11 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('DIVERGENCE_DETECTED'),
     payload: divergenceDetectedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('DIVERGENCE_NONE'),
+    payload: divergenceNonePayloadSchema,
     metadata: eventMetadataSchema,
   }),
   z.object({
