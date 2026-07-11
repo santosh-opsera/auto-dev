@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import {
+  ATLASSIAN_JIRA_SCOPES,
   ATLASSIAN_REMEMBER_COOKIE_NAME,
   SESSION_COOKIE_NAME,
   PKCE_COOKIE_NAME,
@@ -329,6 +330,32 @@ export function createAuthRouter(): Router {
 
     res.redirect(buildAtlassianAuthorizationUrl(clientId, redirectUri, codeChallenge, state, prompt));
   }));
+
+  router.get(
+    '/atlassian/jira/connect',
+    asyncHandler(async (req, res) => {
+      const sessionId = getCookieValue(req, SESSION_COOKIE_NAME);
+      if (!sessionId) {
+        throw new AppError('Unauthorized', 'Session not found.', 401, 'Sign in before connecting Jira.');
+      }
+
+      const { clientId, redirectUri } = getAtlassianConfig();
+      const { codeVerifier, codeChallenge } = createAtlassianPkcePair();
+      const state = generateStateToken();
+      setPkceCookie(res, codeVerifier);
+
+      res.redirect(
+        buildAtlassianAuthorizationUrl(
+          clientId,
+          redirectUri,
+          codeChallenge,
+          state,
+          'consent',
+          [...ATLASSIAN_JIRA_SCOPES, 'offline_access'],
+        ),
+      );
+    }),
+  );
 
   router.post(
     '/atlassian/callback',
