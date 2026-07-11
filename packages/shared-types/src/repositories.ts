@@ -52,6 +52,12 @@ export const repositoryConnectResponseSchema = z.object({
 
 export type RepositoryConnectResponse = z.infer<typeof repositoryConnectResponseSchema>;
 
+export const connectedRepositoryListResponseSchema = z.object({
+  connections: z.array(repositoryConnectionSchema),
+});
+
+export type ConnectedRepositoryListResponse = z.infer<typeof connectedRepositoryListResponseSchema>;
+
 export const repositoryTreeEntrySchema = z.object({
   path: z.string(),
   type: z.enum(['file', 'dir']),

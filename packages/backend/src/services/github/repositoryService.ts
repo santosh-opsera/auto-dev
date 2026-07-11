@@ -2,6 +2,7 @@ import type {
   GitHubRateLimitStatus,
   RepositoryConnectResponse,
   RepositoryConnection,
+  ConnectedRepositoryListResponse,
   RepositoryFileResponse,
   RepositoryListResponse,
   RepositoryTreeResponse,
@@ -47,6 +48,38 @@ function toConnection(record: {
 
 export class RepositoryService {
   constructor(private readonly client: GitHubApiClient = githubApiClient) {}
+
+  async listConnectedRepositories(user: UserDocument): Promise<ConnectedRepositoryListResponse> {
+    const records = await getRepositoryConnectionModel()
+      .find({ userId: String(user._id) })
+      .sort({ connectedAt: -1 })
+      .exec();
+
+    return {
+      connections: records.map((record) => toConnection(record)),
+    };
+  }
+
+  async requireConnectedRepository(
+    user: UserDocument,
+    owner: string,
+    repo: string,
+  ): Promise<RepositoryConnection> {
+    const record = await getRepositoryConnectionModel()
+      .findOne({ userId: String(user._id), owner, repo })
+      .exec();
+
+    if (!record) {
+      throw new AppError(
+        'RepositoryNotConnected',
+        'This repository has not been connected yet.',
+        412,
+        'Connect the repository from the repositories page before running analysis.',
+      );
+    }
+
+    return toConnection(record);
+  }
 
   async listRepositories(user: UserDocument): Promise<RepositoryListResponse> {
     const accessToken = resolveGitHubAccessToken(user);
@@ -98,12 +131,9 @@ export class RepositoryService {
     owner: string,
     repo: string,
   ): Promise<RepositoryTreeResponse> {
+    const connection = await this.requireConnectedRepository(user, owner, repo);
     const accessToken = resolveGitHubAccessToken(user);
-    const connection = await getRepositoryConnectionModel()
-      .findOne({ userId: String(user._id), owner, repo })
-      .exec();
-
-    const branch = connection?.defaultBranch ?? 'main';
+    const branch = connection.defaultBranch;
     const tree = await this.client.getRepositoryTree(accessToken, owner, repo, branch);
 
     return {
@@ -120,6 +150,7 @@ export class RepositoryService {
     repo: string,
     path: string,
   ): Promise<RepositoryFileResponse> {
+    await this.requireConnectedRepository(user, owner, repo);
     const accessToken = resolveGitHubAccessToken(user);
     return this.client.getRepositoryFile(accessToken, owner, repo, path);
   }

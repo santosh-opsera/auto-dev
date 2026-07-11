@@ -1,5 +1,6 @@
 import { Router, type Response } from 'express';
 import {
+  connectedRepositoryListResponseSchema,
   githubRateLimitStatusSchema,
   repositoryConnectResponseSchema,
   repositoryFileParamsSchema,
@@ -15,6 +16,16 @@ import { repositoryService } from '../services/github/repositoryService.js';
 
 export function createRepositoryRouter(): Router {
   const router = Router();
+
+  router.get(
+    '/connected',
+    asyncHandler(requireSession),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const payload = await repositoryService.listConnectedRepositories(req.user!);
+      connectedRepositoryListResponseSchema.parse(payload);
+      res.status(200).json(payload);
+    }),
+  );
 
   router.get(
     '/rate-limit',

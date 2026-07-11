@@ -147,6 +147,57 @@ describe('repository routes', () => {
     expect(file.body.content).toContain('AutoDev');
   });
 
+  it('returns 412 when fetching tree for an unconnected repository', async () => {
+    const app = createApp();
+    const { sessionCookie } = await loginAsUser(app);
+
+    const response = await request(app)
+      .get('/api/v1/repositories/santosh-opsera/auto-dev/tree')
+      .set('Cookie', sessionCookie);
+
+    expect(response.status).toBe(412);
+    expect(response.body.error).toBe('RepositoryNotConnected');
+  });
+
+  it('lists connected repositories for the signed-in user', async () => {
+    vi.spyOn(repositoryService, 'connectRepository').mockResolvedValue({
+      connection: {
+        id: 'conn-1',
+        owner: 'santosh-opsera',
+        repo: 'auto-dev',
+        fullName: 'santosh-opsera/auto-dev',
+        defaultBranch: 'main',
+        connectedAt: '2026-07-11T08:00:00.000Z',
+      },
+    });
+    vi.spyOn(repositoryService, 'listConnectedRepositories').mockResolvedValue({
+      connections: [
+        {
+          id: 'conn-1',
+          owner: 'santosh-opsera',
+          repo: 'auto-dev',
+          fullName: 'santosh-opsera/auto-dev',
+          defaultBranch: 'main',
+          connectedAt: '2026-07-11T08:00:00.000Z',
+        },
+      ],
+    });
+
+    const app = createApp();
+    const { sessionCookie } = await loginAsUser(app);
+
+    await request(app)
+      .post('/api/v1/repositories/santosh-opsera/auto-dev/connect')
+      .set('Cookie', sessionCookie);
+
+    const response = await request(app)
+      .get('/api/v1/repositories/connected')
+      .set('Cookie', sessionCookie);
+
+    expect(response.status).toBe(200);
+    expect(response.body.connections).toHaveLength(1);
+  });
+
   it('exposes GitHub rate limit status', async () => {
     vi.spyOn(repositoryService, 'getRateLimitStatus').mockReturnValue({
       limit: 5000,
