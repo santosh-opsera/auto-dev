@@ -154,3 +154,29 @@ export {
   sampleEventMetadata,
   sampleTicketParsedEvent,
 } from './fixtures/events.js';
+
+export {
+  linkedIssueSchema,
+  manualTicketRequestSchema,
+  normalizedTicketSchema,
+  sprintContextSchema,
+  ticketAttachmentSchema,
+  ticketKeyParamsSchema,
+  ticketKeySchema,
+  ticketResponseSchema,
+  ticketSourceSchema,
+  TICKET_KEY_PATTERN,
+} from './tickets.js';
+
+export type {
+  ManualTicketRequest,
+  NormalizedTicket,
+  TicketResponse,
+  TicketSource,
+} from './tickets.js';
+
+export {
+  sampleJiraIssueResponse,
+  sampleNormalizedTicket,
+  samplePartialJiraIssueResponse,
+} from './fixtures/tickets.js';

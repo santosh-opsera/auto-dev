@@ -21,6 +21,7 @@ import { createAuthRouter } from './routes/authRoutes.js';
 import { createAuditRouter } from './routes/auditRoutes.js';
 import { createConventionRouter } from './routes/conventionRoutes.js';
 import { createEventRouter } from './routes/eventRoutes.js';
+import { createTicketRouter } from './routes/ticketRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
 import { auditService } from './services/audit/auditService.js';
@@ -77,6 +78,7 @@ export function createApp(): Application {
   app.use('/api/v1/audit', createAuditRouter());
   app.use('/api/v1/conventions', createConventionRouter());
   app.use('/api/v1/events', createEventRouter());
+  app.use('/api/v1/tickets', createTicketRouter());
 
   if (process.env.NODE_ENV === 'test') {
     app.post(
