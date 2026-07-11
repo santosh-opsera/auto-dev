@@ -1,10 +1,11 @@
 import type { ConventionSettingsInput } from '@autodev/shared-types';
+import { DEFAULT_PR_DESCRIPTION_TEMPLATE } from './conventionDefaults.js';
 
 export const validConventionSettingsInput: ConventionSettingsInput = {
-  commitMessageFormat: '{type}({scope}): {description} [{ticketKey}]',
-  branchNamingPattern: '^feature/[A-Z]+-\\d+$',
-  prTitleTemplate: '[{ticketKey}] {summary}',
-  prDescriptionTemplate: '## Summary\n{summary}',
+  commitMessageFormat: '{ticketKey}: {description}',
+  branchNamingPattern: '^(feature|bugfix)/OPL-\\d+$',
+  prTitleTemplate: '{ticketKey} {summary}',
+  prDescriptionTemplate: DEFAULT_PR_DESCRIPTION_TEMPLATE,
   reviewerAssignmentRules: {
     mode: 'manual-list',
     reviewers: ['octocat', 'hubot'],

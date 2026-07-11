@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser } from './api/auth';
 import { DashboardPage } from './pages/DashboardPage';
+import { ConventionsPage } from './pages/ConventionsPage';
 import { LoginPage } from './pages/LoginPage';
 import { useAuthStore } from './store/authStore';
 import './App.css';
@@ -53,6 +54,16 @@ function AppRoutes() {
       <Route
         path="/login"
         element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+      />
+      <Route
+        path="/conventions"
+        element={
+          isAuthenticated ? (
+            <ConventionsPage onLogoutComplete={() => navigate('/login', { replace: true })} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
       />
       <Route
         path="/dashboard"

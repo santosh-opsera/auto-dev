@@ -1,8 +1,17 @@
+export const DEFAULT_PR_DESCRIPTION_TEMPLATE = `Context
+{context}
+
+Changes in codebase
+{changes}
+
+Jira Ticket
+https://opsera.atlassian.net/browse/{ticketKey}`;
+
 export const defaultConventionTemplates = {
-  commitMessageFormat: '{type}({scope}): {description} [{ticketKey}]',
-  branchNamingPattern: '^{type}/{ticketKey}-{description}$',
-  prTitleTemplate: '[{ticketKey}] {summary}',
-  prDescriptionTemplate: '## Summary\n{summary}\n\n## Changes\n{changes}',
+  commitMessageFormat: '{ticketKey}: {description}',
+  branchNamingPattern: '^(feature|bugfix)/OPL-\\d+$',
+  prTitleTemplate: '{ticketKey} {summary}',
+  prDescriptionTemplate: DEFAULT_PR_DESCRIPTION_TEMPLATE,
   reviewerAssignmentRules: {
     mode: 'manual-list' as const,
     reviewers: ['octocat'],
@@ -11,9 +20,9 @@ export const defaultConventionTemplates = {
 
 export const conventionTemplateVariables = [
   'ticketKey',
-  'type',
   'description',
-  'scope',
   'summary',
+  'context',
   'changes',
+  'type',
 ];
