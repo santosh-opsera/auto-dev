@@ -39,7 +39,7 @@ export const sampleJiraIssueResponse = {
         },
         {
           type: 'paragraph',
-          content: [{ type: 'text', text: 'Implement PKCE flow for secure auth.' }],
+          content: [{ type: 'text', text: 'Implement PKCE flow for secure auth with refresh token rotation and session expiry handling.' }],
         },
       ],
     },
@@ -68,6 +68,9 @@ export const sampleJiraIssueResponse = {
         state: 'active',
       },
     ],
+    issuetype: {
+      name: 'Story',
+    },
   },
 };
 
@@ -86,7 +89,7 @@ export const samplePartialJiraIssueResponse = {
 export const sampleNormalizedTicket: NormalizedTicket = {
   ticketKey: 'OPL-1234',
   summary: 'Add OAuth support',
-  description: 'Implement PKCE flow for secure auth.',
+  description: 'Implement PKCE flow for secure auth with refresh token rotation and session expiry handling.',
   acceptanceCriteria: [
     'User can sign in with GitHub OAuth',
     'Session persists for 8 hours',
@@ -107,6 +110,7 @@ export const sampleNormalizedTicket: NormalizedTicket = {
     },
   ],
   labels: ['backend', 'auth'],
+  issueType: 'Story',
   sprintContext: {
     id: '42',
     name: 'Sprint 12',

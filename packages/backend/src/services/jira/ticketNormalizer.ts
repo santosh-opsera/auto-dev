@@ -35,6 +35,7 @@ export interface JiraIssueResponse {
     attachment?: JiraAttachment[];
     issuelinks?: JiraIssueLink[];
     customfield_10020?: JiraSprintField[] | JiraSprintField | null;
+    issuetype?: { name?: string };
   };
 }
 
@@ -151,5 +152,6 @@ export function normalizeJiraIssue(issue: JiraIssueResponse): NormalizedTicket {
           state: sprint.state,
         }
       : undefined,
+    issueType: fields.issuetype?.name,
   };
 }

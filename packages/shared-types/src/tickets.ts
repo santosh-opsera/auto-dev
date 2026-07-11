@@ -41,6 +41,7 @@ export const normalizedTicketSchema = z.object({
   attachments: z.array(ticketAttachmentSchema),
   labels: z.array(z.string()),
   sprintContext: sprintContextSchema.optional(),
+  issueType: z.string().optional(),
 });
 
 export type NormalizedTicket = z.infer<typeof normalizedTicketSchema>;
