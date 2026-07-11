@@ -16,7 +16,11 @@ export const AUTH_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 export const STANDARD_RATE_LIMIT_MAX = 1000;
 export const STANDARD_RATE_LIMIT_WINDOW_MS = 60 * 1000;
 
-export const GITHUB_SCOPES = ['read:user', 'user:email'];
+export const GITHUB_LOGIN_SCOPES = ['read:user', 'user:email'];
+export const GITHUB_REPO_SCOPES = ['repo'];
+
+/** Scopes requested during GitHub sign-in (repository access is granted separately). */
+export const GITHUB_SCOPES = [...GITHUB_LOGIN_SCOPES];
 
 export const ATLASSIAN_LOGIN_SCOPES = ['read:me', 'offline_access'];
 export const ATLASSIAN_JIRA_SCOPES = ['read:jira-work', 'read:jira-user'];

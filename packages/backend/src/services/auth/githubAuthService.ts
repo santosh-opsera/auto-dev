@@ -1,4 +1,4 @@
-import { GITHUB_SCOPES } from '../../auth/constants.js';
+import { GITHUB_LOGIN_SCOPES, GITHUB_SCOPES } from '../../auth/constants.js';
 import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
 import { generateCodeChallenge, generateCodeVerifier } from '../../auth/pkce.js';
 import type { OAuthProfile } from './userAuthService.js';
@@ -81,11 +81,12 @@ export function buildGitHubAuthorizationUrl(
   redirectUri: string,
   codeChallenge: string,
   state: string,
+  scopes: readonly string[] = GITHUB_LOGIN_SCOPES,
 ): string {
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
-    scope: GITHUB_SCOPES.join(' '),
+    scope: scopes.join(' '),
     state,
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
