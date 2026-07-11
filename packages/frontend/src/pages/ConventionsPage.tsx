@@ -10,6 +10,7 @@ import {
 import { SessionWarningModal } from '../components/SessionWarningModal';
 import { useConventionSettings } from '../hooks/useConventionSettings';
 import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
+import { useSSE } from '../hooks/useSSE';
 import {
   mergeSectionIntoSettings,
   validateConventionSection,
@@ -43,6 +44,7 @@ export function ConventionsPage({ onLogoutComplete }: ConventionsPageProps) {
   const currentSectionId = WIZARD_STEPS[stepIndex]?.id as ConventionSectionId;
 
   useSessionHeartbeat(true);
+  useSSE({ enabled: true });
 
   useEffect(() => {
     if (!loading) {

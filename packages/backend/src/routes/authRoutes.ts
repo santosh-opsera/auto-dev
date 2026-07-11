@@ -41,6 +41,7 @@ import {
 } from '../services/auth/atlassianAuthService.js';
 import { upsertUserFromOAuth } from '../services/auth/userAuthService.js';
 import { auditService } from '../services/audit/auditService.js';
+import { sseManager } from '../services/events/sseManager.js';
 
 const REFRESH_COOKIE_NAME = 'autodev_refresh';
 
@@ -482,6 +483,10 @@ export function createAuthRouter(): Router {
 
       if (sessionId && typeof sessionId === 'string') {
         await invalidateSession(sessionId);
+      }
+
+      if (sessionMetadata?.userId) {
+        sseManager.closeUserConnections(sessionMetadata.userId);
       }
 
       void auditService.logSafe({
