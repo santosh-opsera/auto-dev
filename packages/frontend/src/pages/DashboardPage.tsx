@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { logout } from '../api/auth';
 import { SessionWarningModal } from '../components/SessionWarningModal';
 import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
+import { useSSE } from '../hooks/useSSE';
 import { useAuthStore } from '../store/authStore';
 
 interface DashboardPageProps {
@@ -14,6 +15,7 @@ export function DashboardPage({ onLogoutComplete }: DashboardPageProps) {
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
   useSessionHeartbeat(true);
+  useSSE({ enabled: true });
 
   const handleLogout = async (): Promise<void> => {
     try {

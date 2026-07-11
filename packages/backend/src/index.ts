@@ -20,10 +20,13 @@ import { logger } from './utils/logger.js';
 import { createAuthRouter } from './routes/authRoutes.js';
 import { createAuditRouter } from './routes/auditRoutes.js';
 import { createConventionRouter } from './routes/conventionRoutes.js';
+import { createEventRouter } from './routes/eventRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
 import { auditService } from './services/audit/auditService.js';
 import { sampleAuditMutationPayload } from './fixtures/audit.js';
+import { eventBus } from './services/events/eventBus.js';
+import { domainEventSchema } from '@autodev/shared-types';
 
 export function createApp(): Application {
   const app = express();
@@ -73,6 +76,7 @@ export function createApp(): Application {
   app.use('/api/v1/auth', createAuthRouter());
   app.use('/api/v1/audit', createAuditRouter());
   app.use('/api/v1/conventions', createConventionRouter());
+  app.use('/api/v1/events', createEventRouter());
 
   if (process.env.NODE_ENV === 'test') {
     app.post(
@@ -120,6 +124,16 @@ export function createApp(): Application {
         'Review the request fields and try again.',
       );
     });
+
+    app.post(
+      '/api/v1/test/events/publish',
+      asyncHandler(requireSession),
+      asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+        const event = domainEventSchema.parse(req.body);
+        await eventBus.publish(event, { awaitHandlers: true });
+        res.status(202).json({ ok: true });
+      }),
+    );
   }
 
   app.use(errorHandler);
