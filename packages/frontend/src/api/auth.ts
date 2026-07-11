@@ -4,6 +4,9 @@ export interface AuthUser {
   email: string;
   displayName: string;
   connectedProviders: Array<'github' | 'atlassian'>;
+  integrations?: {
+    jira: boolean;
+  };
 }
 
 export interface SessionMetadata {
@@ -27,6 +30,11 @@ export { API_BASE_URL } from './client.js';
 export function getOAuthStartUrl(provider: 'github' | 'atlassian'): string {
   const base = import.meta.env.VITE_API_URL ?? '';
   return `${base}/api/v1/auth/${provider}/start`;
+}
+
+export function getJiraConnectUrl(): string {
+  const base = import.meta.env.VITE_API_URL ?? '';
+  return `${base}/api/v1/auth/atlassian/jira/connect`;
 }
 
 export async function fetchCurrentUser(): Promise<MeResponse> {

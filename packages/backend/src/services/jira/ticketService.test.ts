@@ -34,6 +34,7 @@ describe('TicketService', () => {
     email: 'alex.dev@example.com',
     atlassian: {
       encryptedAccessToken: 'encrypted',
+      scopes: ['read:me', 'offline_access', 'read:jira-work', 'read:jira-user'],
     },
   } as never;
 
@@ -70,5 +71,21 @@ describe('TicketService', () => {
 
     expect(response.source).toBe('jira-rest');
     expect(forgeTicketClient.getIssue).not.toHaveBeenCalled();
+  });
+
+  it('rejects ticket fetch when Jira scopes are missing', async () => {
+    const service = new TicketService();
+    const userWithoutJira = {
+      ...user,
+      atlassian: {
+        encryptedAccessToken: 'encrypted',
+        scopes: ['read:me', 'offline_access'],
+      },
+    } as never;
+
+    await expect(service.getTicket(userWithoutJira, 'OPL-1234')).rejects.toMatchObject({
+      error: 'JiraNotConnected',
+      statusCode: 412,
+    });
   });
 });

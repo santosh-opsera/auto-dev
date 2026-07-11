@@ -9,6 +9,7 @@ import type { TicketResponse } from '@autodev/shared-types';
 import { forgeTicketClient } from './forgeTicketClient.js';
 import { jiraRestClient } from './jiraRestClient.js';
 import { normalizeJiraIssue } from './ticketNormalizer.js';
+import { userHasJiraScopes } from './jiraScopes.js';
 
 function getAtlassianConfig(): {
   clientId: string;
@@ -78,9 +79,29 @@ async function resolveAccessToken(user: UserDocument): Promise<string> {
 
 export class TicketService {
   async getTicket(user: UserDocument, ticketKey: string, forceRest = false): Promise<TicketResponse> {
+    if (!userHasJiraScopes(user)) {
+      throw new AppError(
+        'JiraNotConnected',
+        'Jira access has not been granted for this account.',
+        412,
+        'Connect Jira read permissions, then retry ticket ingestion.',
+      );
+    }
+
     const accessToken = await resolveAccessToken(user);
     const preferredSiteUrl = process.env.ATLASSIAN_SITE_URL;
-    const cloudId = await jiraRestClient.resolveCloudId(accessToken, preferredSiteUrl);
+
+    let cloudId: string;
+    try {
+      cloudId = await jiraRestClient.resolveCloudId(accessToken, preferredSiteUrl);
+    } catch (error) {
+      throw new AppError(
+        'JiraSiteUnavailable',
+        error instanceof Error ? error.message : 'Unable to resolve an accessible Jira site.',
+        412,
+        'Connect Jira read permissions and verify ATLASSIAN_SITE_URL matches your Jira Cloud site.',
+      );
+    }
 
     if (!forceRest && forgeTicketClient.isConfigured()) {
       try {
