@@ -4,7 +4,7 @@ import {
   ATLASSIAN_LOGIN_SCOPES,
   ATLASSIAN_REMEMBER_COOKIE_NAME,
   GITHUB_LOGIN_SCOPES,
-  GITHUB_REPO_SCOPES,
+  GITHUB_REPO_CONNECT_SCOPES,
   OAUTH_LINK_USER_COOKIE_NAME,
   SESSION_COOKIE_NAME,
   PKCE_COOKIE_NAME,
@@ -250,7 +250,7 @@ export function createAuthRouter(): Router {
         redirectUri,
         codeChallenge,
         state,
-        [...GITHUB_LOGIN_SCOPES, ...GITHUB_REPO_SCOPES],
+        [...GITHUB_LOGIN_SCOPES, ...GITHUB_REPO_CONNECT_SCOPES],
       );
 
       res.redirect(authorizationUrl);

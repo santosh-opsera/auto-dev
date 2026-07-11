@@ -53,6 +53,36 @@ const defaultFetch: GitHubFetchFn = async (url, init) => {
   };
 };
 
+interface GitHubOrgResponse {
+  login: string;
+}
+
+function parseNextPageUrl(linkHeader: string | null): string | null {
+  if (!linkHeader) {
+    return null;
+  }
+
+  const nextLink = linkHeader
+    .split(',')
+    .map((part) => part.trim())
+    .find((part) => part.endsWith('rel="next"'));
+
+  if (!nextLink) {
+    return null;
+  }
+
+  const match = nextLink.match(/<([^>]+)>/);
+  return match?.[1] ?? null;
+}
+
+function dedupeRepositories(repositories: GitHubRepository[]): GitHubRepository[] {
+  const byId = new Map<number, GitHubRepository>();
+  for (const repository of repositories) {
+    byId.set(repository.id, repository);
+  }
+
+  return [...byId.values()].sort((left, right) => left.fullName.localeCompare(right.fullName));
+}
 function mapRepository(record: GitHubRepositoryResponse): GitHubRepository {
   return {
     id: record.id,
@@ -98,9 +128,114 @@ export class GitHubApiClient {
   }
 
   async listRepositories(accessToken: string): Promise<GitHubRepository[]> {
-    return this.request<GitHubRepositoryResponse[]>(accessToken, `${GITHUB_API_BASE}/user/repos?per_page=100`, {
-      method: 'GET',
-    }).then((records) => records.map(mapRepository));
+    const userRepos = await this.listPaginatedRepositories(
+      accessToken,
+      `${GITHUB_API_BASE}/user/repos?affiliation=owner,organization_member,collaborator&sort=updated&per_page=100`,
+    );
+
+    let orgRepos: GitHubRepository[] = [];
+    try {
+      const organizations = await this.listPaginatedRecords<GitHubOrgResponse>(
+        accessToken,
+        `${GITHUB_API_BASE}/user/orgs?per_page=100`,
+      );
+
+      const orgRepoLists = await Promise.all(
+        organizations.map((organization) =>
+          this.listPaginatedRepositories(
+            accessToken,
+            `${GITHUB_API_BASE}/orgs/${encodeURIComponent(organization.login)}/repos?type=all&sort=updated&per_page=100`,
+          ),
+        ),
+      );
+
+      orgRepos = orgRepoLists.flat();
+    } catch {
+      // read:org may be unavailable on older tokens; user/repos affiliations still apply.
+    }
+
+    return dedupeRepositories([...userRepos, ...orgRepos]);
+  }
+
+  private async listPaginatedRepositories(
+    accessToken: string,
+    initialUrl: string,
+  ): Promise<GitHubRepository[]> {
+    const records = await this.listPaginatedRecords<GitHubRepositoryResponse>(
+      accessToken,
+      initialUrl,
+    );
+    return records.map(mapRepository);
+  }
+
+  private async listPaginatedRecords<T>(
+    accessToken: string,
+    initialUrl: string,
+  ): Promise<T[]> {
+    const records: T[] = [];
+    let nextUrl: string | null = initialUrl;
+
+    while (nextUrl) {
+      const page = await this.requestWithHeaders<T[]>(accessToken, nextUrl, { method: 'GET' });
+      records.push(...page.data);
+      nextUrl = parseNextPageUrl(page.linkHeader);
+    }
+
+    return records;
+  }
+
+  private async requestWithHeaders<T>(
+    accessToken: string,
+    url: string,
+    init: RequestInit,
+  ): Promise<{ data: T; linkHeader: string | null }> {
+    if (!this.circuitBreaker.canExecute()) {
+      const retryAfter = this.circuitBreaker.getRetryAfterSeconds() ?? 30;
+      throw new AppError(
+        'GitHubCircuitOpen',
+        'GitHub API circuit breaker is open due to repeated failures.',
+        503,
+        `Retry after ${String(retryAfter)} seconds.`,
+      );
+    }
+
+    await this.rateLimiter.waitForCapacity();
+
+    try {
+      const response = await this.fetchImpl(url, {
+        ...init,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/vnd.github+json',
+          ...(init.headers ?? {}),
+        },
+      });
+
+      this.rateLimiter.updateFromHeaders(response.headers);
+
+      if (!response.status || response.status >= 400) {
+        this.circuitBreaker.recordFailure();
+        let bodyText: string | undefined;
+        try {
+          const body = (await response.json()) as { message?: string };
+          bodyText = body.message;
+        } catch {
+          bodyText = undefined;
+        }
+        throw mapGitHubApiError(response.status, bodyText);
+      }
+
+      this.circuitBreaker.recordSuccess();
+      return {
+        data: (await response.json()) as T,
+        linkHeader: response.headers.get('link'),
+      };
+    } catch (error) {
+      if (!(error instanceof AppError)) {
+        this.circuitBreaker.recordFailure();
+      }
+      throw error;
+    }
   }
 
   async getRepository(accessToken: string, owner: string, repo: string): Promise<GitHubRepository> {
@@ -157,50 +292,8 @@ export class GitHubApiClient {
     url: string,
     init: RequestInit,
   ): Promise<T> {
-    if (!this.circuitBreaker.canExecute()) {
-      const retryAfter = this.circuitBreaker.getRetryAfterSeconds() ?? 30;
-      throw new AppError(
-        'GitHubCircuitOpen',
-        'GitHub API circuit breaker is open due to repeated failures.',
-        503,
-        `Retry after ${String(retryAfter)} seconds.`,
-      );
-    }
-
-    await this.rateLimiter.waitForCapacity();
-
-    try {
-      const response = await this.fetchImpl(url, {
-        ...init,
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: 'application/vnd.github+json',
-          ...(init.headers ?? {}),
-        },
-      });
-
-      this.rateLimiter.updateFromHeaders(response.headers);
-
-      if (!response.status || response.status >= 400) {
-        this.circuitBreaker.recordFailure();
-        let bodyText: string | undefined;
-        try {
-          const body = (await response.json()) as { message?: string };
-          bodyText = body.message;
-        } catch {
-          bodyText = undefined;
-        }
-        throw mapGitHubApiError(response.status, bodyText);
-      }
-
-      this.circuitBreaker.recordSuccess();
-      return (await response.json()) as T;
-    } catch (error) {
-      if (!(error instanceof AppError)) {
-        this.circuitBreaker.recordFailure();
-      }
-      throw error;
-    }
+    const response = await this.requestWithHeaders<T>(accessToken, url, init);
+    return response.data;
   }
 }
 

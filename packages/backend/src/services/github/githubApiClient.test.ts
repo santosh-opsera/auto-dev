@@ -16,18 +16,66 @@ function createHeaders(remaining = '100'): Headers {
 }
 
 describe('GitHubApiClient', () => {
+  it('lists personal and organization repositories with pagination', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: 200,
+        headers: createHeaders(),
+        json: async () => mockGitHubApiRepositoryResponse,
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        headers: createHeaders(),
+        json: async () => [{ login: 'opsera' }],
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        headers: createHeaders(),
+        json: async () => [
+          {
+            id: 3,
+            name: 'org-platform',
+            full_name: 'opsera/org-platform',
+            owner: { login: 'opsera' },
+            private: true,
+            default_branch: 'main',
+            html_url: 'https://github.com/opsera/org-platform',
+          },
+        ],
+      });
+    const client = new GitHubApiClient(fetchImpl);
+
+    const repositories = await client.listRepositories('token');
+
+    expect(repositories).toHaveLength(2);
+    expect(repositories.map((repository) => repository.fullName)).toEqual([
+      'opsera/org-platform',
+      'santosh-opsera/auto-dev',
+    ]);
+    expect(fetchImpl.mock.calls[0]?.[0]).toContain('affiliation=owner,organization_member,collaborator');
+    expect(fetchImpl.mock.calls[2]?.[0]).toContain('/orgs/opsera/repos');
+  });
+
   it('lists repositories and maps responses', async () => {
-    const fetchImpl = vi.fn().mockResolvedValue({
-      status: 200,
-      headers: createHeaders(),
-      json: async () => mockGitHubApiRepositoryResponse,
-    });
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: 200,
+        headers: createHeaders(),
+        json: async () => mockGitHubApiRepositoryResponse,
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        headers: createHeaders(),
+        json: async () => [],
+      });
     const client = new GitHubApiClient(fetchImpl);
 
     const repositories = await client.listRepositories('token');
 
     expect(repositories[0]?.fullName).toBe('santosh-opsera/auto-dev');
-    expect(fetchImpl).toHaveBeenCalledOnce();
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
   it('maps GitHub API errors to structured AppError responses', async () => {
