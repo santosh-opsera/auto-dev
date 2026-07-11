@@ -19,6 +19,8 @@ import { AppError } from './utils/errors.js';
 import { logger } from './utils/logger.js';
 import { createAuthRouter } from './routes/authRoutes.js';
 import { createAuditRouter } from './routes/auditRoutes.js';
+import { createConventionRouter } from './routes/conventionRoutes.js';
+import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
 import { auditService } from './services/audit/auditService.js';
 import { sampleAuditMutationPayload } from './fixtures/audit.js';
@@ -70,6 +72,7 @@ export function createApp(): Application {
 
   app.use('/api/v1/auth', createAuthRouter());
   app.use('/api/v1/audit', createAuditRouter());
+  app.use('/api/v1/conventions', createConventionRouter());
 
   if (process.env.NODE_ENV === 'test') {
     app.post(
@@ -77,6 +80,15 @@ export function createApp(): Application {
       validateBody(sampleValidationPayloadSchema),
       (_req: Request, res: Response) => {
         res.status(200).json({ ok: true });
+      },
+    );
+
+    app.post(
+      '/api/v1/test/workflow/start',
+      asyncHandler(requireSession),
+      asyncHandler(requireConventionSettings),
+      (_req: AuthenticatedRequest, res: Response) => {
+        res.status(200).json({ ok: true, message: 'Development workflow started.' });
       },
     );
 
