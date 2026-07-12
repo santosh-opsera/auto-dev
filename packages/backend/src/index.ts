@@ -25,6 +25,7 @@ import { createTicketRouter } from './routes/ticketRoutes.js';
 import { createRepositoryRouter } from './routes/repositoryRoutes.js';
 import { createAnalysisRouter } from './routes/analysisRoutes.js';
 import { createDivergenceRouter } from './routes/divergenceRoutes.js';
+import { createLlmRouter } from './routes/llmRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
 import { auditService } from './services/audit/auditService.js';
@@ -85,6 +86,7 @@ export function createApp(): Application {
   app.use('/api/v1/repositories', createRepositoryRouter());
   app.use('/api/v1/repositories/:owner/:repo/analyze', createAnalysisRouter());
   app.use('/api/v1/tickets/:ticketKey/divergence', createDivergenceRouter());
+  app.use('/api/v1/llm', createLlmRouter());
 
   if (process.env.NODE_ENV === 'test') {
     app.post(
