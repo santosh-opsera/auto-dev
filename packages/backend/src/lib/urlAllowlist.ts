@@ -5,6 +5,8 @@ const DEFAULT_ALLOWED_HOSTS = [
   'api.atlassian.com',
   'github.com',
   'api.github.com',
+  'api.openai.com',
+  'api.anthropic.com',
 ];
 
 function parseAllowedHosts(): string[] {

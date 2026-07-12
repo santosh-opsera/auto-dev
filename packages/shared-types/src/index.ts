@@ -298,3 +298,36 @@ export {
   sampleNamingConflictTicketIntent,
   samplePatternConflictTicketIntent,
 } from './fixtures/divergence.js';
+
+export {
+  llmChatMessageSchema,
+  llmChatRequestSchema,
+  llmChatRoleSchema,
+  llmCompleteRequestSchema,
+  llmCompletionResponseSchema,
+  llmEmbedRequestSchema,
+  llmEmbeddingResponseSchema,
+  llmProviderSchema,
+  llmRequestOptionsSchema,
+  llmUsageSchema,
+} from './llm.js';
+
+export type {
+  LlmChatMessage,
+  LlmChatRequest,
+  LlmChatRole,
+  LlmCompleteRequest,
+  LlmCompletionResponse,
+  LlmEmbedRequest,
+  LlmEmbeddingResponse,
+  LlmProvider,
+  LlmRequestOptions,
+  LlmUsage,
+} from './llm.js';
+
+export {
+  sampleDivergenceReasoningPrompt,
+  sampleLlmChatMessages,
+  sampleLlmCompletionResponse,
+  sampleLlmEmbeddingResponse,
+} from './fixtures/llm.js';
