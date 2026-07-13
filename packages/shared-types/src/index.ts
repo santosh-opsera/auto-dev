@@ -960,3 +960,40 @@ export {
   sampleRetentionPolicies,
   sampleRetentionPurgeResult,
 } from './fixtures/dataClassification.js';
+
+export {
+  ERASURE_GRACE_PERIOD_MS,
+  ERASURE_REQUEST_STATUSES,
+  cancelErasureResponseSchema,
+  dataExportResponseSchema,
+  erasureExecutionSummarySchema,
+  erasureRequestStatusSchema,
+  erasureScheduleResponseSchema,
+  scheduleErasureSchema,
+  updateUserProfileResponseSchema,
+  updateUserProfileSchema,
+  userProfileExportSchema,
+} from './gdprDsr.js';
+
+export type {
+  CancelErasureResponse,
+  DataExportResponse,
+  ErasureExecutionSummary,
+  ErasureRequestStatus,
+  ErasureScheduleResponse,
+  ScheduleErasureInput,
+  UpdateUserProfileInput,
+  UpdateUserProfileResponse,
+  UserProfileExport,
+} from './gdprDsr.js';
+
+export {
+  sampleCancelErasureResponse,
+  sampleDataExportResponse,
+  sampleDsrUserDataset,
+  sampleErasureExecutionSummary,
+  sampleErasureScheduleResponse,
+  sampleUpdateUserProfileInput,
+  sampleUpdateUserProfileResponse,
+  sampleUserProfileExport,
+} from './fixtures/gdprDsr.js';

@@ -32,6 +32,7 @@ import { createWorkflowRouter } from './routes/workflowRoutes.js';
 import { createPackageRouter, createRepositoryDependencyRouter } from './routes/packageRoutes.js';
 import { createDeploymentRouter } from './routes/deploymentRoutes.js';
 import { createIntegrationRouter } from './routes/integrationRoutes.js';
+import { createUserRouter } from './routes/userRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireApprovalClearance } from './middleware/requireApprovalClearance.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
@@ -106,6 +107,7 @@ export function createApp(): Application {
   app.use('/api/v1/packages', createPackageRouter());
   app.use('/api/v1/deployments', createDeploymentRouter());
   app.use('/api/v1/integrations', createIntegrationRouter());
+  app.use('/api/v1/user', createUserRouter());
   app.use('/api/v1/llm', createLlmRouter());
 
   if (process.env.NODE_ENV === 'test') {
@@ -203,6 +205,11 @@ async function startServer(): Promise<void> {
     './services/classification/retentionJob.js'
   );
   startDailyRetentionJob({ runImmediately: false });
+
+  const { startErasureProcessingJob } = await import(
+    './services/gdpr/dataSubjectRightsService.js'
+  );
+  startErasureProcessingJob({ runImmediately: false });
 
   const app = createApp();
   app.listen(PORT, () => {
