@@ -20,6 +20,7 @@ export const EVENT_TYPES = [
   'TESTING_ITERATION',
   'TESTING_PASSED',
   'TESTING_FAILED',
+  'PR_CREATED',
   'WORKFLOW_TRANSITIONED',
   'WORKFLOW_FAILED',
 ] as const;
@@ -167,6 +168,14 @@ const testingFailedPayloadSchema = z.object({
   rootCauseSummary: z.string().min(1),
 });
 
+const prCreatedPayloadSchema = z.object({
+  workflowId: z.string(),
+  prUrl: z.string().url(),
+  prNumber: z.number().int().positive(),
+  reviewers: z.array(z.string()),
+  title: z.string().min(1),
+});
+
 const workflowTransitionedPayloadSchema = z.object({
   workflowId: z.string(),
   previousState: workflowStateSchema,
@@ -264,6 +273,11 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('TESTING_FAILED'),
     payload: testingFailedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('PR_CREATED'),
+    payload: prCreatedPayloadSchema,
     metadata: eventMetadataSchema,
   }),
   z.object({

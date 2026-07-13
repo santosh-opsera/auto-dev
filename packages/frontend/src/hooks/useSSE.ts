@@ -109,6 +109,7 @@ export function useSSE({ enabled, onEvent, onConnectionChange }: UseSSEOptions):
         'TESTING_ITERATION',
         'TESTING_PASSED',
         'TESTING_FAILED',
+        'PR_CREATED',
         'WORKFLOW_TRANSITIONED',
         'WORKFLOW_FAILED',
       ] as const) {

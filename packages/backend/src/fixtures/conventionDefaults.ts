@@ -1,11 +1,20 @@
-export const DEFAULT_PR_DESCRIPTION_TEMPLATE = `Context
-{context}
+export const DEFAULT_PR_DESCRIPTION_TEMPLATE = `## Summary
+{summary}
 
-Changes in codebase
+## Changes
 {changes}
 
-Jira Ticket
-https://opsera.atlassian.net/browse/{ticketKey}`;
+## Jira Ticket
+{jiraTicketUrl}
+
+## Test Results
+{testResults}
+
+## Analysis Notes
+{analysisNotes}
+
+## Context
+{context}`;
 
 export const defaultConventionTemplates = {
   commitMessageFormat: '{ticketKey}: {description}',
@@ -27,4 +36,7 @@ export const conventionTemplateVariables = [
   'context',
   'changes',
   'type',
+  'jiraTicketUrl',
+  'testResults',
+  'analysisNotes',
 ];

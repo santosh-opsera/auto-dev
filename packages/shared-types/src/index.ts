@@ -158,6 +158,7 @@ export {
   sampleTestingIterationEvent,
   sampleTestingPassedEvent,
   sampleTestingStartedEvent,
+  samplePrCreatedEvent,
   sampleTicketParsedEvent,
   sampleWorkflowFailedEvent,
   sampleWorkflowTransitionedEvent,
@@ -378,6 +379,22 @@ export {
   sampleLlmEmbeddingResponse,
 } from './fixtures/llm.js';
 
+export type {
+  PausableWorkflowState,
+  TerminalWorkflowState,
+  WorkflowCreateRequest,
+  WorkflowError,
+  WorkflowFailRequest,
+  WorkflowListQuery,
+  WorkflowListResponse,
+  WorkflowProgress,
+  WorkflowPullRequest,
+  WorkflowResponse,
+  WorkflowState,
+  WorkflowTransitionRecord,
+  WorkflowTransitionRequest,
+} from './workflow.js';
+
 export {
   isPausableWorkflowState,
   isTerminalWorkflowState,
@@ -391,25 +408,11 @@ export {
   workflowListQuerySchema,
   workflowListResponseSchema,
   workflowProgressSchema,
+  workflowPullRequestSchema,
   workflowResponseSchema,
   workflowStateSchema,
   workflowTransitionRecordSchema,
   workflowTransitionRequestSchema,
-} from './workflow.js';
-
-export type {
-  PausableWorkflowState,
-  TerminalWorkflowState,
-  WorkflowCreateRequest,
-  WorkflowError,
-  WorkflowFailRequest,
-  WorkflowListQuery,
-  WorkflowListResponse,
-  WorkflowProgress,
-  WorkflowResponse,
-  WorkflowState,
-  WorkflowTransitionRecord,
-  WorkflowTransitionRequest,
 } from './workflow.js';
 
 export {
@@ -651,3 +654,29 @@ export {
   sampleSuccessfulBugFixDraft,
   sampleSuccessfulBugFixLlmJson,
 } from './fixtures/testFix.js';
+
+export {
+  LABEL_BY_CHANGE_TYPE,
+  PR_CHANGE_TYPES,
+  createPullRequestRequestSchema,
+  labelForChangeType,
+  prChangeTypeSchema,
+  pullRequestResponseSchema,
+} from './pullRequest.js';
+
+export type {
+  CreatePullRequestRequest,
+  PrChangeType,
+  PullRequestResponse,
+} from './pullRequest.js';
+
+export {
+  mockGitHubCodeOwnersFile,
+  mockGitHubPullRequestResponse,
+  sampleCreatePullRequestRequest,
+  sampleExpectedGitHubCreatePullRequestPayload,
+  sampleManualListReviewers,
+  samplePrCreationConventions,
+  samplePullRequestResponse,
+  sampleRoundRobinReviewers,
+} from './fixtures/pullRequest.js';

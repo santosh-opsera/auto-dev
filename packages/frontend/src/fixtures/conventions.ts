@@ -38,7 +38,17 @@ export const mockConventionSettings: ConventionSettingsResponse = {
 
 export const mockConventionDefaults: ConventionDefaultsResponse = {
   templates: mockConventionInput,
-  availableVariables: ['ticketKey', 'description', 'summary', 'context', 'changes', 'type'],
+  availableVariables: [
+    'ticketKey',
+    'description',
+    'summary',
+    'context',
+    'changes',
+    'type',
+    'jiraTicketUrl',
+    'testResults',
+    'analysisNotes',
+  ],
 };
 
 export const mockConventionHistory: ConventionHistoryResponse = {

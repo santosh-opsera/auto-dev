@@ -4,6 +4,7 @@ import {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  samplePrCreatedEvent,
   sampleTestingFailedEvent,
   sampleTestingIterationEvent,
   sampleTestingPassedEvent,
@@ -32,6 +33,7 @@ describe('event schemas', () => {
       'TESTING_ITERATION',
       'TESTING_PASSED',
       'TESTING_FAILED',
+      'PR_CREATED',
       'WORKFLOW_TRANSITIONED',
       'WORKFLOW_FAILED',
     ]);
@@ -45,6 +47,7 @@ describe('event schemas', () => {
     expect(domainEventSchema.safeParse(sampleTestingIterationEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleTestingPassedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleTestingFailedEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(samplePrCreatedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleWorkflowTransitionedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleWorkflowFailedEvent).success).toBe(true);
   });

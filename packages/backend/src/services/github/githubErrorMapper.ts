@@ -28,6 +28,17 @@ export function mapGitHubApiError(status: number, body?: string): AppError {
     );
   }
 
+  if (status === 422) {
+    return new AppError(
+      'GitHubValidationFailed',
+      body
+        ? `GitHub rejected the request: ${body}`
+        : 'GitHub rejected the request due to a validation error.',
+      422,
+      'Confirm the head branch exists, differs from the base branch, and that a pull request does not already exist for this branch.',
+    );
+  }
+
   if (status === 429) {
     return new AppError(
       'GitHubRateLimited',
