@@ -26,7 +26,9 @@ import { createRepositoryRouter } from './routes/repositoryRoutes.js';
 import { createAnalysisRouter } from './routes/analysisRoutes.js';
 import { createDivergenceRouter } from './routes/divergenceRoutes.js';
 import { createLlmRouter } from './routes/llmRoutes.js';
+import { createApprovalRouter, createTicketApprovalRouter } from './routes/approvalRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
+import { requireApprovalClearance } from './middleware/requireApprovalClearance.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
 import { auditService } from './services/audit/auditService.js';
 import { sampleAuditMutationPayload } from './fixtures/audit.js';
@@ -86,6 +88,8 @@ export function createApp(): Application {
   app.use('/api/v1/repositories', createRepositoryRouter());
   app.use('/api/v1/repositories/:owner/:repo/analyze', createAnalysisRouter());
   app.use('/api/v1/tickets/:ticketKey/divergence', createDivergenceRouter());
+  app.use('/api/v1/tickets/:ticketKey/approvals', createTicketApprovalRouter());
+  app.use('/api/v1/approvals', createApprovalRouter());
   app.use('/api/v1/llm', createLlmRouter());
 
   if (process.env.NODE_ENV === 'test') {
@@ -103,6 +107,15 @@ export function createApp(): Application {
       asyncHandler(requireConventionSettings),
       (_req: AuthenticatedRequest, res: Response) => {
         res.status(200).json({ ok: true, message: 'Development workflow started.' });
+      },
+    );
+
+    app.post(
+      '/api/v1/test/workflow/:requestId/proceed',
+      asyncHandler(requireSession),
+      asyncHandler(requireApprovalClearance),
+      (_req: AuthenticatedRequest, res: Response) => {
+        res.status(200).json({ ok: true, message: 'Approval gate cleared.' });
       },
     );
 

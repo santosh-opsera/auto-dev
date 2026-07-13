@@ -100,6 +100,8 @@ export function useSSE({ enabled, onEvent, onConnectionChange }: UseSSEOptions):
         'DIVERGENCE_NONE',
         'APPROVAL_REQUESTED',
         'APPROVAL_RESOLVED',
+        'APPROVAL_EXPIRED',
+        'APPROVAL_REMINDER',
         'CONVENTION_UPDATED',
         'CHUNK_PROGRESS',
       ] as const) {

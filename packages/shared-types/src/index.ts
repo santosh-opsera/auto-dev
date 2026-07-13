@@ -300,6 +300,44 @@ export {
 } from './fixtures/divergence.js';
 
 export {
+  APPROVAL_REMINDER_HOURS,
+  APPROVAL_TTL_HOURS,
+  approvalActionSchema,
+  approvalCreateRequestSchema,
+  approvalDecisionSchema,
+  approvalItemParamsSchema,
+  approvalItemSchema,
+  approvalItemStatusSchema,
+  approvalItemTypeSchema,
+  approvalReminderMarkSchema,
+  approvalRequestIdParamsSchema,
+  approvalRequestResponseSchema,
+  approvalRequestStatusSchema,
+  approvalResolveRequestSchema,
+  approvalStatusResponseSchema,
+} from './approval.js';
+
+export type {
+  ApprovalAction,
+  ApprovalCreateRequest,
+  ApprovalDecision,
+  ApprovalItem,
+  ApprovalItemStatus,
+  ApprovalItemType,
+  ApprovalReminderMark,
+  ApprovalRequestResponse,
+  ApprovalRequestStatus,
+  ApprovalResolveRequest,
+  ApprovalStatusResponse,
+} from './approval.js';
+
+export {
+  sampleApprovalRequestExpired,
+  sampleApprovalRequestMixed,
+  sampleApprovalRequestPending,
+} from './fixtures/approval.js';
+
+export {
   llmChatMessageSchema,
   llmChatRequestSchema,
   llmChatRoleSchema,
