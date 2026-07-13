@@ -5,6 +5,7 @@ import { ApprovalGatePage } from './pages/ApprovalGatePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ConventionsPage } from './pages/ConventionsPage';
 import { LoginPage } from './pages/LoginPage';
+import { PrdReviewPage } from './pages/PrdReviewPage';
 import { RepositoriesPage } from './pages/RepositoriesPage';
 import { TicketIngestPage } from './pages/TicketIngestPage';
 import { WorkflowDetailPage } from './pages/WorkflowDetailPage';
@@ -95,6 +96,32 @@ function AppRoutes() {
         element={
           isAuthenticated ? (
             <ApprovalGatePage onLogoutComplete={() => navigate('/login', { replace: true })} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/prd/:id"
+        element={
+          isAuthenticated ? (
+            <PrdReviewPage
+              mode="byId"
+              onLogoutComplete={() => navigate('/login', { replace: true })}
+            />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/tickets/:ticketKey/prd"
+        element={
+          isAuthenticated ? (
+            <PrdReviewPage
+              mode="byTicket"
+              onLogoutComplete={() => navigate('/login', { replace: true })}
+            />
           ) : (
             <Navigate to="/login" replace />
           )

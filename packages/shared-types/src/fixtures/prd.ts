@@ -83,10 +83,34 @@ export const samplePrdVersionTwo: PrdResponse = {
   id: 'prd-002',
   version: 2,
   previousVersionId: 'prd-001',
+  status: 'in_review',
   sections: {
     ...samplePrdSections,
     solutionOutline:
       'Revised solution outline after product owner feedback on scope boundaries.',
   },
   updatedAt: '2026-07-13T11:00:00.000Z',
+};
+
+export const sampleApprovedPrd: PrdResponse = {
+  ...samplePrdVersionTwo,
+  id: 'prd-003',
+  version: 3,
+  previousVersionId: 'prd-002',
+  status: 'approved',
+  approvedBy: 'Alex Developer',
+  approvedAt: '2026-07-13T12:00:00.000Z',
+  updatedAt: '2026-07-13T12:00:00.000Z',
+};
+
+export const sampleRejectedPrd: PrdResponse = {
+  ...sampleExpectedPrdResponse,
+  id: 'prd-004',
+  version: 1,
+  status: 'rejected',
+  isActive: true,
+  rejectedBy: 'Alex Developer',
+  rejectedAt: '2026-07-13T12:30:00.000Z',
+  rejectionReason: 'Missing concrete success metrics and unclear out-of-scope boundaries.',
+  updatedAt: '2026-07-13T12:30:00.000Z',
 };

@@ -2,17 +2,21 @@ import { describe, expect, it } from 'vitest';
 import {
   encodePrdSections,
   escapeHtml,
+  formatPrdSectionValue,
   prdCreateVersionRequestSchema,
   prdGenerateRequestSchema,
   prdListResponseSchema,
+  prdRejectRequestSchema,
   prdResponseSchema,
   prdSectionsSchema,
 } from './prd.js';
 import {
+  sampleApprovedPrd,
   sampleExpectedPrdResponse,
   samplePrdSections,
   samplePrdVersionTwo,
   samplePrdWithXssAttempt,
+  sampleRejectedPrd,
 } from './fixtures/prd.js';
 
 describe('prd schemas', () => {
@@ -26,18 +30,22 @@ describe('prd schemas', () => {
     ).toBe(false);
   });
 
-  it('validates PRD response fixtures including versioning', () => {
+  it('validates PRD response fixtures including versioning and approval states', () => {
     expect(prdResponseSchema.safeParse(sampleExpectedPrdResponse).success).toBe(true);
     expect(prdResponseSchema.safeParse(samplePrdVersionTwo).success).toBe(true);
+    expect(prdResponseSchema.safeParse(sampleApprovedPrd).success).toBe(true);
+    expect(prdResponseSchema.safeParse(sampleRejectedPrd).success).toBe(true);
     expect(samplePrdVersionTwo.previousVersionId).toBe(sampleExpectedPrdResponse.id);
+    expect(sampleApprovedPrd.status).toBe('approved');
+    expect(sampleRejectedPrd.rejectionReason).toBeTruthy();
     expect(
       prdListResponseSchema.safeParse({
-        prds: [sampleExpectedPrdResponse, samplePrdVersionTwo],
+        prds: [sampleExpectedPrdResponse, samplePrdVersionTwo, sampleApprovedPrd],
       }).success,
     ).toBe(true);
   });
 
-  it('validates generate and create-version requests', () => {
+  it('validates generate, create-version, and reject requests', () => {
     expect(
       prdGenerateRequestSchema.safeParse({
         workflowId: 'wf-1',
@@ -51,6 +59,11 @@ describe('prd schemas', () => {
         status: 'in_review',
       }).success,
     ).toBe(true);
+    expect(prdRejectRequestSchema.safeParse({ reason: 'Needs clearer metrics' }).success).toBe(
+      true,
+    );
+    expect(prdRejectRequestSchema.safeParse({ reason: '   ' }).success).toBe(false);
+    expect(formatPrdSectionValue(['a', 'b'])).toBe('a\nb');
   });
 });
 

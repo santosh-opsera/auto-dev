@@ -56,6 +56,21 @@ function mapPrd(doc: PrdRecord): PrdResponse {
   if (doc.previousVersionId) {
     response.previousVersionId = doc.previousVersionId;
   }
+  if (doc.approvedBy) {
+    response.approvedBy = doc.approvedBy;
+  }
+  if (doc.approvedAt) {
+    response.approvedAt = toIso(doc.approvedAt);
+  }
+  if (doc.rejectedBy) {
+    response.rejectedBy = doc.rejectedBy;
+  }
+  if (doc.rejectedAt) {
+    response.rejectedAt = toIso(doc.rejectedAt);
+  }
+  if (doc.rejectionReason) {
+    response.rejectionReason = doc.rejectionReason;
+  }
 
   return response;
 }
@@ -266,6 +281,104 @@ export class PrdGenerationService {
       status: input.status ?? 'draft',
       forcePrevious: previous,
     });
+  }
+
+  async approve(user: UserDocument, id: string): Promise<PrdResponse> {
+    const record = await this.loadOwnedPrd(user, id);
+
+    if (record.status === 'approved') {
+      return mapPrd(record);
+    }
+
+    if (record.status === 'rejected') {
+      throw new AppError(
+        'PrdAlreadyRejected',
+        'Rejected PRDs cannot be approved. Generate or edit a new version first.',
+        409,
+        'Create a new PRD version or regenerate from the ticket, then approve that version.',
+      );
+    }
+
+    const previousStatus = record.status;
+    const approvedAt = new Date();
+    record.status = 'approved';
+    record.approvedBy = user.displayName || user.email;
+    record.approvedAt = approvedAt;
+    record.rejectedBy = undefined;
+    record.rejectedAt = undefined;
+    record.rejectionReason = undefined;
+    record.updatedBy = String(user._id);
+    await record.save();
+
+    await auditService.logSafe({
+      resource: `prds/${record._id.toString()}`,
+      operation: 'update',
+      actor: String(user._id),
+      previousValue: { status: previousStatus, version: record.version },
+      newValue: {
+        status: 'approved',
+        action: 'approve',
+        version: record.version,
+        approvedBy: record.approvedBy,
+        approvedAt: toIso(approvedAt),
+        correlationHint: randomUUID(),
+      },
+    });
+
+    return mapPrd(record);
+  }
+
+  async reject(user: UserDocument, id: string, reason: string): Promise<PrdResponse> {
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) {
+      throw new AppError(
+        'PrdRejectionReasonRequired',
+        'A rejection reason is required.',
+        400,
+        'Provide a non-empty reason explaining why the PRD should be regenerated.',
+      );
+    }
+
+    const record = await this.loadOwnedPrd(user, id);
+
+    if (record.status === 'approved') {
+      throw new AppError(
+        'PrdAlreadyApproved',
+        'Approved PRDs cannot be rejected.',
+        409,
+        'Create a new PRD version if scope needs to change after approval.',
+      );
+    }
+
+    const previousStatus = record.status;
+    const rejectedAt = new Date();
+    record.status = 'rejected';
+    record.rejectedBy = user.displayName || user.email;
+    record.rejectedAt = rejectedAt;
+    record.rejectionReason = trimmedReason;
+    record.approvedBy = undefined;
+    record.approvedAt = undefined;
+    record.updatedBy = String(user._id);
+    await record.save();
+
+    await auditService.logSafe({
+      resource: `prds/${record._id.toString()}`,
+      operation: 'update',
+      actor: String(user._id),
+      previousValue: { status: previousStatus, version: record.version },
+      newValue: {
+        status: 'rejected',
+        action: 'reject',
+        version: record.version,
+        rejectedBy: record.rejectedBy,
+        rejectedAt: toIso(rejectedAt),
+        rejectionReason: trimmedReason,
+        markedForRegeneration: true,
+        correlationHint: randomUUID(),
+      },
+    });
+
+    return mapPrd(record);
   }
 
   private async generateSections(

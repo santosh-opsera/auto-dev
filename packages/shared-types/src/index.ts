@@ -418,13 +418,17 @@ export {
 
 export {
   PRD_GENERATION_TIMEOUT_MS,
+  PRD_SECTION_KEYS,
+  PRD_SECTION_LABELS,
   encodePrdSections,
   escapeHtml,
+  formatPrdSectionValue,
   prdCodebaseContextSummarySchema,
   prdCreateVersionRequestSchema,
   prdGenerateRequestSchema,
   prdIdParamsSchema,
   prdListResponseSchema,
+  prdRejectRequestSchema,
   prdResponseSchema,
   prdSectionsSchema,
   prdStatusSchema,
@@ -435,15 +439,19 @@ export type {
   PrdCreateVersionRequest,
   PrdGenerateRequest,
   PrdListResponse,
+  PrdRejectRequest,
   PrdResponse,
+  PrdSectionKey,
   PrdSections,
   PrdStatus,
 } from './prd.js';
 
 export {
+  sampleApprovedPrd,
   sampleExpectedPrdResponse,
   samplePrdLlmJsonResponse,
   samplePrdSections,
   samplePrdVersionTwo,
   samplePrdWithXssAttempt,
+  sampleRejectedPrd,
 } from './fixtures/prd.js';

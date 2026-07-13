@@ -795,3 +795,222 @@
   }
 }
 
+.prd-review-page {
+  padding: 2rem;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.prd-meta,
+.prd-actions,
+.prd-history,
+.prd-content-panel,
+.prd-history-panel {
+  max-width: 56rem;
+  margin-bottom: 1.5rem;
+}
+
+.prd-sections {
+  display: grid;
+  gap: 1rem;
+  max-width: 56rem;
+  margin-bottom: 1.5rem;
+}
+
+.prd-section-panel h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.prd-section-content {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #0f172a;
+}
+
+.prd-section-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd5e1;
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.prd-section-textarea:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+  border-color: #2563eb;
+}
+
+.prd-approved-badge,
+.prd-rejected-banner {
+  margin-top: 1rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+}
+
+.prd-rejected-banner {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.prd-approved-badge p,
+.prd-rejected-banner p {
+  margin: 0.5rem 0 0;
+}
+
+.prd-status-pill {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: capitalize;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.prd-status-pill--approved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.prd-status-pill--rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.prd-status-pill--in_review,
+.prd-status-pill--draft {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.prd-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-width: 56rem;
+  margin-bottom: 1rem;
+}
+
+.prd-tab.is-active {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.prd-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.prd-reject-form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.prd-version-list {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.prd-version-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.prd-version-item.is-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.prd-diff-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.prd-diff-selectors label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+.prd-diff-selectors select {
+  min-width: 10rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+}
+
+.prd-diff-section {
+  margin-top: 1rem;
+}
+
+.prd-diff-section h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+}
+
+.prd-diff-lines {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #0f172a;
+  color: #e2e8f0;
+  overflow-x: auto;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.prd-diff-line--added {
+  color: #86efac;
+  background: rgba(22, 163, 74, 0.15);
+}
+
+.prd-diff-line--removed {
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.15);
+}
+
+.prd-diff-line--unchanged {
+  color: #cbd5e1;
+}
+
+.field-error {
+  color: #b91c1c;
+  margin: 0;
+  font-size: 0.875rem;
+}
+

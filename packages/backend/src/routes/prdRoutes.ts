@@ -4,6 +4,7 @@ import {
   prdGenerateRequestSchema,
   prdIdParamsSchema,
   prdListResponseSchema,
+  prdRejectRequestSchema,
   prdResponseSchema,
   ticketKeyParamsSchema,
 } from '@autodev/shared-types';
@@ -89,6 +90,32 @@ export function createPrdRouter(): Router {
       const payload = await prdGenerationService.createVersion(req.user!, id, body);
       prdResponseSchema.parse(payload);
       res.status(201).json(payload);
+    }),
+  );
+
+  router.post(
+    '/:id/approve',
+    asyncHandler(requireSession),
+    validateParams(prdIdParamsSchema),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const { id } = req.params as { id: string };
+      const payload = await prdGenerationService.approve(req.user!, id);
+      prdResponseSchema.parse(payload);
+      res.status(200).json(payload);
+    }),
+  );
+
+  router.post(
+    '/:id/reject',
+    asyncHandler(requireSession),
+    validateParams(prdIdParamsSchema),
+    validateBody(prdRejectRequestSchema),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const { id } = req.params as { id: string };
+      const { reason } = req.body as { reason: string };
+      const payload = await prdGenerationService.reject(req.user!, id, reason);
+      prdResponseSchema.parse(payload);
+      res.status(200).json(payload);
     }),
   );
 

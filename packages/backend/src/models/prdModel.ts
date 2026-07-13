@@ -16,6 +16,11 @@ export interface PrdDocument extends AuditFields {
   isActive: boolean;
   sections: PrdSections;
   codebaseContext: PrdCodebaseContextSummary;
+  approvedBy?: string;
+  approvedAt?: Date;
+  rejectedBy?: string;
+  rejectedAt?: Date;
+  rejectionReason?: string;
 }
 
 export type PrdRecord = HydratedDocument<PrdDocument>;
@@ -61,6 +66,11 @@ const prdSchema = createBaseSchema({
   isActive: { type: Boolean, required: true, default: true },
   sections: { type: prdSectionsSubSchema, required: true },
   codebaseContext: { type: prdCodebaseContextSubSchema, required: true },
+  approvedBy: { type: String, required: false },
+  approvedAt: { type: Date, required: false },
+  rejectedBy: { type: String, required: false },
+  rejectedAt: { type: Date, required: false },
+  rejectionReason: { type: String, required: false },
 });
 
 prdSchema.index({ userId: 1, ticketKey: 1, version: -1 });

@@ -45,6 +45,12 @@ export const prdCreateVersionRequestSchema = z.object({
 
 export type PrdCreateVersionRequest = z.infer<typeof prdCreateVersionRequestSchema>;
 
+export const prdRejectRequestSchema = z.object({
+  reason: z.string().trim().min(1, 'Rejection reason is required'),
+});
+
+export type PrdRejectRequest = z.infer<typeof prdRejectRequestSchema>;
+
 export const prdIdParamsSchema = z.object({
   id: z.string().min(1),
 });
@@ -63,11 +69,45 @@ export const prdResponseSchema = z.object({
   isActive: z.boolean(),
   sections: prdSectionsSchema,
   codebaseContext: prdCodebaseContextSummarySchema,
+  approvedBy: z.string().min(1).optional(),
+  approvedAt: z.string().datetime().optional(),
+  rejectedBy: z.string().min(1).optional(),
+  rejectedAt: z.string().datetime().optional(),
+  rejectionReason: z.string().min(1).optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
 
 export type PrdResponse = z.infer<typeof prdResponseSchema>;
+
+/** Stable section keys for review UI and version diffs. */
+export const PRD_SECTION_KEYS = [
+  'problemStatement',
+  'solutionOutline',
+  'userStories',
+  'acceptanceCriteria',
+  'scopeBoundaries',
+  'dependencies',
+  'risks',
+  'successMetrics',
+] as const satisfies ReadonlyArray<keyof PrdSections>;
+
+export type PrdSectionKey = (typeof PRD_SECTION_KEYS)[number];
+
+export const PRD_SECTION_LABELS: Record<PrdSectionKey, string> = {
+  problemStatement: 'Problem statement',
+  solutionOutline: 'Solution outline',
+  userStories: 'User stories',
+  acceptanceCriteria: 'Acceptance criteria',
+  scopeBoundaries: 'Scope boundaries',
+  dependencies: 'Dependencies',
+  risks: 'Risks',
+  successMetrics: 'Success metrics',
+};
+
+export function formatPrdSectionValue(value: string | string[]): string {
+  return Array.isArray(value) ? value.join('\n') : value;
+}
 
 export const prdListResponseSchema = z.object({
   prds: z.array(prdResponseSchema),
