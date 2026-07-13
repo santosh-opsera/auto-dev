@@ -49,6 +49,7 @@ export const COLLECTION_DEFAULT_CLASSIFICATION = {
   conventions: 'internal',
   prds: 'internal',
   workflows: 'internal',
+  workflow_metrics: 'internal',
 } as const satisfies Record<string, DataClassification>;
 
 export function createBaseSchema(definition: SchemaDefinition): Schema {

@@ -2,6 +2,7 @@ export {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  sampleConventionValidationEvent,
   sampleDependencyUpdateAvailableEvent,
   sampleDeploymentCompletedEvent,
   sampleDeploymentFailedEvent,
@@ -25,6 +26,7 @@ import {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  sampleConventionValidationEvent,
   sampleDependencyUpdateAvailableEvent,
   sampleDeploymentCompletedEvent,
   sampleDeploymentFailedEvent,
@@ -44,6 +46,7 @@ import {
 
 export const sampleDomainEvents: DomainEvent[] = [
   sampleConventionUpdatedEvent,
+  sampleConventionValidationEvent,
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleTestingStartedEvent,
@@ -74,6 +77,7 @@ export const sampleEventTypes: EventType[] = [
   'APPROVAL_EXPIRED',
   'APPROVAL_REMINDER',
   'CONVENTION_UPDATED',
+  'CONVENTION_VALIDATION',
   'CHUNK_CREATED',
   'CHUNK_PROGRESS',
   'TESTING_STARTED',

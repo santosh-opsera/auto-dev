@@ -14,6 +14,7 @@ export const EVENT_TYPES = [
   'APPROVAL_EXPIRED',
   'APPROVAL_REMINDER',
   'CONVENTION_UPDATED',
+  'CONVENTION_VALIDATION',
   'CHUNK_CREATED',
   'CHUNK_PROGRESS',
   'TESTING_STARTED',
@@ -121,6 +122,15 @@ const approvalReminderPayloadSchema = z.object({
 const conventionUpdatedPayloadSchema = z.object({
   settingsId: z.string(),
   version: z.number().int().positive(),
+});
+
+const conventionValidationPayloadSchema = z.object({
+  workflowId: z.string().min(1),
+  artifactType: z.enum(['branch', 'commit', 'pr']),
+  /** True when the artifact matched convention rules. */
+  passed: z.boolean(),
+  /** True when the artifact required correction (failed initially or was rewritten). */
+  corrected: z.boolean(),
 });
 
 const chunkCreatedPayloadSchema = z.object({
@@ -313,6 +323,11 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('CONVENTION_UPDATED'),
     payload: conventionUpdatedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('CONVENTION_VALIDATION'),
+    payload: conventionValidationPayloadSchema,
     metadata: eventMetadataSchema,
   }),
   z.object({

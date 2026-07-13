@@ -17,6 +17,20 @@ export const sampleConventionUpdatedEvent: DomainEvent = {
   metadata: sampleEventMetadata,
 };
 
+export const sampleConventionValidationEvent: DomainEvent = {
+  type: 'CONVENTION_VALIDATION',
+  payload: {
+    workflowId: 'workflow-001',
+    artifactType: 'branch',
+    passed: true,
+    corrected: false,
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-001b',
+  },
+};
+
 export const sampleChunkCreatedEvent: DomainEvent = {
   type: 'CHUNK_CREATED',
   payload: {
