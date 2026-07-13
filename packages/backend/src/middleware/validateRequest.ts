@@ -12,7 +12,13 @@ function validatePart<T>(part: RequestPart, schema: ZodType<T>) {
       return;
     }
 
-    req[part] = result.data as Request[typeof part];
+    // Express 5 exposes query (and sometimes params) as getters — redefine instead of assign.
+    Object.defineProperty(req, part, {
+      value: result.data,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
     next();
   };
 }

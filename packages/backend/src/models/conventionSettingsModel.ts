@@ -14,6 +14,7 @@ export interface ConventionSettingsDocument extends AuditFields {
   isActive: boolean;
   previousVersionId?: string;
   commitMessageFormat: string;
+  branchNameTemplate?: string;
   branchNamingPattern: string;
   prTitleTemplate: string;
   prDescriptionTemplate: string;
@@ -28,6 +29,7 @@ const conventionSettingsSchema = createBaseSchema({
   isActive: { type: Boolean, required: true, default: true },
   previousVersionId: { type: String, required: false },
   commitMessageFormat: { type: String, required: true },
+  branchNameTemplate: { type: String, required: false },
   branchNamingPattern: { type: String, required: true },
   prTitleTemplate: { type: String, required: true },
   prDescriptionTemplate: { type: String, required: true },

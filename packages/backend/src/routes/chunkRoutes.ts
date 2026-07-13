@@ -1,8 +1,16 @@
 import { Router, type Response } from 'express';
 import {
+  branchNamePreviewResponseSchema,
+  branchPreviewQuerySchema,
+  chunkBranchResponseSchema,
+  chunkCommitResponseSchema,
   chunkDecomposeRequestSchema,
   chunkListResponseSchema,
   chunkStatusUpdateRequestSchema,
+  commitChunkRequestSchema,
+  commitMessagePreviewResponseSchema,
+  commitPreviewQuerySchema,
+  createChunkBranchRequestSchema,
   cursorContextResponseSchema,
   cursorExecuteRequestSchema,
   cursorExecuteResponseSchema,
@@ -14,8 +22,9 @@ import {
 } from '@autodev/shared-types';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { requireSession, type AuthenticatedRequest } from '../middleware/requireSession.js';
-import { validateBody, validateParams } from '../middleware/validateRequest.js';
+import { validateBody, validateParams, validateQuery } from '../middleware/validateRequest.js';
 import { cursorBridgeService } from '../services/cursor/cursorBridgeService.js';
+import { branchCommitService } from '../services/git/branchCommitService.js';
 import { chunkManager } from '../services/implementation/chunkManager.js';
 
 export function createChunkRouter(): Router {
@@ -58,6 +67,63 @@ export function createChunkRouter(): Router {
       const payload = await chunkManager.updateStatus(req.user!, id, chunkId, body);
       implementationChunkResponseSchema.parse(payload);
       res.status(200).json(payload);
+    }),
+  );
+
+  router.get(
+    '/:chunkId/branch/preview',
+    asyncHandler(requireSession),
+    validateParams(workflowChunkIdParamsSchema),
+    validateQuery(branchPreviewQuerySchema),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const { id, chunkId } = req.params as { id: string; chunkId: string };
+      const payload = await branchCommitService.previewBranchName(req.user!, id, chunkId, req.query);
+      branchNamePreviewResponseSchema.parse(payload);
+      res.status(200).json(payload);
+    }),
+  );
+
+  router.get(
+    '/:chunkId/commit/preview',
+    asyncHandler(requireSession),
+    validateParams(workflowChunkIdParamsSchema),
+    validateQuery(commitPreviewQuerySchema),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const { id, chunkId } = req.params as { id: string; chunkId: string };
+      const payload = await branchCommitService.previewCommitMessage(
+        req.user!,
+        id,
+        chunkId,
+        req.query,
+      );
+      commitMessagePreviewResponseSchema.parse(payload);
+      res.status(200).json(payload);
+    }),
+  );
+
+  router.post(
+    '/:chunkId/branch',
+    asyncHandler(requireSession),
+    validateParams(workflowChunkIdParamsSchema),
+    validateBody(createChunkBranchRequestSchema),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const { id, chunkId } = req.params as { id: string; chunkId: string };
+      const payload = await branchCommitService.createBranch(req.user!, id, chunkId, req.body);
+      chunkBranchResponseSchema.parse(payload);
+      res.status(payload.created ? 201 : 200).json(payload);
+    }),
+  );
+
+  router.post(
+    '/:chunkId/commit',
+    asyncHandler(requireSession),
+    validateParams(workflowChunkIdParamsSchema),
+    validateBody(commitChunkRequestSchema),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const { id, chunkId } = req.params as { id: string; chunkId: string };
+      const payload = await branchCommitService.commitChanges(req.user!, id, chunkId, req.body);
+      chunkCommitResponseSchema.parse(payload);
+      res.status(201).json(payload);
     }),
   );
 

@@ -112,6 +112,7 @@ export type AuditLogListResponse = z.infer<typeof auditLogListResponseSchema>;
 
 export {
   GITHUB_USERNAME_REGEX,
+  branchNameTemplateSchema,
   branchNamingPatternSchema,
   conventionDefaultsResponseSchema,
   conventionHistoryResponseSchema,
@@ -458,9 +459,11 @@ export {
 } from './fixtures/prd.js';
 
 export {
+  BRANCH_GIT_STATUSES,
   CHUNK_COMPLEXITIES,
   CHUNK_STATUSES,
   CHUNK_STATUS_TRANSITIONS,
+  branchGitStatusSchema,
   canTransitionChunkStatus,
   chunkComplexitySchema,
   chunkDecomposeRequestSchema,
@@ -475,6 +478,7 @@ export {
 } from './chunk.js';
 
 export type {
+  BranchGitStatus,
   ChunkComplexity,
   ChunkDecomposeRequest,
   ChunkDecompositionDraft,
@@ -542,3 +546,44 @@ export {
   sampleCursorImplementationResultBadConventions,
   sampleCursorImplementationResultOutOfScope,
 } from './fixtures/cursorBridge.js';
+
+export {
+  branchNamePreviewResponseSchema,
+  branchPreviewQuerySchema,
+  chunkBranchResponseSchema,
+  chunkCommitResponseSchema,
+  commitChunkFileSchema,
+  commitChunkRequestSchema,
+  commitMessagePreviewResponseSchema,
+  commitPreviewQuerySchema,
+  createChunkBranchRequestSchema,
+} from './branchCommit.js';
+
+export type {
+  BranchNamePreviewResponse,
+  BranchPreviewQuery,
+  ChunkBranchResponse,
+  ChunkCommitResponse,
+  CommitChunkFile,
+  CommitChunkRequest,
+  CommitMessagePreviewResponse,
+  CommitPreviewQuery,
+  CreateChunkBranchRequest,
+} from './branchCommit.js';
+
+export {
+  mockGitHubCreatedBlobResponse,
+  mockGitHubCreatedCommitResponse,
+  mockGitHubCreatedTreeResponse,
+  mockGitHubGitCommitResponse,
+  mockGitHubGitRefResponse,
+  sampleBranchCommitConventions,
+  sampleBranchNamePreview,
+  sampleChunkBranchResponse,
+  sampleChunkCommitResponse,
+  sampleCommitChunkRequest,
+  sampleCommitMessagePreview,
+  sampleCreateBranchRequest,
+  sampleExpectedBranchName,
+  sampleExpectedCommitMessage,
+} from './fixtures/branchCommit.js';

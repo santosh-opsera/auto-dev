@@ -76,6 +76,7 @@ export function toConventionSnapshot(
     isActive: record.isActive,
     previousVersionId: record.previousVersionId,
     commitMessageFormat: record.commitMessageFormat,
+    branchNameTemplate: record.branchNameTemplate,
     branchNamingPattern: record.branchNamingPattern,
     prTitleTemplate: record.prTitleTemplate,
     prDescriptionTemplate: record.prDescriptionTemplate,

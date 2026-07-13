@@ -9,6 +9,8 @@ https://opsera.atlassian.net/browse/{ticketKey}`;
 
 export const defaultConventionTemplates = {
   commitMessageFormat: '{ticketKey}: {description}',
+  /** Generation template — services must resolve this, never hardcode branch names. */
+  branchNameTemplate: '{type}/{ticketKey}-{description}',
   branchNamingPattern: '^(feature|bugfix)/OPL-\\d+$',
   prTitleTemplate: '{ticketKey} {summary}',
   prDescriptionTemplate: DEFAULT_PR_DESCRIPTION_TEMPLATE,
