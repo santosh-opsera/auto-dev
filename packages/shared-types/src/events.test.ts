@@ -4,6 +4,7 @@ import {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  sampleConventionValidationEvent,
   sampleDependencyUpdateAvailableEvent,
   sampleDeploymentCompletedEvent,
   sampleDeploymentFailedEvent,
@@ -34,6 +35,7 @@ describe('event schemas', () => {
       'APPROVAL_EXPIRED',
       'APPROVAL_REMINDER',
       'CONVENTION_UPDATED',
+      'CONVENTION_VALIDATION',
       'CHUNK_CREATED',
       'CHUNK_PROGRESS',
       'TESTING_STARTED',
@@ -55,6 +57,7 @@ describe('event schemas', () => {
 
   it('validates sample domain events', () => {
     expect(domainEventSchema.safeParse(sampleConventionUpdatedEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleConventionValidationEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleChunkCreatedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleChunkProgressEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleTestingStartedEvent).success).toBe(true);

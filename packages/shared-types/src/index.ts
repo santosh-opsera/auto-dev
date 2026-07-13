@@ -162,6 +162,7 @@ export {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  sampleConventionValidationEvent,
   sampleDependencyUpdateAvailableEvent,
   sampleDeploymentCompletedEvent,
   sampleDeploymentFailedEvent,
@@ -179,6 +180,49 @@ export {
   sampleWorkflowFailedEvent,
   sampleWorkflowTransitionedEvent,
 } from './fixtures/events.js';
+
+export {
+  CONVENTION_ARTIFACT_TYPES,
+  METRICS_PERIODS,
+  aggregatedMetricsResponseSchema,
+  buildRateSummary,
+  calculateAverageMs,
+  calculateMedianMs,
+  calculateRatePercent,
+  conventionArtifactTypeSchema,
+  durationSummarySchema,
+  metricsPeriodDays,
+  metricsPeriodSchema,
+  metricsQuerySchema,
+  periodWindow,
+  rateSummarySchema,
+  resolveStageTimings,
+  workflowMetricsParamsSchema,
+  workflowMetricsResponseSchema,
+  workflowStageTimingSchema,
+} from './metrics.js';
+
+export type {
+  AggregatedMetricsResponse,
+  ConventionArtifactType,
+  DurationSummary,
+  MetricsPeriod,
+  MetricsQuery,
+  RateSummary,
+  WorkflowMetricsParams,
+  WorkflowMetricsResponse,
+  WorkflowStageTiming,
+} from './metrics.js';
+
+export {
+  expectedAggregatedMetrics30d,
+  expectedWorkflowAMetrics,
+  metricsWorkflowAId,
+  metricsWorkflowBId,
+  sampleMetricsDomainEvents,
+  sampleMetricsWorkflowAEvents,
+  sampleMetricsWorkflowBEvents,
+} from './fixtures/metrics.js';
 
 export {
   linkedIssueSchema,
