@@ -209,6 +209,80 @@ describe('prd routes', () => {
     expect(history.body.prds).toHaveLength(2);
   });
 
+  it('approves a PRD with audit trail and rejects with required reason', async () => {
+    const app = createApp();
+    const { sessionCookie } = await loginAsUser(app);
+    const user = await getUserModel().findOne({ email: 'alex.dev@example.com' }).exec();
+    await seedTicketData(String(user!._id), 'OPL-8002');
+
+    const generated = await request(app)
+      .post('/api/v1/tickets/OPL-8002/prd/generate')
+      .set('Cookie', sessionCookie)
+      .send({
+        owner: sampleAutoDevLikeContext.owner,
+        repo: sampleAutoDevLikeContext.repo,
+      });
+
+    expect(generated.status).toBe(201);
+
+    const missingReason = await request(app)
+      .post(`/api/v1/prd/${generated.body.id}/reject`)
+      .set('Cookie', sessionCookie)
+      .send({});
+
+    expect(missingReason.status).toBe(400);
+
+    const rejected = await request(app)
+      .post(`/api/v1/prd/${generated.body.id}/reject`)
+      .set('Cookie', sessionCookie)
+      .send({ reason: 'Scope boundaries are too vague for implementation.' });
+
+    expect(rejected.status).toBe(200);
+    expect(rejected.body.status).toBe('rejected');
+    expect(rejected.body.rejectionReason).toMatch(/Scope boundaries/);
+    expect(rejected.body.rejectedBy).toBeTruthy();
+    expect(rejected.body.rejectedAt).toBeTruthy();
+
+    const rejectAudit = await getAuditLogModel()
+      .findOne({
+        resource: `prds/${generated.body.id}`,
+        operation: 'update',
+        'newValue.action': 'reject',
+      })
+      .exec();
+    expect(rejectAudit).toBeTruthy();
+
+    const regenerated = await request(app)
+      .post('/api/v1/tickets/OPL-8002/prd/generate')
+      .set('Cookie', sessionCookie)
+      .send({
+        owner: sampleAutoDevLikeContext.owner,
+        repo: sampleAutoDevLikeContext.repo,
+      });
+
+    expect(regenerated.status).toBe(201);
+    expect(regenerated.body.version).toBe(2);
+
+    const approved = await request(app)
+      .post(`/api/v1/prd/${regenerated.body.id}/approve`)
+      .set('Cookie', sessionCookie)
+      .send();
+
+    expect(approved.status).toBe(200);
+    expect(approved.body.status).toBe('approved');
+    expect(approved.body.approvedBy).toBeTruthy();
+    expect(approved.body.approvedAt).toBeTruthy();
+
+    const approveAudit = await getAuditLogModel()
+      .findOne({
+        resource: `prds/${regenerated.body.id}`,
+        operation: 'update',
+        'newValue.action': 'approve',
+      })
+      .exec();
+    expect(approveAudit).toBeTruthy();
+  });
+
   it('returns 412 when ticket intent is missing', async () => {
     const app = createApp();
     const { sessionCookie } = await loginAsUser(app);
