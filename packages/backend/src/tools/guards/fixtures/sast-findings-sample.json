@@ -1,0 +1,18 @@
+[
+  {
+    "file": "packages/backend/src/evil.ts",
+    "line": 3,
+    "ruleId": "no-eval",
+    "severity": "critical",
+    "message": "Use of eval() is dangerous and blocked by policy.",
+    "engine": "js"
+  },
+  {
+    "file": "packages/backend/src/evil.ts",
+    "line": 10,
+    "ruleId": "no-hardcoded-secret-assignment",
+    "severity": "high",
+    "message": "Possible hardcoded secret assignment detected.",
+    "engine": "js"
+  }
+]

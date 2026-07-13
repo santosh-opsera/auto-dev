@@ -1,0 +1,6 @@
+packages/backend/src/config/env.ts
+packages/backend/.env
+packages/frontend/src/.env.local
+.env
+.env.production
+.env.example

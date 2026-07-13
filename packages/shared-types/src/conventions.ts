@@ -1,4 +1,10 @@
 import { z } from 'zod';
+import {
+  MAX_REGEXP_PATTERN_LENGTH,
+  describeRegExpSafetyIssue,
+  findRegExpSafetyIssue,
+  isSafeRegExpPattern,
+} from './safeRegExp.js';
 
 export const GITHUB_USERNAME_REGEX = /^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i;
 
@@ -6,26 +12,27 @@ export const githubUsernameSchema = z
   .string()
   .regex(GITHUB_USERNAME_REGEX, 'Invalid GitHub username. Example: octocat');
 
+/** True when the pattern is syntactically valid and passes ReDoS heuristics. */
 export function isValidRegexPattern(value: string): boolean {
-  if (value.length > 200) {
-    return false;
-  }
-  try {
-    RegExp(value);
-    return true;
-  } catch {
-    return false;
-  }
+  return isSafeRegExpPattern(value);
 }
 
 export const branchNamingPatternSchema = z
   .string()
   .min(1, 'Branch naming pattern is required')
-  .max(200, 'Branch naming pattern must be 200 characters or fewer')
-  .refine(
-    isValidRegexPattern,
-    'Branch naming pattern must be valid regex. Example: ^(feature|bugfix)/OPL-\\d+$',
-  );
+  .max(
+    MAX_REGEXP_PATTERN_LENGTH,
+    `Branch naming pattern must be ${MAX_REGEXP_PATTERN_LENGTH} characters or fewer`,
+  )
+  .superRefine((value, ctx) => {
+    const issue = findRegExpSafetyIssue(value);
+    if (issue) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${describeRegExpSafetyIssue(issue)} Example: ^(feature|bugfix)/OPL-\\d+$`,
+      });
+    }
+  });
 
 export const nonEmptyTemplateSchema = (field: string, example: string) =>
   z.string().min(1, `${field} is required. Example: ${example}`);

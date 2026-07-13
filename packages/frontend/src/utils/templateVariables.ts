@@ -1,3 +1,5 @@
+import { isValidRegexPattern } from '@autodev/shared-types';
+
 const SAMPLE_BRANCH_NAMES = [
   'feature/OPL-1234',
   'bugfix/OPL-35139',
@@ -21,7 +23,13 @@ export function previewBranchName(pattern: string): string {
     return 'Enter a regex pattern to preview a sample branch name.';
   }
 
+  if (!isValidRegexPattern(pattern)) {
+    return 'Invalid regex — fix syntax or ReDoS risk to preview a branch name.';
+  }
+
   try {
+    // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp
+    // Preview-only; pattern already passed isValidRegexPattern (ReDoS heuristics).
     const regex = new RegExp(pattern);
     const match = SAMPLE_BRANCH_NAMES.find((candidate) => regex.test(candidate));
     return match ?? 'No sample branch matched — adjust the pattern or try ^(feature|bugfix)/OPL-\\d+$';

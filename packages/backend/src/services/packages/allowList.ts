@@ -1,4 +1,5 @@
 import type { AllowListValidation } from '@autodev/shared-types';
+import { createSafeRegExp } from '../../lib/safeRegExp.js';
 
 function normalizePath(path: string): string {
   return path.replace(/\\/g, '/').replace(/^\.\//, '');
@@ -48,9 +49,13 @@ export function patternMatches(relativePath: string, pattern: string): boolean {
     .replace(/\*/g, '[^/]*')
     .replace(/::GLOBSTAR::/g, '.*');
 
-  const regex = new RegExp(`^${escaped}$`);
-  if (regex.test(path)) {
-    return true;
+  try {
+    const regex = createSafeRegExp(`^${escaped}$`);
+    if (regex.test(path)) {
+      return true;
+    }
+  } catch {
+    return false;
   }
 
   // Allow "lib/**/*.js" style to match nested paths via globstar already handled

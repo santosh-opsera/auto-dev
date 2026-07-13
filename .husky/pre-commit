@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+# Husky pre-commit — AutoDev NPM/SAST guards (WO-040).
+# Composes with optional local/Forge extras without replacing them.
+
+set -e
+
+# Prefer npm workspace script so tsx resolves from @autodev/backend.
+npm run precommit:guard
+
+# Compose with developer/Forge local hooks if present (do not overwrite this file).
+if [ -f "$(dirname "$0")/pre-commit.local" ]; then
+  # shellcheck disable=SC1091
+  . "$(dirname "$0")/pre-commit.local"
+fi
+
+if [ -f "$(dirname "$0")/forge-pre-commit.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$(dirname "$0")/forge-pre-commit.sh"
+fi

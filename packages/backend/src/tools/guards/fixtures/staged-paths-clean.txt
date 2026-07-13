@@ -1,0 +1,5 @@
+packages/backend/src/index.ts
+packages/frontend/src/App.tsx
+packages/shared-types/src/conventions.ts
+README.md
+package.json

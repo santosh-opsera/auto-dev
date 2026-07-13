@@ -1,0 +1,39 @@
+{
+  "vulnerabilities": {
+    "lodash": {
+      "name": "lodash",
+      "severity": "high",
+      "via": [
+        {
+          "title": "Prototype Pollution",
+          "url": "https://github.com/advisories/GHSA-test",
+          "severity": "high"
+        }
+      ],
+      "range": "<4.17.21",
+      "url": "https://github.com/advisories/GHSA-test"
+    },
+    "minimist": {
+      "name": "minimist",
+      "severity": "critical",
+      "via": ["minimist"],
+      "range": "<1.2.6"
+    },
+    "debug": {
+      "name": "debug",
+      "severity": "moderate",
+      "via": ["debug"],
+      "range": "<2.6.9"
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 1,
+      "high": 1,
+      "critical": 1,
+      "total": 3
+    }
+  }
+}
