@@ -1,4 +1,5 @@
 import { getRequestContext } from './requestContext.js';
+import { maskPiiInText } from '../lib/piiMasking.js';
 
 export interface LogFields {
   actor?: string;
@@ -53,10 +54,10 @@ function buildLogEntry(
     timestamp: new Date().toISOString(),
     level,
     correlationId: context?.correlationId ?? 'no-correlation-id',
-    actor: fields.actor ?? context?.actor ?? 'system',
+    actor: maskPiiInText(fields.actor ?? context?.actor ?? 'system'),
     resource: fields.resource ?? context?.resource ?? 'unknown',
     operation: fields.operation ?? context?.operation ?? 'unknown',
-    message,
+    message: maskPiiInText(message),
   };
 }
 

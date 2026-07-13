@@ -930,3 +930,33 @@ export {
   sampleJiraAdapterInfo,
   sampleOpseraAdapterInfo,
 } from './fixtures/integrations.js';
+
+export {
+  CLASSIFICATION_HANDLING,
+  DATA_CLASSIFICATIONS,
+  RETENTION_CATEGORIES,
+  RETENTION_POLICY_DAYS,
+  classificationHandlingSchema,
+  dataClassificationSchema,
+  getClassificationHandling,
+  getRetentionPolicy,
+  retentionCategorySchema,
+  retentionPolicySchema,
+  retentionPurgeResultSchema,
+} from './dataClassification.js';
+
+export type {
+  ClassificationHandling,
+  DataClassification,
+  RetentionCategory,
+  RetentionPolicy,
+  RetentionPurgeResult,
+} from './dataClassification.js';
+
+export {
+  sampleClassificationDocuments,
+  sampleClassificationHandling,
+  samplePiiValues,
+  sampleRetentionPolicies,
+  sampleRetentionPurgeResult,
+} from './fixtures/dataClassification.js';

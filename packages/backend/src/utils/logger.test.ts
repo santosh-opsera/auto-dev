@@ -47,9 +47,25 @@ describe('logger', () => {
 
     const entry = parseLogLine(lines[0] ?? '');
     expect(entry.correlationId).toBe('corr-fixture-001');
-    expect(entry.actor).toBe('user@example.com');
+    expect(entry.actor).toBe('u***@***.com');
     expect(entry.resource).toBe('/api/v1/workflows');
     expect(entry.operation).toBe('POST');
+  });
+
+  it('masks PII in log messages and actor fields', () => {
+    setLogWriter((line) => {
+      lines.push(line);
+    });
+
+    logger.info('Contact Jane Doe at jane.doe@example.com', {
+      actor: 'jane.doe@example.com',
+      resource: 'users',
+      operation: 'update',
+    });
+
+    const entry = parseLogLine(lines[0] ?? '');
+    expect(entry.message).toBe('Contact J*** D*** at j***@***.com');
+    expect(entry.actor).toBe('j***@***.com');
   });
 
   it('logs errors at error level without swallowing exceptions', () => {
