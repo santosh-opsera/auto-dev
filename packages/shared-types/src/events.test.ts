@@ -8,6 +8,9 @@ import {
   sampleDeploymentCompletedEvent,
   sampleDeploymentFailedEvent,
   sampleDeploymentStartedEvent,
+  sampleQaChangesRequestedEvent,
+  sampleQaHandoffApprovedEvent,
+  sampleQaHandoffReadyEvent,
   samplePrCreatedEvent,
   sampleTestingFailedEvent,
   sampleTestingIterationEvent,
@@ -44,6 +47,9 @@ describe('event schemas', () => {
       'DEPLOYMENT_STARTED',
       'DEPLOYMENT_COMPLETED',
       'DEPLOYMENT_FAILED',
+      'QA_HANDOFF_READY',
+      'QA_HANDOFF_APPROVED',
+      'QA_CHANGES_REQUESTED',
     ]);
   });
 
@@ -62,6 +68,9 @@ describe('event schemas', () => {
     expect(domainEventSchema.safeParse(sampleDeploymentStartedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleDeploymentCompletedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleDeploymentFailedEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleQaHandoffReadyEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleQaHandoffApprovedEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleQaChangesRequestedEvent).success).toBe(true);
   });
 
   it('rejects events with invalid payloads', () => {

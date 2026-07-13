@@ -233,3 +233,51 @@ export const sampleDeploymentFailedEvent: DomainEvent = {
     eventId: 'event-009',
   },
 };
+
+export const sampleQaHandoffReadyEvent: DomainEvent = {
+  type: 'QA_HANDOFF_READY',
+  payload: {
+    handoffId: 'handoff-001',
+    workflowId: 'workflow-001',
+    ticketKey: 'OPL-1234',
+    deploymentUrl: 'http://localhost:4000',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-010',
+  },
+};
+
+export const sampleQaHandoffApprovedEvent: DomainEvent = {
+  type: 'QA_HANDOFF_APPROVED',
+  payload: {
+    handoffId: 'handoff-001',
+    workflowId: 'workflow-001',
+    ticketKey: 'OPL-1234',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-011',
+  },
+};
+
+export const sampleQaChangesRequestedEvent: DomainEvent = {
+  type: 'QA_CHANGES_REQUESTED',
+  payload: {
+    handoffId: 'handoff-001',
+    workflowId: 'workflow-001',
+    ticketKey: 'OPL-1234',
+    feedbackItems: [
+      {
+        id: 'fb-1',
+        description: 'Session expiry edge case fails when clock skew exceeds 2 minutes',
+        checklistItemId: 'ac-2',
+      },
+    ],
+    feedbackCount: 1,
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-012',
+  },
+};

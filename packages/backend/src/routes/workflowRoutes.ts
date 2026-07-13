@@ -15,12 +15,14 @@ import { formatZodError, RequestValidationError } from '../utils/errors.js';
 import { orchestrationService } from '../services/orchestration/orchestrationService.js';
 import { createChunkRouter } from './chunkRoutes.js';
 import { createPullRequestRouter } from './pullRequestRoutes.js';
+import { createQaHandoffRouter } from './qaHandoffRoutes.js';
 
 export function createWorkflowRouter(): Router {
   const router = Router({ mergeParams: true });
 
   router.use('/:id/chunks', createChunkRouter());
   router.use('/:id/pull-request', createPullRequestRouter());
+  router.use('/:id/qa-handoff', createQaHandoffRouter());
 
   router.post(
     '/',
