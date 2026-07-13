@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { domainEventSchema, eventTypeSchema } from './events.js';
 import {
+  sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
   sampleWorkflowFailedEvent,
@@ -21,6 +22,7 @@ describe('event schemas', () => {
       'APPROVAL_EXPIRED',
       'APPROVAL_REMINDER',
       'CONVENTION_UPDATED',
+      'CHUNK_CREATED',
       'CHUNK_PROGRESS',
       'WORKFLOW_TRANSITIONED',
       'WORKFLOW_FAILED',
@@ -29,6 +31,7 @@ describe('event schemas', () => {
 
   it('validates sample domain events', () => {
     expect(domainEventSchema.safeParse(sampleConventionUpdatedEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleChunkCreatedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleChunkProgressEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleWorkflowTransitionedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleWorkflowFailedEvent).success).toBe(true);

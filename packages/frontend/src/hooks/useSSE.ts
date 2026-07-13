@@ -103,6 +103,7 @@ export function useSSE({ enabled, onEvent, onConnectionChange }: UseSSEOptions):
         'APPROVAL_EXPIRED',
         'APPROVAL_REMINDER',
         'CONVENTION_UPDATED',
+        'CHUNK_CREATED',
         'CHUNK_PROGRESS',
         'WORKFLOW_TRANSITIONED',
         'WORKFLOW_FAILED',

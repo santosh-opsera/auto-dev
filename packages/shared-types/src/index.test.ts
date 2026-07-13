@@ -9,7 +9,7 @@ import {
   errorResponseSchema,
   healthCheckSchema,
   validationErrorResponseSchema,
-} from './index';
+} from './index.js';
 
 describe('healthCheckSchema', () => {
   it('validates a correct health check response', () => {

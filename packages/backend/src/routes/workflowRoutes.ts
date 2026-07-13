@@ -13,9 +13,12 @@ import { requireSession, type AuthenticatedRequest } from '../middleware/require
 import { validateBody, validateParams } from '../middleware/validateRequest.js';
 import { formatZodError, RequestValidationError } from '../utils/errors.js';
 import { orchestrationService } from '../services/orchestration/orchestrationService.js';
+import { createChunkRouter } from './chunkRoutes.js';
 
 export function createWorkflowRouter(): Router {
   const router = Router({ mergeParams: true });
+
+  router.use('/:id/chunks', createChunkRouter());
 
   router.post(
     '/',
