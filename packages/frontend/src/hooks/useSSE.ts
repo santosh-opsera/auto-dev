@@ -105,6 +105,10 @@ export function useSSE({ enabled, onEvent, onConnectionChange }: UseSSEOptions):
         'CONVENTION_UPDATED',
         'CHUNK_CREATED',
         'CHUNK_PROGRESS',
+        'TESTING_STARTED',
+        'TESTING_ITERATION',
+        'TESTING_PASSED',
+        'TESTING_FAILED',
         'WORKFLOW_TRANSITIONED',
         'WORKFLOW_FAILED',
       ] as const) {

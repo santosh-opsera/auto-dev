@@ -47,6 +47,70 @@ export const sampleChunkProgressEvent: DomainEvent = {
   },
 };
 
+export const sampleTestingStartedEvent: DomainEvent = {
+  type: 'TESTING_STARTED',
+  payload: {
+    workflowId: 'workflow-001',
+    chunkId: 'chunk-001',
+    maxIterations: 5,
+    framework: 'vitest',
+    testCount: 3,
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-002b',
+  },
+};
+
+export const sampleTestingIterationEvent: DomainEvent = {
+  type: 'TESTING_ITERATION',
+  payload: {
+    workflowId: 'workflow-001',
+    chunkId: 'chunk-001',
+    iteration: 1,
+    maxIterations: 5,
+    passed: false,
+    failedCount: 1,
+    identifiedIssues: ['add subtracts operands'],
+    fixesApplied: 1,
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-002c',
+  },
+};
+
+export const sampleTestingPassedEvent: DomainEvent = {
+  type: 'TESTING_PASSED',
+  payload: {
+    workflowId: 'workflow-001',
+    chunkId: 'chunk-001',
+    iterationsUsed: 2,
+    coveragePercent: 80.75,
+    passedCount: 3,
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-002d',
+  },
+};
+
+export const sampleTestingFailedEvent: DomainEvent = {
+  type: 'TESTING_FAILED',
+  payload: {
+    workflowId: 'workflow-001',
+    chunkId: 'chunk-001',
+    iterationsUsed: 5,
+    maxIterations: 5,
+    failedCount: 1,
+    rootCauseSummary: 'Max iterations exhausted with failing tests.',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-002e',
+  },
+};
+
 export const sampleTicketParsedEvent: DomainEvent = {
   type: 'TICKET_PARSED',
   payload: {

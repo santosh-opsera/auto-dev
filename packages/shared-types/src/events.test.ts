@@ -4,6 +4,10 @@ import {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  sampleTestingFailedEvent,
+  sampleTestingIterationEvent,
+  sampleTestingPassedEvent,
+  sampleTestingStartedEvent,
   sampleWorkflowFailedEvent,
   sampleWorkflowTransitionedEvent,
 } from './fixtures/events.js';
@@ -24,6 +28,10 @@ describe('event schemas', () => {
       'CONVENTION_UPDATED',
       'CHUNK_CREATED',
       'CHUNK_PROGRESS',
+      'TESTING_STARTED',
+      'TESTING_ITERATION',
+      'TESTING_PASSED',
+      'TESTING_FAILED',
       'WORKFLOW_TRANSITIONED',
       'WORKFLOW_FAILED',
     ]);
@@ -33,6 +41,10 @@ describe('event schemas', () => {
     expect(domainEventSchema.safeParse(sampleConventionUpdatedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleChunkCreatedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleChunkProgressEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleTestingStartedEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleTestingIterationEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleTestingPassedEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleTestingFailedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleWorkflowTransitionedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleWorkflowFailedEvent).success).toBe(true);
   });
