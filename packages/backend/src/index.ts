@@ -29,6 +29,7 @@ import { createLlmRouter } from './routes/llmRoutes.js';
 import { createApprovalRouter, createTicketApprovalRouter } from './routes/approvalRoutes.js';
 import { createPrdRouter, createTicketPrdRouter } from './routes/prdRoutes.js';
 import { createWorkflowRouter } from './routes/workflowRoutes.js';
+import { createPackageRouter } from './routes/packageRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireApprovalClearance } from './middleware/requireApprovalClearance.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
@@ -95,6 +96,7 @@ export function createApp(): Application {
   app.use('/api/v1/tickets/:ticketKey/prd', createTicketPrdRouter());
   app.use('/api/v1/prd', createPrdRouter());
   app.use('/api/v1/workflows', createWorkflowRouter());
+  app.use('/api/v1/packages', createPackageRouter());
   app.use('/api/v1/llm', createLlmRouter());
 
   if (process.env.NODE_ENV === 'test') {
