@@ -491,3 +491,54 @@ export {
   sampleExpectedChunkDecomposition,
   sampleImplementationChunks,
 } from './fixtures/chunk.js';
+
+export {
+  CURSOR_CONTEXT_SCHEMA_VERSION,
+  cursorApprovedPrdSnapshotSchema,
+  cursorChunkSpecSchema,
+  cursorContextDocumentSchema,
+  cursorContextResponseSchema,
+  cursorConventionSnapshotSchema,
+  cursorConventionValidationSchema,
+  cursorDeliveryAckSchema,
+  cursorDeliveryStatusSchema,
+  cursorExecuteRequestSchema,
+  cursorExecuteResponseSchema,
+  cursorFileChangeActionSchema,
+  cursorFileChangeSchema,
+  cursorImplementationResultSchema,
+  cursorPrdSourceSchema,
+  cursorResultValidationSchema,
+  cursorResultsSubmitRequestSchema,
+  cursorResultsSubmitResponseSchema,
+  cursorScopeValidationSchema,
+} from './cursorBridge.js';
+
+export type {
+  CursorApprovedPrdSnapshot,
+  CursorChunkSpec,
+  CursorContextDocument,
+  CursorContextResponse,
+  CursorConventionSnapshot,
+  CursorConventionValidation,
+  CursorDeliveryAck,
+  CursorDeliveryStatus,
+  CursorExecuteRequest,
+  CursorExecuteResponse,
+  CursorFileChange,
+  CursorFileChangeAction,
+  CursorImplementationResult,
+  CursorPrdSource,
+  CursorResultValidation,
+  CursorResultsSubmitRequest,
+  CursorResultsSubmitResponse,
+  CursorScopeValidation,
+} from './cursorBridge.js';
+
+export {
+  sampleCursorContextDocument,
+  sampleCursorConventions,
+  sampleCursorImplementationResult,
+  sampleCursorImplementationResultBadConventions,
+  sampleCursorImplementationResultOutOfScope,
+} from './fixtures/cursorBridge.js';
