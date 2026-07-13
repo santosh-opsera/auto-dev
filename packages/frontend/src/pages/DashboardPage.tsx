@@ -98,6 +98,14 @@ export function DashboardPage({ onLogoutComplete }: DashboardPageProps) {
           Open sample approval review
         </Link>
       </section>
+
+      <section aria-labelledby="workflows-heading" className="profile-card">
+        <h2 id="workflows-heading">Workflows</h2>
+        <p>Track active pipelines, review state history, and pause, resume, or cancel workflows.</p>
+        <Link to="/workflows" className="primary-link">
+          Open workflow dashboard
+        </Link>
+      </section>
     </main>
   );
 }
