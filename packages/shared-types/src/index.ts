@@ -415,3 +415,35 @@ export {
   sampleWorkflowFailed,
   sampleWorkflowPaused,
 } from './fixtures/workflow.js';
+
+export {
+  PRD_GENERATION_TIMEOUT_MS,
+  encodePrdSections,
+  escapeHtml,
+  prdCodebaseContextSummarySchema,
+  prdCreateVersionRequestSchema,
+  prdGenerateRequestSchema,
+  prdIdParamsSchema,
+  prdListResponseSchema,
+  prdResponseSchema,
+  prdSectionsSchema,
+  prdStatusSchema,
+} from './prd.js';
+
+export type {
+  PrdCodebaseContextSummary,
+  PrdCreateVersionRequest,
+  PrdGenerateRequest,
+  PrdListResponse,
+  PrdResponse,
+  PrdSections,
+  PrdStatus,
+} from './prd.js';
+
+export {
+  sampleExpectedPrdResponse,
+  samplePrdLlmJsonResponse,
+  samplePrdSections,
+  samplePrdVersionTwo,
+  samplePrdWithXssAttempt,
+} from './fixtures/prd.js';
