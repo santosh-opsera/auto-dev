@@ -16,6 +16,7 @@ https://opsera.atlassian.net/browse/{ticketKey}`;
 
 export const mockConventionInput: ConventionSettingsInput = {
   commitMessageFormat: '{ticketKey}: {description}',
+  branchNameTemplate: '{type}/{ticketKey}-{description}',
   branchNamingPattern: '^(feature|bugfix)/OPL-\\d+$',
   prTitleTemplate: '{ticketKey} {summary}',
   prDescriptionTemplate: DEFAULT_PR_DESCRIPTION_TEMPLATE,

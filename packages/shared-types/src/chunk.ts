@@ -44,6 +44,16 @@ export const workflowChunkIdParamsSchema = z.object({
   chunkId: z.string().min(1),
 });
 
+export const BRANCH_GIT_STATUSES = [
+  'none',
+  'branch_created',
+  'committed',
+  'ready_for_pr',
+] as const;
+
+export const branchGitStatusSchema = z.enum(BRANCH_GIT_STATUSES);
+export type BranchGitStatus = z.infer<typeof branchGitStatusSchema>;
+
 export const implementationChunkResponseSchema = z.object({
   id: z.string().min(1),
   workflowDocumentId: z.string().min(1),
@@ -56,6 +66,11 @@ export const implementationChunkResponseSchema = z.object({
   dependencies: z.array(z.string()),
   estimatedComplexity: chunkComplexitySchema,
   status: chunkStatusSchema,
+  branchName: z.string().min(1).optional(),
+  branchHeadSha: z.string().min(1).optional(),
+  lastCommitSha: z.string().min(1).optional(),
+  lastCommitMessage: z.string().min(1).optional(),
+  gitStatus: branchGitStatusSchema.optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

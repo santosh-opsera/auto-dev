@@ -3,6 +3,7 @@ import { DEFAULT_PR_DESCRIPTION_TEMPLATE } from './conventionDefaults.js';
 
 export const validConventionSettingsInput: ConventionSettingsInput = {
   commitMessageFormat: '{ticketKey}: {description}',
+  branchNameTemplate: '{type}/{ticketKey}-{description}',
   branchNamingPattern: '^(feature|bugfix)/OPL-\\d+$',
   prTitleTemplate: '{ticketKey} {summary}',
   prDescriptionTemplate: DEFAULT_PR_DESCRIPTION_TEMPLATE,

@@ -1,9 +1,5 @@
+import type { BranchGitStatus, ChunkComplexity, ChunkScope, ChunkStatus } from '@autodev/shared-types';
 import mongoose, { type HydratedDocument, type Model } from 'mongoose';
-import type {
-  ChunkComplexity,
-  ChunkScope,
-  ChunkStatus,
-} from '@autodev/shared-types';
 import { createBaseSchema, type AuditFields } from '../database/baseSchema.js';
 
 export interface ImplementationChunkDocument extends AuditFields {
@@ -18,6 +14,11 @@ export interface ImplementationChunkDocument extends AuditFields {
   dependencies: string[];
   estimatedComplexity: ChunkComplexity;
   status: ChunkStatus;
+  branchName?: string;
+  branchHeadSha?: string;
+  lastCommitSha?: string;
+  lastCommitMessage?: string;
+  gitStatus?: BranchGitStatus;
 }
 
 export type ImplementationChunkRecord = HydratedDocument<ImplementationChunkDocument>;
@@ -50,6 +51,15 @@ const implementationChunkSchema = createBaseSchema({
     enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'PAUSED', 'SKIPPED'],
     required: true,
     default: 'PENDING',
+  },
+  branchName: { type: String, required: false },
+  branchHeadSha: { type: String, required: false },
+  lastCommitSha: { type: String, required: false },
+  lastCommitMessage: { type: String, required: false },
+  gitStatus: {
+    type: String,
+    enum: ['none', 'branch_created', 'committed', 'ready_for_pr'],
+    required: false,
   },
 });
 

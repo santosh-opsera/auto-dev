@@ -44,11 +44,22 @@ export const reviewerAssignmentRulesSchema = z.discriminatedUnion('mode', [
   }),
 ]);
 
+export const branchNameTemplateSchema = nonEmptyTemplateSchema(
+  'Branch name template',
+  '{type}/{ticketKey}-{description}',
+).refine(
+  (value) => value.includes('{ticketKey}'),
+  'Branch name template must include {ticketKey}',
+);
+
 export const conventionSettingsInputSchema = z.object({
   commitMessageFormat: nonEmptyTemplateSchema(
     'Commit message format',
     'OPL-1234: commit description message',
   ),
+  /** Template used to generate branch names — never hardcode names in services. */
+  branchNameTemplate: branchNameTemplateSchema.optional(),
+  /** Regex used to validate generated branch names. */
   branchNamingPattern: branchNamingPatternSchema,
   prTitleTemplate: nonEmptyTemplateSchema('PR title template', 'OPL-1234 summary of pr'),
   prDescriptionTemplate: nonEmptyTemplateSchema(

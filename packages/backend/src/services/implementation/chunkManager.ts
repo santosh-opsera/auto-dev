@@ -45,6 +45,11 @@ function mapChunk(doc: ImplementationChunkRecord): ImplementationChunkResponse {
     dependencies: [...doc.dependencies],
     estimatedComplexity: doc.estimatedComplexity,
     status: doc.status,
+    branchName: doc.branchName,
+    branchHeadSha: doc.branchHeadSha,
+    lastCommitSha: doc.lastCommitSha,
+    lastCommitMessage: doc.lastCommitMessage,
+    gitStatus: doc.gitStatus,
     createdAt: toIso(doc.createdAt),
     updatedAt: toIso(doc.updatedAt),
   };

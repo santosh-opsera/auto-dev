@@ -112,6 +112,53 @@ function decodeFileContent(response: GitHubFileResponse): RepositoryFileResponse
   return Buffer.from(response.content, 'base64').toString('utf8');
 }
 
+export interface GitHubGitRef {
+  ref: string;
+  sha: string;
+}
+
+export interface GitHubGitCommit {
+  sha: string;
+  treeSha: string;
+  message: string;
+  parentShas: string[];
+}
+
+export interface GitHubCreatedBlob {
+  sha: string;
+}
+
+export interface GitHubCreatedTree {
+  sha: string;
+}
+
+export interface CreateTreeEntry {
+  path: string;
+  mode: '100644' | '100755' | '040000' | '160000' | '120000';
+  type: 'blob' | 'tree' | 'commit';
+  sha: string;
+}
+
+interface GitHubRefResponse {
+  ref: string;
+  object: { sha: string; type: string };
+}
+
+interface GitHubCommitResponse {
+  sha: string;
+  message: string;
+  tree: { sha: string };
+  parents: Array<{ sha: string }>;
+}
+
+interface GitHubBlobResponse {
+  sha: string;
+}
+
+interface GitHubTreeCreateResponse {
+  sha: string;
+}
+
 export class GitHubApiClient {
   constructor(
     private readonly fetchImpl: GitHubFetchFn = defaultFetch,
@@ -284,6 +331,176 @@ export class GitHubApiClient {
       content: decodeFileContent(response),
       sha: response.sha,
       size: response.size,
+    };
+  }
+
+  async getRef(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    ref: string,
+  ): Promise<GitHubGitRef> {
+    const normalized = ref.startsWith('refs/') ? ref : `heads/${ref}`;
+    const response = await this.request<GitHubRefResponse>(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/ref/${normalized
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')}`,
+      { method: 'GET' },
+    );
+
+    return {
+      ref: response.ref,
+      sha: response.object.sha,
+    };
+  }
+
+  async createRef(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    branchName: string,
+    sha: string,
+  ): Promise<GitHubGitRef> {
+    const response = await this.request<GitHubRefResponse>(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/refs`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ref: `refs/heads/${branchName}`,
+          sha,
+        }),
+      },
+    );
+
+    return {
+      ref: response.ref,
+      sha: response.object.sha,
+    };
+  }
+
+  async getCommit(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    sha: string,
+  ): Promise<GitHubGitCommit> {
+    const response = await this.request<GitHubCommitResponse>(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/commits/${encodeURIComponent(sha)}`,
+      { method: 'GET' },
+    );
+
+    return {
+      sha: response.sha,
+      treeSha: response.tree.sha,
+      message: response.message,
+      parentShas: response.parents.map((parent) => parent.sha),
+    };
+  }
+
+  async createBlob(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    content: string,
+    encoding: 'utf-8' | 'base64' = 'utf-8',
+  ): Promise<GitHubCreatedBlob> {
+    const response = await this.request<GitHubBlobResponse>(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/blobs`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, encoding }),
+      },
+    );
+
+    return { sha: response.sha };
+  }
+
+  async createTree(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    baseTreeSha: string,
+    tree: CreateTreeEntry[],
+  ): Promise<GitHubCreatedTree> {
+    const response = await this.request<GitHubTreeCreateResponse>(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/trees`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          base_tree: baseTreeSha,
+          tree,
+        }),
+      },
+    );
+
+    return { sha: response.sha };
+  }
+
+  async createCommit(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    input: {
+      message: string;
+      treeSha: string;
+      parentShas: string[];
+    },
+  ): Promise<GitHubGitCommit> {
+    const response = await this.request<GitHubCommitResponse>(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/commits`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: input.message,
+          tree: input.treeSha,
+          parents: input.parentShas,
+        }),
+      },
+    );
+
+    return {
+      sha: response.sha,
+      treeSha: response.tree.sha,
+      message: response.message,
+      parentShas: response.parents.map((parent) => parent.sha),
+    };
+  }
+
+  async updateRef(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    branchName: string,
+    sha: string,
+    force = false,
+  ): Promise<GitHubGitRef> {
+    const response = await this.request<GitHubRefResponse>(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/git/refs/heads/${branchName
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sha, force }),
+      },
+    );
+
+    return {
+      ref: response.ref,
+      sha: response.object.sha,
     };
   }
 
