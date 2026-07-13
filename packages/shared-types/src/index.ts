@@ -899,3 +899,34 @@ export {
   sampleVerificationChecklist,
   sampleWorkflowHandoffInputs,
 } from './fixtures/qaHandoff.js';
+
+export {
+  ADAPTER_STATUSES,
+  DEFAULT_ADAPTER_HEALTH_CHECK_INTERVAL_MS,
+  INTEGRATION_ADAPTER_NAMES,
+  adapterHealthResultSchema,
+  adapterStatusSchema,
+  integrationAdapterInfoSchema,
+  integrationAdapterNameSchema,
+  integrationsListResponseSchema,
+} from './integrations.js';
+
+export type {
+  AdapterHealthResult,
+  AdapterStatus,
+  IntegrationAdapterInfo,
+  IntegrationAdapterName,
+  IntegrationsListResponse,
+} from './integrations.js';
+
+export {
+  githubAdapterCapabilities,
+  jiraAdapterCapabilities,
+  opseraAdapterCapabilities,
+  sampleAdapterHealthHealthy,
+  sampleAdapterHealthUnhealthy,
+  sampleGitHubAdapterInfo,
+  sampleIntegrationsListResponse,
+  sampleJiraAdapterInfo,
+  sampleOpseraAdapterInfo,
+} from './fixtures/integrations.js';
