@@ -2,6 +2,7 @@ export {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  sampleDependencyUpdateAvailableEvent,
   sampleEventMetadata,
   samplePrCreatedEvent,
   sampleTestingFailedEvent,
@@ -18,6 +19,7 @@ import {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  sampleDependencyUpdateAvailableEvent,
   samplePrCreatedEvent,
   sampleTestingFailedEvent,
   sampleTestingIterationEvent,
@@ -40,6 +42,7 @@ export const sampleDomainEvents: DomainEvent[] = [
   sampleTicketParsedEvent,
   sampleWorkflowTransitionedEvent,
   sampleWorkflowFailedEvent,
+  sampleDependencyUpdateAvailableEvent,
 ];
 
 export const sampleEventTypes: EventType[] = [
@@ -62,4 +65,5 @@ export const sampleEventTypes: EventType[] = [
   'PR_CREATED',
   'WORKFLOW_TRANSITIONED',
   'WORKFLOW_FAILED',
+  'DEPENDENCY_UPDATE_AVAILABLE',
 ];

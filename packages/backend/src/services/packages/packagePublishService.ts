@@ -1,5 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
+  buildChangelogLink,
   DEFAULT_AUDIT_SEVERITY_THRESHOLD,
   type PackageDetectRequest,
   type PackageDetectResponse,
@@ -13,9 +14,11 @@ import {
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
 import { validateAllowList } from './allowList.js';
+import { dependencyTrackingService } from './dependencyTrackingService.js';
 import { detectAffectedPackages } from './packageDetection.js';
 import { evaluateVulnerabilityScan } from './npmAuditParser.js';
 import { analyzeVersionBump, buildChangelog } from './versionBump.js';
+import { logger } from '../../utils/logger.js';
 
 function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -339,6 +342,26 @@ export class PackagePublishService {
         simulated: true,
       },
     });
+
+    try {
+      await dependencyTrackingService.proposeUpdatesForBump(user, {
+        packageName: doc.packageName,
+        proposedVersion: doc.proposedVersion,
+        changelogLink: buildChangelogLink(doc.packageName, doc.proposedVersion),
+        sourceOwner: doc.owner,
+        sourceRepo: doc.repo,
+      });
+    } catch (error) {
+      logger.warn(
+        `Dependency update proposals failed after package publish: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+        {
+          resource: `packages/proposals/${doc._id.toString()}`,
+          operation: 'dependency_notify',
+        },
+      );
+    }
 
     return mapProposal(doc);
   }

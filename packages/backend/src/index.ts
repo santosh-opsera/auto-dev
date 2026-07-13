@@ -29,7 +29,7 @@ import { createLlmRouter } from './routes/llmRoutes.js';
 import { createApprovalRouter, createTicketApprovalRouter } from './routes/approvalRoutes.js';
 import { createPrdRouter, createTicketPrdRouter } from './routes/prdRoutes.js';
 import { createWorkflowRouter } from './routes/workflowRoutes.js';
-import { createPackageRouter } from './routes/packageRoutes.js';
+import { createPackageRouter, createRepositoryDependencyRouter } from './routes/packageRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireApprovalClearance } from './middleware/requireApprovalClearance.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
@@ -89,6 +89,7 @@ export function createApp(): Application {
   app.use('/api/v1/events', createEventRouter());
   app.use('/api/v1/tickets', createTicketRouter());
   app.use('/api/v1/repositories', createRepositoryRouter());
+  app.use('/api/v1/repositories', createRepositoryDependencyRouter());
   app.use('/api/v1/repositories/:owner/:repo/analyze', createAnalysisRouter());
   app.use('/api/v1/tickets/:ticketKey/divergence', createDivergenceRouter());
   app.use('/api/v1/tickets/:ticketKey/approvals', createTicketApprovalRouter());

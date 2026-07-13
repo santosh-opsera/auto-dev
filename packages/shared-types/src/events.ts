@@ -23,6 +23,7 @@ export const EVENT_TYPES = [
   'PR_CREATED',
   'WORKFLOW_TRANSITIONED',
   'WORKFLOW_FAILED',
+  'DEPENDENCY_UPDATE_AVAILABLE',
 ] as const;
 
 export const eventTypeSchema = z.enum(EVENT_TYPES);
@@ -189,6 +190,17 @@ const workflowFailedPayloadSchema = z.object({
   error: workflowErrorSchema,
 });
 
+const dependencyUpdateAvailablePayloadSchema = z.object({
+  proposalId: z.string().min(1),
+  packageName: z.string().min(1),
+  currentVersion: z.string().min(1),
+  proposedVersion: z.string().min(1),
+  changelogLink: z.string().min(1),
+  owner: z.string().min(1),
+  repo: z.string().min(1),
+  packagePath: z.string().min(1),
+});
+
 export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('TICKET_PARSED'),
@@ -288,6 +300,11 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('WORKFLOW_FAILED'),
     payload: workflowFailedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('DEPENDENCY_UPDATE_AVAILABLE'),
+    payload: dependencyUpdateAvailablePayloadSchema,
     metadata: eventMetadataSchema,
   }),
 ]);
