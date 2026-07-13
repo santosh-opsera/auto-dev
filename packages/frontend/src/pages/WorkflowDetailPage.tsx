@@ -8,6 +8,8 @@ import { WorkflowTimeline } from '../components/workflows/WorkflowTimeline';
 import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
 import { useSSE } from '../hooks/useSSE';
 import { useWorkflowDetail } from '../hooks/useWorkflowDetail';
+import { useLocaleStore } from '../store/localeStore';
+import { formatNumber } from '../utils/localeFormat';
 import {
   formatWorkflowState,
   formatWorkflowTimestamp,
@@ -20,6 +22,7 @@ interface WorkflowDetailPageProps {
 
 export function WorkflowDetailPage({ onLogoutComplete }: WorkflowDetailPageProps) {
   const { id } = useParams<{ id: string }>();
+  const locale = useLocaleStore((state) => state.locale);
   const {
     phase,
     workflow,
@@ -103,7 +106,7 @@ export function WorkflowDetailPage({ onLogoutComplete }: WorkflowDetailPageProps
                 <dt>Last updated</dt>
                 <dd>
                   <time dateTime={workflow.updatedAt}>
-                    {formatWorkflowTimestamp(workflow.updatedAt)}
+                    {formatWorkflowTimestamp(workflow.updatedAt, locale)}
                   </time>
                 </dd>
               </div>
@@ -135,7 +138,9 @@ export function WorkflowDetailPage({ onLogoutComplete }: WorkflowDetailPageProps
                     style={{ width: `${workflow.progress.percent}%` }}
                   />
                 </div>
-                <p className="field-hint">{workflow.progress.percent}% complete</p>
+                <p className="field-hint">
+                  {formatNumber(workflow.progress.percent, locale)}% complete
+                </p>
               </div>
             ) : null}
             {workflow.progress?.chunkId ? (

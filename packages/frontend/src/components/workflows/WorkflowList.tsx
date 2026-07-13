@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { WorkflowResponse } from '@autodev/shared-types';
+import { useLocaleStore } from '../../store/localeStore';
 import {
   formatWorkflowTimestamp,
   getWorkflowTitle,
@@ -22,6 +23,8 @@ export function WorkflowList({
   onResume,
   onCancel,
 }: WorkflowListProps) {
+  const locale = useLocaleStore((state) => state.locale);
+
   if (workflows.length === 0) {
     return (
       <p className="field-hint" role="status">
@@ -63,7 +66,7 @@ export function WorkflowList({
                 </td>
                 <td>
                   <time dateTime={workflow.updatedAt}>
-                    {formatWorkflowTimestamp(workflow.updatedAt)}
+                    {formatWorkflowTimestamp(workflow.updatedAt, locale)}
                   </time>
                 </td>
                 <td>

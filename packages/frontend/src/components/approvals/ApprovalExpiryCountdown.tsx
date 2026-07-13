@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useLocaleStore } from '../../store/localeStore';
 import { formatExpiryCountdown } from '../../utils/approvalValidation';
+import { formatDate } from '../../utils/localeFormat';
 
 interface ApprovalExpiryCountdownProps {
   expiresAt: string;
 }
 
 export function ApprovalExpiryCountdown({ expiresAt }: ApprovalExpiryCountdownProps) {
+  const locale = useLocaleStore((state) => state.locale);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const label = formatExpiryCountdown(expiresAt, nowMs);
   const isExpired = label === 'Expired';
@@ -32,7 +35,7 @@ export function ApprovalExpiryCountdown({ expiresAt }: ApprovalExpiryCountdownPr
           : `Countdown toward 72-hour expiry: ${label}`}
       </p>
       <p className="field-hint">
-        Expires at {new Date(expiresAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+        Expires at {formatDate(expiresAt, locale)}
       </p>
     </section>
   );

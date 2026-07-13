@@ -2,6 +2,8 @@ import {
   PRD_SECTION_LABELS,
   type PrdResponse,
 } from '@autodev/shared-types';
+import { useLocaleStore } from '../../store/localeStore';
+import { formatDate } from '../../utils/localeFormat';
 import { diffPrdSections } from '../../utils/prdDiff';
 
 interface PrdVersionHistoryProps {
@@ -21,6 +23,7 @@ export function PrdVersionHistory({
   onSelectVersion,
   activePrdId,
 }: PrdVersionHistoryProps) {
+  const locale = useLocaleStore((state) => state.locale);
   const from = history.find((entry) => entry.id === compareFromId) ?? null;
   const to = history.find((entry) => entry.id === compareToId) ?? null;
   const diff = from && to ? diffPrdSections(from.sections, to.sections) : null;
@@ -51,7 +54,7 @@ export function PrdVersionHistory({
                   {entry.status.replace('_', ' ')}
                 </span>
                 <time dateTime={entry.updatedAt}>
-                  {new Date(entry.updatedAt).toLocaleString()}
+                  {formatDate(entry.updatedAt, locale)}
                 </time>
               </li>
             );

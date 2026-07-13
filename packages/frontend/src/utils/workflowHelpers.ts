@@ -4,6 +4,8 @@ import {
   type WorkflowResponse,
   type WorkflowState,
 } from '@autodev/shared-types';
+import { getAppLocale } from '../store/localeStore';
+import { formatDate } from './localeFormat';
 
 export type WorkflowFilterCategory =
   | 'all'
@@ -119,13 +121,6 @@ export function filterWorkflows(
   return workflows.filter((workflow) => matchesWorkflowFilter(workflow, filter));
 }
 
-export function formatWorkflowTimestamp(iso: string): string {
-  try {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
+export function formatWorkflowTimestamp(iso: string, locale?: string | null): string {
+  return formatDate(iso, locale ?? getAppLocale());
 }

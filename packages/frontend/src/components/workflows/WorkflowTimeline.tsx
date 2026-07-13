@@ -1,4 +1,5 @@
 import type { WorkflowTransitionRecord } from '@autodev/shared-types';
+import { useLocaleStore } from '../../store/localeStore';
 import {
   formatWorkflowState,
   formatWorkflowTimestamp,
@@ -9,6 +10,8 @@ interface WorkflowTimelineProps {
 }
 
 export function WorkflowTimeline({ history }: WorkflowTimelineProps) {
+  const locale = useLocaleStore((state) => state.locale);
+
   if (history.length === 0) {
     return (
       <p className="field-hint" role="status">
@@ -38,7 +41,9 @@ export function WorkflowTimeline({ history }: WorkflowTimelineProps) {
               </span>
             </p>
             <p className="workflow-timeline-meta">
-              <time dateTime={entry.timestamp}>{formatWorkflowTimestamp(entry.timestamp)}</time>
+              <time dateTime={entry.timestamp}>
+                {formatWorkflowTimestamp(entry.timestamp, locale)}
+              </time>
               {' · '}
               <span>{entry.trigger}</span>
             </p>

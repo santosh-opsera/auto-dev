@@ -1,13 +1,14 @@
+import { useLocaleStore } from '../../store/localeStore';
+import { formatDate } from '../../utils/localeFormat';
+
 interface PrdApprovedBadgeProps {
   approvedBy: string;
   approvedAt: string;
 }
 
 export function PrdApprovedBadge({ approvedBy, approvedAt }: PrdApprovedBadgeProps) {
-  const formatted = new Date(approvedAt).toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  const locale = useLocaleStore((state) => state.locale);
+  const formatted = formatDate(approvedAt, locale);
 
   return (
     <div
