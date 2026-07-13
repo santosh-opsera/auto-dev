@@ -31,6 +31,7 @@ import { createPrdRouter, createTicketPrdRouter } from './routes/prdRoutes.js';
 import { createWorkflowRouter } from './routes/workflowRoutes.js';
 import { createPackageRouter, createRepositoryDependencyRouter } from './routes/packageRoutes.js';
 import { createDeploymentRouter } from './routes/deploymentRoutes.js';
+import { createIntegrationRouter } from './routes/integrationRoutes.js';
 import { requireConventionSettings } from './middleware/conventionGate.js';
 import { requireApprovalClearance } from './middleware/requireApprovalClearance.js';
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
@@ -38,9 +39,13 @@ import { auditService } from './services/audit/auditService.js';
 import { sampleAuditMutationPayload } from './fixtures/audit.js';
 import { eventBus } from './services/events/eventBus.js';
 import { domainEventSchema } from '@autodev/shared-types';
+import { registerDefaultAdapters } from './services/integrations/registerDefaultAdapters.js';
 
 export function createApp(): Application {
   const app = express();
+
+  // Registration-only: new adapters are added via registerDefaultAdapters, not here.
+  registerDefaultAdapters();
 
   app.use(corsMiddleware);
   app.use(securityHeadersMiddleware);
@@ -100,6 +105,7 @@ export function createApp(): Application {
   app.use('/api/v1/workflows', createWorkflowRouter());
   app.use('/api/v1/packages', createPackageRouter());
   app.use('/api/v1/deployments', createDeploymentRouter());
+  app.use('/api/v1/integrations', createIntegrationRouter());
   app.use('/api/v1/llm', createLlmRouter());
 
   if (process.env.NODE_ENV === 'test') {
@@ -187,6 +193,11 @@ async function startServer(): Promise<void> {
       operation: 'startup',
     });
   }
+
+  const { bootstrapIntegrationAdapters } = await import(
+    './services/integrations/registerDefaultAdapters.js'
+  );
+  await bootstrapIntegrationAdapters();
 
   const app = createApp();
   app.listen(PORT, () => {
