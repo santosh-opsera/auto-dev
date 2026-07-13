@@ -1,4 +1,5 @@
 export {
+  sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
   sampleEventMetadata,
@@ -9,6 +10,7 @@ export {
 
 import type { DomainEvent, EventType } from '@autodev/shared-types';
 import {
+  sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
   sampleTicketParsedEvent,
@@ -18,6 +20,7 @@ import {
 
 export const sampleDomainEvents: DomainEvent[] = [
   sampleConventionUpdatedEvent,
+  sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleTicketParsedEvent,
   sampleWorkflowTransitionedEvent,
@@ -35,6 +38,7 @@ export const sampleEventTypes: EventType[] = [
   'APPROVAL_EXPIRED',
   'APPROVAL_REMINDER',
   'CONVENTION_UPDATED',
+  'CHUNK_CREATED',
   'CHUNK_PROGRESS',
   'WORKFLOW_TRANSITIONED',
   'WORKFLOW_FAILED',

@@ -1,4 +1,4 @@
-import type { DomainEvent } from './events.js';
+import type { DomainEvent } from '../events.js';
 
 export const sampleEventMetadata = {
   eventId: 'event-001',
@@ -15,6 +15,22 @@ export const sampleConventionUpdatedEvent: DomainEvent = {
     version: 2,
   },
   metadata: sampleEventMetadata,
+};
+
+export const sampleChunkCreatedEvent: DomainEvent = {
+  type: 'CHUNK_CREATED',
+  payload: {
+    workflowId: 'workflow-001',
+    chunkId: 'chunk-001',
+    prdId: 'prd-003',
+    name: 'Data model and shared types',
+    order: 0,
+    status: 'PENDING',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-002a',
+  },
 };
 
 export const sampleChunkProgressEvent: DomainEvent = {

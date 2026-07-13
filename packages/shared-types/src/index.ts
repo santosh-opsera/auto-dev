@@ -149,6 +149,7 @@ export type {
 } from './events.js';
 
 export {
+  sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
   sampleEventMetadata,
@@ -455,3 +456,38 @@ export {
   samplePrdWithXssAttempt,
   sampleRejectedPrd,
 } from './fixtures/prd.js';
+
+export {
+  CHUNK_COMPLEXITIES,
+  CHUNK_STATUSES,
+  CHUNK_STATUS_TRANSITIONS,
+  canTransitionChunkStatus,
+  chunkComplexitySchema,
+  chunkDecomposeRequestSchema,
+  chunkDecompositionDraftSchema,
+  chunkListResponseSchema,
+  chunkScopeSchema,
+  chunkStatusSchema,
+  chunkStatusUpdateRequestSchema,
+  implementationChunkResponseSchema,
+  workflowChunkIdParamsSchema,
+  workflowChunkParamsSchema,
+} from './chunk.js';
+
+export type {
+  ChunkComplexity,
+  ChunkDecomposeRequest,
+  ChunkDecompositionDraft,
+  ChunkListResponse,
+  ChunkScope,
+  ChunkStatus,
+  ChunkStatusUpdateRequest,
+  ImplementationChunkResponse,
+} from './chunk.js';
+
+export {
+  sampleChunkDecompositionDraft,
+  sampleChunkLlmJsonResponse,
+  sampleExpectedChunkDecomposition,
+  sampleImplementationChunks,
+} from './fixtures/chunk.js';
