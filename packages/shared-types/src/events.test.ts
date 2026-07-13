@@ -4,6 +4,7 @@ import {
   sampleChunkCreatedEvent,
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
+  sampleDependencyUpdateAvailableEvent,
   samplePrCreatedEvent,
   sampleTestingFailedEvent,
   sampleTestingIterationEvent,
@@ -36,6 +37,7 @@ describe('event schemas', () => {
       'PR_CREATED',
       'WORKFLOW_TRANSITIONED',
       'WORKFLOW_FAILED',
+      'DEPENDENCY_UPDATE_AVAILABLE',
     ]);
   });
 
@@ -50,6 +52,7 @@ describe('event schemas', () => {
     expect(domainEventSchema.safeParse(samplePrCreatedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleWorkflowTransitionedEvent).success).toBe(true);
     expect(domainEventSchema.safeParse(sampleWorkflowFailedEvent).success).toBe(true);
+    expect(domainEventSchema.safeParse(sampleDependencyUpdateAvailableEvent).success).toBe(true);
   });
 
   it('rejects events with invalid payloads', () => {

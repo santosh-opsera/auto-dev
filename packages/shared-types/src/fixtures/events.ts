@@ -168,3 +168,22 @@ export const sampleWorkflowFailedEvent: DomainEvent = {
     eventId: 'event-005',
   },
 };
+
+export const sampleDependencyUpdateAvailableEvent: DomainEvent = {
+  type: 'DEPENDENCY_UPDATE_AVAILABLE',
+  payload: {
+    proposalId: 'dep-update-sample-001',
+    packageName: '@autodev/shared-utils',
+    currentVersion: '^1.2.3',
+    proposedVersion: '1.3.0',
+    changelogLink:
+      'https://www.npmjs.com/package/%40autodev%2Fshared-utils?activeTab=versions#1.3.0',
+    owner: 'acme',
+    repo: 'web-app',
+    packagePath: 'package.json',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-006',
+  },
+};
