@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: autodev-qa:local
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: test
+      PORT: "4000"
+      AUTODEV_BRANCH: ${AUTODEV_BRANCH:-main}
+      AUTODEV_BASE_URL: ${AUTODEV_BASE_URL:-http://localhost:4000}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/api/v1/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s

@@ -24,6 +24,9 @@ export const EVENT_TYPES = [
   'WORKFLOW_TRANSITIONED',
   'WORKFLOW_FAILED',
   'DEPENDENCY_UPDATE_AVAILABLE',
+  'DEPLOYMENT_STARTED',
+  'DEPLOYMENT_COMPLETED',
+  'DEPLOYMENT_FAILED',
 ] as const;
 
 export const eventTypeSchema = z.enum(EVENT_TYPES);
@@ -201,6 +204,31 @@ const dependencyUpdateAvailablePayloadSchema = z.object({
   packagePath: z.string().min(1),
 });
 
+const deploymentStartedPayloadSchema = z.object({
+  deploymentId: z.string().min(1),
+  workflowId: z.string().min(1),
+  branch: z.string().min(1),
+  baseUrl: z.string().url(),
+});
+
+const deploymentCompletedPayloadSchema = z.object({
+  deploymentId: z.string().min(1),
+  workflowId: z.string().min(1),
+  branch: z.string().min(1),
+  baseUrl: z.string().url(),
+  status: z.literal('RUNNING'),
+});
+
+const deploymentFailedPayloadSchema = z.object({
+  deploymentId: z.string().min(1),
+  workflowId: z.string().min(1),
+  branch: z.string().min(1),
+  baseUrl: z.string().url(),
+  errorMessage: z.string().min(1),
+  errorCode: z.string().min(1).optional(),
+  phase: z.enum(['PENDING', 'BUILDING', 'DEPLOYING', 'RUNNING', 'FAILED', 'STOPPED']).optional(),
+});
+
 export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('TICKET_PARSED'),
@@ -305,6 +333,21 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('DEPENDENCY_UPDATE_AVAILABLE'),
     payload: dependencyUpdateAvailablePayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('DEPLOYMENT_STARTED'),
+    payload: deploymentStartedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('DEPLOYMENT_COMPLETED'),
+    payload: deploymentCompletedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('DEPLOYMENT_FAILED'),
+    payload: deploymentFailedPayloadSchema,
     metadata: eventMetadataSchema,
   }),
 ]);

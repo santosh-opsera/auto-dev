@@ -187,3 +187,49 @@ export const sampleDependencyUpdateAvailableEvent: DomainEvent = {
     eventId: 'event-006',
   },
 };
+
+export const sampleDeploymentStartedEvent: DomainEvent = {
+  type: 'DEPLOYMENT_STARTED',
+  payload: {
+    deploymentId: 'deployment-001',
+    workflowId: 'workflow-001',
+    branch: 'feature/qa-handoff',
+    baseUrl: 'http://localhost:4000',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-007',
+  },
+};
+
+export const sampleDeploymentCompletedEvent: DomainEvent = {
+  type: 'DEPLOYMENT_COMPLETED',
+  payload: {
+    deploymentId: 'deployment-001',
+    workflowId: 'workflow-001',
+    branch: 'feature/qa-handoff',
+    baseUrl: 'http://localhost:4000',
+    status: 'RUNNING',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-008',
+  },
+};
+
+export const sampleDeploymentFailedEvent: DomainEvent = {
+  type: 'DEPLOYMENT_FAILED',
+  payload: {
+    deploymentId: 'deployment-002',
+    workflowId: 'workflow-001',
+    branch: 'feature/qa-handoff',
+    baseUrl: 'http://localhost:4000',
+    errorMessage: 'Docker Compose build failed',
+    errorCode: 'DEPLOY_BUILD_FAILED',
+    phase: 'BUILDING',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-009',
+  },
+};

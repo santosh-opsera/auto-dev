@@ -154,6 +154,9 @@ export {
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
   sampleDependencyUpdateAvailableEvent,
+  sampleDeploymentCompletedEvent,
+  sampleDeploymentFailedEvent,
+  sampleDeploymentStartedEvent,
   sampleEventMetadata,
   sampleTestingFailedEvent,
   sampleTestingIterationEvent,
@@ -810,3 +813,40 @@ export {
   sampleUnrelatedPackageJson,
   sampleUnrelatedRepoSnapshot,
 } from './fixtures/dependencies.js';
+
+export {
+  DEFAULT_LOCAL_DEPLOYMENT_BASE_URL,
+  DEPLOYMENT_STATUSES,
+  deploymentCreateRequestSchema,
+  deploymentErrorSchema,
+  deploymentIdParamsSchema,
+  deploymentResponseSchema,
+  deploymentStatusSchema,
+  dockerComposeCommandSchema,
+  healthCheckResultSchema,
+} from './deployments.js';
+
+export type {
+  DeploymentCreateRequest,
+  DeploymentError,
+  DeploymentIdParams,
+  DeploymentResponse,
+  DeploymentStatus,
+  DockerComposeCommand,
+  HealthCheckResult,
+} from './deployments.js';
+
+export {
+  sampleComposeDownCommand,
+  sampleComposeUpCommand,
+  sampleDeploymentCreateRequest,
+  sampleDeploymentFailed,
+  sampleDeploymentPending,
+  sampleDeploymentRunning,
+  sampleDeploymentStopped,
+  sampleDockerBuildFailureOutput,
+  sampleDockerBuildOutput,
+  sampleDockerComposeYaml,
+  sampleHealthCheckFailing,
+  sampleHealthCheckPassing,
+} from './fixtures/deployments.js';
