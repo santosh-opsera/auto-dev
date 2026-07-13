@@ -7,6 +7,8 @@ import { ConventionsPage } from './pages/ConventionsPage';
 import { LoginPage } from './pages/LoginPage';
 import { RepositoriesPage } from './pages/RepositoriesPage';
 import { TicketIngestPage } from './pages/TicketIngestPage';
+import { WorkflowDetailPage } from './pages/WorkflowDetailPage';
+import { WorkflowsPage } from './pages/WorkflowsPage';
 import { useAuthStore } from './store/authStore';
 import './App.css';
 
@@ -93,6 +95,26 @@ function AppRoutes() {
         element={
           isAuthenticated ? (
             <ApprovalGatePage onLogoutComplete={() => navigate('/login', { replace: true })} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/workflows"
+        element={
+          isAuthenticated ? (
+            <WorkflowsPage onLogoutComplete={() => navigate('/login', { replace: true })} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/workflows/:id"
+        element={
+          isAuthenticated ? (
+            <WorkflowDetailPage onLogoutComplete={() => navigate('/login', { replace: true })} />
           ) : (
             <Navigate to="/login" replace />
           )

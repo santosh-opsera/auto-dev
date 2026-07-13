@@ -104,6 +104,8 @@ export function useSSE({ enabled, onEvent, onConnectionChange }: UseSSEOptions):
         'APPROVAL_REMINDER',
         'CONVENTION_UPDATED',
         'CHUNK_PROGRESS',
+        'WORKFLOW_TRANSITIONED',
+        'WORKFLOW_FAILED',
       ] as const) {
         eventSource.addEventListener(eventType, (message) => {
           const event = parseDomainEvent((message as MessageEvent<string>).data);
