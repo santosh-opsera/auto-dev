@@ -16,6 +16,8 @@ import {
   cursorExecuteResponseSchema,
   cursorResultsSubmitRequestSchema,
   cursorResultsSubmitResponseSchema,
+  chunkTestRequestSchema,
+  chunkTestResponseSchema,
   implementationChunkResponseSchema,
   workflowChunkIdParamsSchema,
   workflowChunkParamsSchema,
@@ -26,6 +28,7 @@ import { validateBody, validateParams, validateQuery } from '../middleware/valid
 import { cursorBridgeService } from '../services/cursor/cursorBridgeService.js';
 import { branchCommitService } from '../services/git/branchCommitService.js';
 import { chunkManager } from '../services/implementation/chunkManager.js';
+import { testFixService } from '../services/testing/testFixService.js';
 
 export function createChunkRouter(): Router {
   const router = Router({ mergeParams: true });
@@ -161,6 +164,31 @@ export function createChunkRouter(): Router {
       const { id, chunkId } = req.params as { id: string; chunkId: string };
       const payload = await cursorBridgeService.submitResults(req.user!, id, chunkId, req.body);
       cursorResultsSubmitResponseSchema.parse(payload);
+      res.status(200).json(payload);
+    }),
+  );
+
+  router.post(
+    '/:chunkId/test',
+    asyncHandler(requireSession),
+    validateParams(workflowChunkIdParamsSchema),
+    validateBody(chunkTestRequestSchema),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const { id, chunkId } = req.params as { id: string; chunkId: string };
+      const payload = await testFixService.runForChunk(req.user!, id, chunkId, req.body);
+      chunkTestResponseSchema.parse(payload);
+      res.status(200).json(payload);
+    }),
+  );
+
+  router.get(
+    '/:chunkId/test-report',
+    asyncHandler(requireSession),
+    validateParams(workflowChunkIdParamsSchema),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const { id, chunkId } = req.params as { id: string; chunkId: string };
+      const payload = await testFixService.getReport(req.user!, id, chunkId);
+      chunkTestResponseSchema.parse(payload);
       res.status(200).json(payload);
     }),
   );

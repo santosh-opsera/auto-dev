@@ -16,6 +16,10 @@ export const EVENT_TYPES = [
   'CONVENTION_UPDATED',
   'CHUNK_CREATED',
   'CHUNK_PROGRESS',
+  'TESTING_STARTED',
+  'TESTING_ITERATION',
+  'TESTING_PASSED',
+  'TESTING_FAILED',
   'WORKFLOW_TRANSITIONED',
   'WORKFLOW_FAILED',
 ] as const;
@@ -127,6 +131,42 @@ const chunkProgressPayloadSchema = z.object({
   progressPercent: z.number().min(0).max(100),
 });
 
+const testingStartedPayloadSchema = z.object({
+  workflowId: z.string(),
+  chunkId: z.string(),
+  maxIterations: z.number().int().positive(),
+  framework: z.string().min(1),
+  testCount: z.number().int().nonnegative(),
+});
+
+const testingIterationPayloadSchema = z.object({
+  workflowId: z.string(),
+  chunkId: z.string(),
+  iteration: z.number().int().positive(),
+  maxIterations: z.number().int().positive(),
+  passed: z.boolean(),
+  failedCount: z.number().int().nonnegative(),
+  identifiedIssues: z.array(z.string()),
+  fixesApplied: z.number().int().nonnegative(),
+});
+
+const testingPassedPayloadSchema = z.object({
+  workflowId: z.string(),
+  chunkId: z.string(),
+  iterationsUsed: z.number().int().nonnegative(),
+  coveragePercent: z.number().min(0).max(100),
+  passedCount: z.number().int().nonnegative(),
+});
+
+const testingFailedPayloadSchema = z.object({
+  workflowId: z.string(),
+  chunkId: z.string(),
+  iterationsUsed: z.number().int().positive(),
+  maxIterations: z.number().int().positive(),
+  failedCount: z.number().int().nonnegative(),
+  rootCauseSummary: z.string().min(1),
+});
+
 const workflowTransitionedPayloadSchema = z.object({
   workflowId: z.string(),
   previousState: workflowStateSchema,
@@ -204,6 +244,26 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('CHUNK_PROGRESS'),
     payload: chunkProgressPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('TESTING_STARTED'),
+    payload: testingStartedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('TESTING_ITERATION'),
+    payload: testingIterationPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('TESTING_PASSED'),
+    payload: testingPassedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('TESTING_FAILED'),
+    payload: testingFailedPayloadSchema,
     metadata: eventMetadataSchema,
   }),
   z.object({
