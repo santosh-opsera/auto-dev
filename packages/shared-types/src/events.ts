@@ -9,6 +9,8 @@ export const EVENT_TYPES = [
   'DIVERGENCE_NONE',
   'APPROVAL_REQUESTED',
   'APPROVAL_RESOLVED',
+  'APPROVAL_EXPIRED',
+  'APPROVAL_REMINDER',
   'CONVENTION_UPDATED',
   'CHUNK_PROGRESS',
 ] as const;
@@ -79,7 +81,24 @@ const approvalResolvedPayloadSchema = z.object({
   ticketKey: z.string(),
   workflowId: z.string(),
   approvalId: z.string(),
-  decision: z.enum(['ticket', 'codebase']),
+  decision: z.enum(['approve', 'reject', 'modify', 'cleared']),
+  itemId: z.string().optional(),
+});
+
+const approvalExpiredPayloadSchema = z.object({
+  ticketKey: z.string(),
+  workflowId: z.string(),
+  approvalId: z.string(),
+  expiredItemIds: z.array(z.string()),
+});
+
+const approvalReminderPayloadSchema = z.object({
+  ticketKey: z.string(),
+  workflowId: z.string(),
+  approvalId: z.string(),
+  reminder: z.enum(['24h', '48h']),
+  pendingCount: z.number().int().nonnegative(),
+  expiresAt: z.string().datetime(),
 });
 
 const conventionUpdatedPayloadSchema = z.object({
@@ -133,6 +152,16 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('APPROVAL_RESOLVED'),
     payload: approvalResolvedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('APPROVAL_EXPIRED'),
+    payload: approvalExpiredPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('APPROVAL_REMINDER'),
+    payload: approvalReminderPayloadSchema,
     metadata: eventMetadataSchema,
   }),
   z.object({

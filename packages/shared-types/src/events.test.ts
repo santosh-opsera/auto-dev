@@ -13,6 +13,8 @@ describe('event schemas', () => {
       'DIVERGENCE_NONE',
       'APPROVAL_REQUESTED',
       'APPROVAL_RESOLVED',
+      'APPROVAL_EXPIRED',
+      'APPROVAL_REMINDER',
       'CONVENTION_UPDATED',
       'CHUNK_PROGRESS',
     ]);
