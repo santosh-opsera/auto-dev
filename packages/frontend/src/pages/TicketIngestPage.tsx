@@ -150,7 +150,7 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
           <section className="profile-card">
             <p role="status">
               {canProceed
-                ? 'Ticket is ready to proceed to codebase analysis.'
+                ? 'Ticket is ready to proceed to codebase analysis. After analysis detects gaps or divergences, open the approval gate at /approvals/:requestId to clear decisions before implementation.'
                 : 'Resolve critical gaps before proceeding to codebase analysis.'}
             </p>
           </section>

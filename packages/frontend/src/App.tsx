@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser } from './api/auth';
+import { ApprovalGatePage } from './pages/ApprovalGatePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ConventionsPage } from './pages/ConventionsPage';
 import { LoginPage } from './pages/LoginPage';
@@ -82,6 +83,16 @@ function AppRoutes() {
         element={
           isAuthenticated ? (
             <TicketIngestPage onLogoutComplete={() => navigate('/login', { replace: true })} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/approvals/:requestId"
+        element={
+          isAuthenticated ? (
+            <ApprovalGatePage onLogoutComplete={() => navigate('/login', { replace: true })} />
           ) : (
             <Navigate to="/login" replace />
           )

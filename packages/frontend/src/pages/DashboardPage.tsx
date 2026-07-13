@@ -87,6 +87,17 @@ export function DashboardPage({ onLogoutComplete }: DashboardPageProps) {
           Open ticket ingestion
         </Link>
       </section>
+
+      <section aria-labelledby="approvals-heading" className="profile-card">
+        <h2 id="approvals-heading">Approvals</h2>
+        <p>
+          Review gap and divergence decisions at{' '}
+          <code>/approvals/:requestId</code> after an approval request is created.
+        </p>
+        <Link to="/approvals/approval-001" className="primary-link">
+          Open sample approval review
+        </Link>
+      </section>
     </main>
   );
 }

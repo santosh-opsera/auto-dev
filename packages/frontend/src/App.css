@@ -2,7 +2,8 @@
 .auth-page,
 .dashboard-page,
 .repositories-page,
-.tickets-page {
+.tickets-page,
+.approvals-page {
   min-height: 100vh;
 }
 
@@ -517,3 +518,134 @@
   border-radius: 0.75rem;
   background: #f8fafc;
 }
+
+.approvals-page {
+  padding: 2rem;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.approval-meta,
+.approval-progress,
+.approval-expiry,
+.approval-group,
+.approval-proceed {
+  max-width: 56rem;
+  margin-bottom: 1.5rem;
+}
+
+.approval-progress-track {
+  height: 0.75rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  margin-top: 0.75rem;
+}
+
+.approval-progress-fill {
+  height: 100%;
+  background: #2563eb;
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+.approval-expiry-countdown {
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+.approval-expiry-expired {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.approval-item-card {
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.approval-item-status {
+  margin-left: auto;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #475569;
+}
+
+.divergence-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.divergence-column {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.divergence-column h4,
+.divergence-recommendation h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+}
+
+.divergence-recommendation {
+  grid-column: 1 / -1;
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid #2563eb;
+  background: #eff6ff;
+}
+
+.approval-decision-panel {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.approval-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.approval-action-selected {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.approval-decision-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.approval-decision-resolved {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 40rem) {
+  .divergence-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
