@@ -199,6 +199,11 @@ async function startServer(): Promise<void> {
   );
   await bootstrapIntegrationAdapters();
 
+  const { startDailyRetentionJob } = await import(
+    './services/classification/retentionJob.js'
+  );
+  startDailyRetentionJob({ runImmediately: false });
+
   const app = createApp();
   app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`, {
