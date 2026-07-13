@@ -11,6 +11,7 @@ import { TicketIngestPage } from './pages/TicketIngestPage';
 import { WorkflowDetailPage } from './pages/WorkflowDetailPage';
 import { WorkflowsPage } from './pages/WorkflowsPage';
 import { useAuthStore } from './store/authStore';
+import { useLocaleStore } from './store/localeStore';
 import './App.css';
 
 function AppRoutes() {
@@ -18,7 +19,12 @@ function AppRoutes() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setAuth = useAuthStore((state) => state.setAuth);
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const detectLocale = useLocaleStore((state) => state.detectLocale);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+
+  useEffect(() => {
+    detectLocale();
+  }, [detectLocale]);
 
   useEffect(() => {
     let active = true;

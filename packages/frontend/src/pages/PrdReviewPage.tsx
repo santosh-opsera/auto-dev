@@ -7,6 +7,8 @@ import { PrdSectionPanels } from '../components/prd/PrdSectionPanels';
 import { PrdVersionHistory } from '../components/prd/PrdVersionHistory';
 import { usePrdReview } from '../hooks/usePrdReview';
 import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
+import { useLocaleStore } from '../store/localeStore';
+import { formatDate } from '../utils/localeFormat';
 
 interface PrdReviewPageProps {
   onLogoutComplete: () => void;
@@ -17,6 +19,7 @@ export function PrdReviewPage({ onLogoutComplete, mode }: PrdReviewPageProps) {
   const navigate = useNavigate();
   const { id, ticketKey } = useParams<{ id?: string; ticketKey?: string }>();
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const locale = useLocaleStore((state) => state.locale);
 
   const review = usePrdReview(
     mode === 'byId' ? { prdId: id } : { ticketKey },
@@ -93,7 +96,7 @@ export function PrdReviewPage({ onLogoutComplete, mode }: PrdReviewPageProps) {
                 <dt>Updated</dt>
                 <dd>
                   <time dateTime={review.prd.updatedAt}>
-                    {new Date(review.prd.updatedAt).toLocaleString()}
+                    {formatDate(review.prd.updatedAt, locale)}
                   </time>
                 </dd>
               </div>

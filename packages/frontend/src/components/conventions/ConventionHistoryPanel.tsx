@@ -1,15 +1,15 @@
 import type { ConventionSettingsResponse } from '@autodev/shared-types';
+import { useLocaleStore } from '../../store/localeStore';
+import { formatDate } from '../../utils/localeFormat';
 import { getChangedConventionFields } from '../../utils/templateVariables';
 
 interface ConventionHistoryPanelProps {
   versions: ConventionSettingsResponse[];
 }
 
-function formatTimestamp(value: string): string {
-  return new Date(value).toLocaleString();
-}
-
 export function ConventionHistoryPanel({ versions }: ConventionHistoryPanelProps) {
+  const locale = useLocaleStore((state) => state.locale);
+
   if (versions.length === 0) {
     return <p>No convention versions saved yet.</p>;
   }
@@ -44,7 +44,7 @@ export function ConventionHistoryPanel({ versions }: ConventionHistoryPanelProps
               <header>
                 <strong>Version {version.version}</strong>
                 {version.isActive ? <span className="history-badge">Active</span> : null}
-                <time dateTime={version.createdAt}>{formatTimestamp(version.createdAt)}</time>
+                <time dateTime={version.createdAt}>{formatDate(version.createdAt, locale)}</time>
               </header>
               <dl>
                 {(
