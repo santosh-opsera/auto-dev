@@ -12,6 +12,10 @@
     "dev:frontend": "npm run dev -w @autodev/frontend",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test -w @autodev/e2e",
+    "test:e2e:api": "npm run test:api -w @autodev/e2e",
+    "test:e2e:ui": "npm run test:ui -w @autodev/e2e",
+    "test:e2e:mocks": "npm run mocks -w @autodev/e2e",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --write \"packages/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx,json}\""

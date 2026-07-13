@@ -15,3 +15,8 @@ npm-audit.json
 security-report-*.html
 security-report-*.md
 package-leakage-report.json
+
+# E2E artifacts
+packages/e2e/playwright-report/
+packages/e2e/test-results/
+packages/e2e/blob-report/

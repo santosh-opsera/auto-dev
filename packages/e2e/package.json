@@ -1,0 +1,31 @@
+{
+  "name": "@autodev/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "End-to-end tests for AutoDev core workflows (mock mode)",
+  "scripts": {
+    "test": "npm run test:api && npm run test:ui",
+    "test:api": "vitest run",
+    "test:ui": "playwright test",
+    "test:ui:headed": "playwright test --headed",
+    "mocks": "tsx mocks/startMocks.ts",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install chromium"
+  },
+  "dependencies": {
+    "@autodev/shared-types": "*",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.1",
+    "@types/supertest": "^6.0.3",
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.1.4",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.4"
+  }
+}
