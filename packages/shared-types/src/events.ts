@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { workflowErrorSchema, workflowStateSchema } from './workflow.js';
 
 export const EVENT_TYPES = [
   'TICKET_PARSED',
@@ -13,6 +14,8 @@ export const EVENT_TYPES = [
   'APPROVAL_REMINDER',
   'CONVENTION_UPDATED',
   'CHUNK_PROGRESS',
+  'WORKFLOW_TRANSITIONED',
+  'WORKFLOW_FAILED',
 ] as const;
 
 export const eventTypeSchema = z.enum(EVENT_TYPES);
@@ -113,6 +116,19 @@ const chunkProgressPayloadSchema = z.object({
   progressPercent: z.number().min(0).max(100),
 });
 
+const workflowTransitionedPayloadSchema = z.object({
+  workflowId: z.string(),
+  previousState: workflowStateSchema,
+  newState: workflowStateSchema,
+  trigger: z.string().min(1),
+});
+
+const workflowFailedPayloadSchema = z.object({
+  workflowId: z.string(),
+  previousState: workflowStateSchema,
+  error: workflowErrorSchema,
+});
+
 export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('TICKET_PARSED'),
@@ -172,6 +188,16 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('CHUNK_PROGRESS'),
     payload: chunkProgressPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('WORKFLOW_TRANSITIONED'),
+    payload: workflowTransitionedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('WORKFLOW_FAILED'),
+    payload: workflowFailedPayloadSchema,
     metadata: eventMetadataSchema,
   }),
 ]);

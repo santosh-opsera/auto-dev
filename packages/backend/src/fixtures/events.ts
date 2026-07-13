@@ -3,6 +3,8 @@ export {
   sampleConventionUpdatedEvent,
   sampleEventMetadata,
   sampleTicketParsedEvent,
+  sampleWorkflowFailedEvent,
+  sampleWorkflowTransitionedEvent,
 } from '@autodev/shared-types';
 
 import type { DomainEvent, EventType } from '@autodev/shared-types';
@@ -10,12 +12,16 @@ import {
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
   sampleTicketParsedEvent,
+  sampleWorkflowFailedEvent,
+  sampleWorkflowTransitionedEvent,
 } from '@autodev/shared-types';
 
 export const sampleDomainEvents: DomainEvent[] = [
   sampleConventionUpdatedEvent,
   sampleChunkProgressEvent,
   sampleTicketParsedEvent,
+  sampleWorkflowTransitionedEvent,
+  sampleWorkflowFailedEvent,
 ];
 
 export const sampleEventTypes: EventType[] = [
@@ -30,4 +36,6 @@ export const sampleEventTypes: EventType[] = [
   'APPROVAL_REMINDER',
   'CONVENTION_UPDATED',
   'CHUNK_PROGRESS',
+  'WORKFLOW_TRANSITIONED',
+  'WORKFLOW_FAILED',
 ];
