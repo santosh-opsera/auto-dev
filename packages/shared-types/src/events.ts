@@ -27,6 +27,9 @@ export const EVENT_TYPES = [
   'DEPLOYMENT_STARTED',
   'DEPLOYMENT_COMPLETED',
   'DEPLOYMENT_FAILED',
+  'QA_HANDOFF_READY',
+  'QA_HANDOFF_APPROVED',
+  'QA_CHANGES_REQUESTED',
 ] as const;
 
 export const eventTypeSchema = z.enum(EVENT_TYPES);
@@ -229,6 +232,33 @@ const deploymentFailedPayloadSchema = z.object({
   phase: z.enum(['PENDING', 'BUILDING', 'DEPLOYING', 'RUNNING', 'FAILED', 'STOPPED']).optional(),
 });
 
+const qaFeedbackEventItemSchema = z.object({
+  id: z.string().min(1),
+  description: z.string().min(1),
+  checklistItemId: z.string().min(1).optional(),
+});
+
+const qaHandoffReadyPayloadSchema = z.object({
+  handoffId: z.string().min(1),
+  workflowId: z.string().min(1),
+  ticketKey: z.string().min(1),
+  deploymentUrl: z.string().url(),
+});
+
+const qaHandoffApprovedPayloadSchema = z.object({
+  handoffId: z.string().min(1),
+  workflowId: z.string().min(1),
+  ticketKey: z.string().min(1),
+});
+
+const qaChangesRequestedPayloadSchema = z.object({
+  handoffId: z.string().min(1),
+  workflowId: z.string().min(1),
+  ticketKey: z.string().min(1),
+  feedbackItems: z.array(qaFeedbackEventItemSchema).min(1),
+  feedbackCount: z.number().int().positive(),
+});
+
 export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('TICKET_PARSED'),
@@ -348,6 +378,21 @@ export const domainEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('DEPLOYMENT_FAILED'),
     payload: deploymentFailedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('QA_HANDOFF_READY'),
+    payload: qaHandoffReadyPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('QA_HANDOFF_APPROVED'),
+    payload: qaHandoffApprovedPayloadSchema,
+    metadata: eventMetadataSchema,
+  }),
+  z.object({
+    type: z.literal('QA_CHANGES_REQUESTED'),
+    payload: qaChangesRequestedPayloadSchema,
     metadata: eventMetadataSchema,
   }),
 ]);

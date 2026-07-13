@@ -8,6 +8,9 @@ export {
   sampleDeploymentStartedEvent,
   sampleEventMetadata,
   samplePrCreatedEvent,
+  sampleQaChangesRequestedEvent,
+  sampleQaHandoffApprovedEvent,
+  sampleQaHandoffReadyEvent,
   sampleTestingFailedEvent,
   sampleTestingIterationEvent,
   sampleTestingPassedEvent,
@@ -27,6 +30,9 @@ import {
   sampleDeploymentFailedEvent,
   sampleDeploymentStartedEvent,
   samplePrCreatedEvent,
+  sampleQaChangesRequestedEvent,
+  sampleQaHandoffApprovedEvent,
+  sampleQaHandoffReadyEvent,
   sampleTestingFailedEvent,
   sampleTestingIterationEvent,
   sampleTestingPassedEvent,
@@ -52,6 +58,9 @@ export const sampleDomainEvents: DomainEvent[] = [
   sampleDeploymentStartedEvent,
   sampleDeploymentCompletedEvent,
   sampleDeploymentFailedEvent,
+  sampleQaHandoffReadyEvent,
+  sampleQaHandoffApprovedEvent,
+  sampleQaChangesRequestedEvent,
 ];
 
 export const sampleEventTypes: EventType[] = [
@@ -78,4 +87,7 @@ export const sampleEventTypes: EventType[] = [
   'DEPLOYMENT_STARTED',
   'DEPLOYMENT_COMPLETED',
   'DEPLOYMENT_FAILED',
+  'QA_HANDOFF_READY',
+  'QA_HANDOFF_APPROVED',
+  'QA_CHANGES_REQUESTED',
 ];

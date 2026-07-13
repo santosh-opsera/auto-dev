@@ -158,6 +158,9 @@ export {
   sampleDeploymentFailedEvent,
   sampleDeploymentStartedEvent,
   sampleEventMetadata,
+  sampleQaChangesRequestedEvent,
+  sampleQaHandoffApprovedEvent,
+  sampleQaHandoffReadyEvent,
   sampleTestingFailedEvent,
   sampleTestingIterationEvent,
   sampleTestingPassedEvent,
@@ -850,3 +853,49 @@ export {
   sampleHealthCheckFailing,
   sampleHealthCheckPassing,
 } from './fixtures/deployments.js';
+
+export {
+  buildVerificationChecklist,
+  QA_HANDOFF_STATUSES,
+  changeSummarySchema,
+  checklistItemStatusSchema,
+  handoffCoverageReportSchema,
+  handoffJiraTicketSchema,
+  qaFeedbackItemSchema,
+  qaHandoffApproveRequestSchema,
+  qaHandoffGenerateRequestSchema,
+  qaHandoffRequestChangesRequestSchema,
+  qaHandoffResponseSchema,
+  qaHandoffStatusSchema,
+  uncoveredLineEntrySchema,
+  verificationChecklistItemSchema,
+} from './qaHandoff.js';
+
+export type {
+  ChangeSummary,
+  ChecklistItemStatus,
+  HandoffCoverageReport,
+  HandoffJiraTicket,
+  QaFeedbackItem,
+  QaHandoffApproveRequest,
+  QaHandoffGenerateRequest,
+  QaHandoffRequestChangesRequest,
+  QaHandoffResponse,
+  QaHandoffStatus,
+  UncoveredLineEntry,
+  VerificationChecklistItem,
+} from './qaHandoff.js';
+
+export {
+  sampleChangeSummary,
+  sampleHandoffCoverageReport,
+  sampleHandoffJiraTicket,
+  sampleQaFeedbackItems,
+  sampleQaHandoffApproved,
+  sampleQaHandoffChangesRequested,
+  sampleQaHandoffGenerateRequest,
+  sampleQaHandoffReady,
+  sampleQaHandoffRequestChanges,
+  sampleVerificationChecklist,
+  sampleWorkflowHandoffInputs,
+} from './fixtures/qaHandoff.js';
