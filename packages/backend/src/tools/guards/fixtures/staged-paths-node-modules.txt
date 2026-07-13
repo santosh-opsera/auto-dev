@@ -1,0 +1,4 @@
+packages/backend/src/index.ts
+packages/backend/src/node_modules/lodash/index.js
+node_modules/express/package.json
+packages/frontend/node_modules/.bin/vite

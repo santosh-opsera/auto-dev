@@ -4,6 +4,8 @@
  * Never hardcode naming formats in callers.
  */
 
+import { createSafeRegExp, UnsafeRegExpError } from '../../lib/safeRegExp.js';
+
 export type ConventionTemplateVariables = Record<string, string>;
 
 function escapeRegExp(value: string): string {
@@ -31,8 +33,11 @@ export function applyConventionTemplate(
 
 export function matchesBranchNamingPattern(branchName: string, pattern: string): boolean {
   try {
-    return new RegExp(pattern).test(branchName);
-  } catch {
+    return createSafeRegExp(pattern).test(branchName);
+  } catch (error) {
+    if (error instanceof UnsafeRegExpError) {
+      return false;
+    }
     return false;
   }
 }
@@ -140,7 +145,7 @@ export function validateCommitMessageAgainstFormat(
   }
 
   try {
-    return new RegExp(`^${pattern}$`).test(commitMessage);
+    return createSafeRegExp(`^${pattern}$`).test(commitMessage);
   } catch {
     return false;
   }

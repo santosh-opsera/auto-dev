@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "guard:build": "tsx src/tools/guards/cli/buildGuardCli.ts",
+    "precommit:guard": "tsx src/tools/guards/cli/preCommitCli.ts",
+    "build": "npm run guard:build && tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
     "lint": "eslint ."

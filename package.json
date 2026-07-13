@@ -10,7 +10,9 @@
     "dev": "concurrently \"npm run dev -w @autodev/backend\" \"npm run dev -w @autodev/frontend\"",
     "dev:backend": "npm run dev -w @autodev/backend",
     "dev:frontend": "npm run dev -w @autodev/frontend",
-    "build": "npm run build --workspaces --if-present",
+    "guard:build": "npm run guard:build -w @autodev/backend",
+    "precommit:guard": "npm run precommit:guard -w @autodev/backend",
+    "build": "npm run guard:build && npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:e2e": "npm run test -w @autodev/e2e",
     "test:e2e:api": "npm run test:api -w @autodev/e2e",
@@ -18,7 +20,8 @@
     "test:e2e:mocks": "npm run mocks -w @autodev/e2e",
     "lint": "npm run lint --workspaces --if-present",
     "format": "prettier --write \"packages/**/*.{ts,tsx,json}\"",
-    "format:check": "prettier --check \"packages/**/*.{ts,tsx,json}\""
+    "format:check": "prettier --check \"packages/**/*.{ts,tsx,json}\"",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -27,6 +30,7 @@
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "husky": "^9.1.7",
     "prettier": "^3.9.4"
   }
 }

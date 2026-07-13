@@ -5,6 +5,7 @@ import type {
   CursorResultValidation,
   CursorScopeValidation,
 } from '@autodev/shared-types';
+import { createSafeRegExp, UnsafeRegExpError } from '../../lib/safeRegExp.js';
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -43,7 +44,11 @@ export function commitMessageMatchesFormat(
     index += 1;
   }
 
-  return new RegExp(`^${pattern}$`).test(commitMessage);
+  try {
+    return createSafeRegExp(`^${pattern}$`).test(commitMessage);
+  } catch {
+    return false;
+  }
 }
 
 export function collectTouchedFiles(result: CursorImplementationResult): string[] {
@@ -91,10 +96,14 @@ export function validateConventionCompliance(
   let branchValid = true;
   if (result.branchName) {
     try {
-      branchValid = new RegExp(branchNamingPattern).test(result.branchName);
-    } catch {
+      branchValid = createSafeRegExp(branchNamingPattern).test(result.branchName);
+    } catch (error) {
       branchValid = false;
-      issues.push('Configured branchNamingPattern is not a valid regular expression.');
+      issues.push(
+        error instanceof UnsafeRegExpError
+          ? error.message
+          : 'Configured branchNamingPattern is not a valid regular expression.',
+      );
     }
     if (!branchValid && issues.length === 0) {
       issues.push(

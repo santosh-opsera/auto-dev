@@ -1,4 +1,5 @@
 import type { ReviewerAssignmentRules } from '@autodev/shared-types';
+import { createSafeRegExp } from '../../lib/safeRegExp.js';
 import { applyConventionTemplate } from '../conventions/conventionNaming.js';
 
 export type ReviewerAssignmentMode = ReviewerAssignmentRules['mode'];
@@ -108,7 +109,11 @@ function pathMatchesCodeOwnerPattern(path: string, pattern: string): boolean {
     const escaped = normalizedPattern
       .replace(/[.+^${}()|[\]\\]/g, '\\$&')
       .replace(/\*/g, '.*');
-    return new RegExp(`^${escaped}$`).test(path);
+    try {
+      return createSafeRegExp(`^${escaped}$`).test(path);
+    } catch {
+      return false;
+    }
   }
   return path === normalizedPattern || path.startsWith(`${normalizedPattern}/`);
 }

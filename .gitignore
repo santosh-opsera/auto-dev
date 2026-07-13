@@ -1,9 +1,14 @@
 node_modules/
 dist/
 .env
-.env.local
+.env.*
+!.env.example
+*.pem
+*.key
+.secrets/
 *.log
 .DS_Store
+Thumbs.db
 coverage/
 .turbo/
 .forge-commit-ready
@@ -15,6 +20,7 @@ npm-audit.json
 security-report-*.html
 security-report-*.md
 package-leakage-report.json
+precommit-scan-*.md
 
 # E2E artifacts
 packages/e2e/playwright-report/

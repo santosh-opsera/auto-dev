@@ -1,18 +1,16 @@
 import { z } from 'zod';
+import { isSafeRegExpPattern } from '../lib/safeRegExp.js';
 
 export const sampleValidationPayloadSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   branchPattern: z
     .string()
     .min(1, 'Branch naming pattern is required')
-    .refine((value) => {
-      try {
-        RegExp(value);
-        return true;
-      } catch {
-        return false;
-      }
-    }, 'Branch naming pattern must be valid regex'),
+    .max(200, 'Branch naming pattern must be 200 characters or fewer')
+    .refine(
+      (value) => isSafeRegExpPattern(value),
+      'Branch naming pattern must be a safe, valid regex',
+    ),
   reviewers: z
     .array(z.string().regex(/^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i, 'Invalid GitHub username'))
     .min(1, 'At least one reviewer is required'),

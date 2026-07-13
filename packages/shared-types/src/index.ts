@@ -134,6 +134,15 @@ export type {
 } from './conventions.js';
 
 export {
+  MAX_REGEXP_PATTERN_LENGTH,
+  describeRegExpSafetyIssue,
+  findRegExpSafetyIssue,
+  isSafeRegExpPattern,
+} from './safeRegExp.js';
+
+export type { RegExpSafetyIssue } from './safeRegExp.js';
+
+export {
   domainEventSchema,
   eventMetadataSchema,
   eventTypeSchema,
