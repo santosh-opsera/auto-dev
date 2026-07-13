@@ -111,6 +111,21 @@ export const sampleTestingFailedEvent: DomainEvent = {
   },
 };
 
+export const samplePrCreatedEvent: DomainEvent = {
+  type: 'PR_CREATED',
+  payload: {
+    workflowId: 'workflow-001',
+    prUrl: 'https://github.com/santosh-opsera/auto-dev/pull/42',
+    prNumber: 42,
+    reviewers: ['octocat', 'hubot'],
+    title: 'OPL-1234 Add user auth',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-002f',
+  },
+};
+
 export const sampleTicketParsedEvent: DomainEvent = {
   type: 'TICKET_PARSED',
   payload: {

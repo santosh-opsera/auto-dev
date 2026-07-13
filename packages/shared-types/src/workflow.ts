@@ -85,6 +85,22 @@ export const workflowFailRequestSchema = z.object({
 
 export type WorkflowFailRequest = z.infer<typeof workflowFailRequestSchema>;
 
+export const workflowPullRequestSchema = z.object({
+  url: z.string().url(),
+  number: z.number().int().positive(),
+  title: z.string().min(1),
+  body: z.string().min(1),
+  reviewers: z.array(z.string()),
+  labels: z.array(z.string()),
+  changeType: z.enum(['feature', 'bugfix', 'refactor', 'documentation']),
+  headBranch: z.string().min(1),
+  baseBranch: z.string().min(1),
+  owner: z.string().min(1),
+  repo: z.string().min(1),
+});
+
+export type WorkflowPullRequest = z.infer<typeof workflowPullRequestSchema>;
+
 export const workflowResponseSchema = z.object({
   id: z.string().min(1),
   workflowId: z.string().min(1),
@@ -96,6 +112,8 @@ export const workflowResponseSchema = z.object({
   pausedFrom: workflowStateSchema.nullable().optional(),
   resumedFrom: workflowStateSchema.nullable().optional(),
   error: workflowErrorSchema.nullable().optional(),
+  prUrl: z.string().url().optional(),
+  pullRequest: workflowPullRequestSchema.optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

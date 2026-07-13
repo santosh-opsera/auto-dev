@@ -19,6 +19,8 @@ export interface ConventionSettingsDocument extends AuditFields {
   prTitleTemplate: string;
   prDescriptionTemplate: string;
   reviewerAssignmentRules: ReviewerAssignmentRules;
+  /** Internal cursor for round-robin reviewer assignment — not exposed via public API. */
+  roundRobinCursor?: number;
 }
 
 export type ConventionSettingsRecord = HydratedDocument<ConventionSettingsDocument>;
@@ -37,6 +39,7 @@ const conventionSettingsSchema = createBaseSchema({
     mode: { type: String, enum: ['round-robin', 'code-owner-based', 'manual-list'], required: true },
     reviewers: { type: [String], required: false },
   },
+  roundRobinCursor: { type: Number, required: false, default: 0 },
 });
 
 conventionSettingsSchema.index({ userId: 1, isActive: 1 });

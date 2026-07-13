@@ -19,6 +19,20 @@ export interface WorkflowDocument extends AuditFields {
   pausedFrom?: WorkflowState | null;
   resumedFrom?: WorkflowState | null;
   error?: WorkflowError | null;
+  prUrl?: string | null;
+  pullRequest?: {
+    url: string;
+    number: number;
+    title: string;
+    body: string;
+    reviewers: string[];
+    labels: string[];
+    changeType: 'feature' | 'bugfix' | 'refactor' | 'documentation';
+    headBranch: string;
+    baseBranch: string;
+    owner: string;
+    repo: string;
+  } | null;
 }
 
 export type WorkflowRecord = HydratedDocument<WorkflowDocument>;
@@ -78,6 +92,31 @@ const workflowSchema = createBaseSchema({
   pausedFrom: { type: String, enum: WORKFLOW_STATE_ENUM, required: false, default: null },
   resumedFrom: { type: String, enum: WORKFLOW_STATE_ENUM, required: false, default: null },
   error: { type: errorSubSchema, required: false, default: null },
+  prUrl: { type: String, required: false, default: null },
+  pullRequest: {
+    type: new mongoose.Schema(
+      {
+        url: { type: String, required: true },
+        number: { type: Number, required: true },
+        title: { type: String, required: true },
+        body: { type: String, required: true },
+        reviewers: { type: [String], required: true, default: [] },
+        labels: { type: [String], required: true, default: [] },
+        changeType: {
+          type: String,
+          enum: ['feature', 'bugfix', 'refactor', 'documentation'],
+          required: true,
+        },
+        headBranch: { type: String, required: true },
+        baseBranch: { type: String, required: true },
+        owner: { type: String, required: true },
+        repo: { type: String, required: true },
+      },
+      { _id: false },
+    ),
+    required: false,
+    default: null,
+  },
 });
 
 workflowSchema.index({ userId: 1, workflowId: 1 }, { unique: true });

@@ -94,6 +94,26 @@ function mapWorkflow(doc: WorkflowRecord): WorkflowResponse {
     response.progress = progress;
   }
 
+  if (doc.prUrl) {
+    response.prUrl = doc.prUrl;
+  }
+
+  if (doc.pullRequest) {
+    response.pullRequest = {
+      url: doc.pullRequest.url,
+      number: doc.pullRequest.number,
+      title: doc.pullRequest.title,
+      body: doc.pullRequest.body,
+      reviewers: [...doc.pullRequest.reviewers],
+      labels: [...doc.pullRequest.labels],
+      changeType: doc.pullRequest.changeType,
+      headBranch: doc.pullRequest.headBranch,
+      baseBranch: doc.pullRequest.baseBranch,
+      owner: doc.pullRequest.owner,
+      repo: doc.pullRequest.repo,
+    };
+  }
+
   return response;
 }
 

@@ -132,6 +132,23 @@ export interface GitHubCreatedTree {
   sha: string;
 }
 
+export interface GitHubPullRequest {
+  number: number;
+  htmlUrl: string;
+  title: string;
+  body: string | null;
+  headBranch: string;
+  baseBranch: string;
+  state: string;
+}
+
+export interface CreatePullRequestInput {
+  title: string;
+  head: string;
+  base: string;
+  body: string;
+}
+
 export interface CreateTreeEntry {
   path: string;
   mode: '100644' | '100755' | '040000' | '160000' | '120000';
@@ -157,6 +174,16 @@ interface GitHubBlobResponse {
 
 interface GitHubTreeCreateResponse {
   sha: string;
+}
+
+interface GitHubPullRequestResponse {
+  number: number;
+  html_url: string;
+  title: string;
+  body: string | null;
+  head: { ref: string };
+  base: { ref: string };
+  state: string;
 }
 
 export class GitHubApiClient {
@@ -502,6 +529,82 @@ export class GitHubApiClient {
       ref: response.ref,
       sha: response.object.sha,
     };
+  }
+
+  async createPullRequest(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    input: CreatePullRequestInput,
+  ): Promise<GitHubPullRequest> {
+    const response = await this.request<GitHubPullRequestResponse>(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/pulls`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: input.title,
+          head: input.head,
+          base: input.base,
+          body: input.body,
+        }),
+      },
+    );
+
+    return {
+      number: response.number,
+      htmlUrl: response.html_url,
+      title: response.title,
+      body: response.body,
+      headBranch: response.head.ref,
+      baseBranch: response.base.ref,
+      state: response.state,
+    };
+  }
+
+  async requestPullRequestReviewers(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    pullNumber: number,
+    reviewers: string[],
+  ): Promise<void> {
+    if (reviewers.length === 0) {
+      return;
+    }
+
+    await this.request(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/pulls/${String(pullNumber)}/requested_reviewers`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewers }),
+      },
+    );
+  }
+
+  async addPullRequestLabels(
+    accessToken: string,
+    owner: string,
+    repo: string,
+    pullNumber: number,
+    labels: string[],
+  ): Promise<void> {
+    if (labels.length === 0) {
+      return;
+    }
+
+    await this.request(
+      accessToken,
+      `${GITHUB_API_BASE}/repos/${owner}/${repo}/issues/${String(pullNumber)}/labels`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ labels }),
+      },
+    );
   }
 
   private async request<T>(
