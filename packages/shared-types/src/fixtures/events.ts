@@ -42,3 +42,34 @@ export const sampleTicketParsedEvent: DomainEvent = {
     eventId: 'event-003',
   },
 };
+
+export const sampleWorkflowTransitionedEvent: DomainEvent = {
+  type: 'WORKFLOW_TRANSITIONED',
+  payload: {
+    workflowId: 'workflow-001',
+    previousState: 'CREATED',
+    newState: 'TICKET_PARSED',
+    trigger: 'ticket.parsed',
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-004',
+  },
+};
+
+export const sampleWorkflowFailedEvent: DomainEvent = {
+  type: 'WORKFLOW_FAILED',
+  payload: {
+    workflowId: 'workflow-001',
+    previousState: 'TESTING',
+    error: {
+      message: 'Integration test suite failed',
+      code: 'TEST_SUITE_FAILED',
+      failedFrom: 'TESTING',
+    },
+  },
+  metadata: {
+    ...sampleEventMetadata,
+    eventId: 'event-005',
+  },
+};

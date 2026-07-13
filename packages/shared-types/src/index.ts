@@ -153,6 +153,8 @@ export {
   sampleConventionUpdatedEvent,
   sampleEventMetadata,
   sampleTicketParsedEvent,
+  sampleWorkflowFailedEvent,
+  sampleWorkflowTransitionedEvent,
 } from './fixtures/events.js';
 
 export {
@@ -369,3 +371,47 @@ export {
   sampleLlmCompletionResponse,
   sampleLlmEmbeddingResponse,
 } from './fixtures/llm.js';
+
+export {
+  isPausableWorkflowState,
+  isTerminalWorkflowState,
+  PAUSABLE_WORKFLOW_STATES,
+  TERMINAL_WORKFLOW_STATES,
+  WORKFLOW_STATES,
+  workflowCreateRequestSchema,
+  workflowErrorSchema,
+  workflowFailRequestSchema,
+  workflowIdParamsSchema,
+  workflowListQuerySchema,
+  workflowListResponseSchema,
+  workflowProgressSchema,
+  workflowResponseSchema,
+  workflowStateSchema,
+  workflowTransitionRecordSchema,
+  workflowTransitionRequestSchema,
+} from './workflow.js';
+
+export type {
+  PausableWorkflowState,
+  TerminalWorkflowState,
+  WorkflowCreateRequest,
+  WorkflowError,
+  WorkflowFailRequest,
+  WorkflowListQuery,
+  WorkflowListResponse,
+  WorkflowProgress,
+  WorkflowResponse,
+  WorkflowState,
+  WorkflowTransitionRecord,
+  WorkflowTransitionRequest,
+} from './workflow.js';
+
+export {
+  sampleFailedHistory,
+  sampleHappyPathHistory,
+  samplePausedHistory,
+  sampleWorkflowCompleted,
+  sampleWorkflowCreated,
+  sampleWorkflowFailed,
+  sampleWorkflowPaused,
+} from './fixtures/workflow.js';
