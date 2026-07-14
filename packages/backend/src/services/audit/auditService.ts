@@ -59,7 +59,7 @@ export class AuditService {
 
     return {
       records: records.map((record) => ({
-        id: String(record._id),
+        id: String((record as { _id?: unknown })._id),
         actor: record.actor,
         timestamp: record.createdAt.toISOString(),
         resource: record.resource,

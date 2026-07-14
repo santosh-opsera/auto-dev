@@ -19,7 +19,7 @@ export class EventBus {
 
   subscribe<T extends EventType>(eventType: T, handler: EventHandler<T>): void {
     const handlers = this.handlers.get(eventType) ?? new Set<EventHandler>();
-    handlers.add(handler as EventHandler);
+    handlers.add(handler as unknown as EventHandler);
     this.handlers.set(eventType, handlers);
   }
 
@@ -29,7 +29,7 @@ export class EventBus {
       return;
     }
 
-    handlers.delete(handler as EventHandler);
+    handlers.delete(handler as unknown as EventHandler);
     if (handlers.size === 0) {
       this.handlers.delete(eventType);
     }

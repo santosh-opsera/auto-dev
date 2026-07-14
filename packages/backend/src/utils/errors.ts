@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import type { ErrorResponse, FieldValidationError } from '@autodev/shared-types';
-import type { ZodError } from 'zod';
 
 export class AppError extends Error {
   constructor(
@@ -26,9 +25,11 @@ export class RequestValidationError extends AppError {
   }
 }
 
-export function formatZodError(error: ZodError): FieldValidationError[] {
+export function formatZodError(error: {
+  issues: Array<{ path: PropertyKey[]; message: string }>;
+}): FieldValidationError[] {
   return error.issues.map((issue) => ({
-    path: issue.path.length > 0 ? issue.path.join('.') : 'body',
+    path: issue.path.length > 0 ? issue.path.map(String).join('.') : 'body',
     message: issue.message,
   }));
 }

@@ -4,6 +4,7 @@ import type {
   GitHubRateLimitStatus,
   PrChangeType,
   PullRequestResponse,
+  ReviewerAssignmentRules,
 } from '@autodev/shared-types';
 import { labelForChangeType } from '@autodev/shared-types';
 import { decryptSecret } from '../../lib/encryption.js';
@@ -11,7 +12,6 @@ import { isRetryableHttpStatus } from '../../lib/retry.js';
 import type { UserDocument } from '../../models/userModel.js';
 import {
   getConventionSettingsModel,
-  type ConventionSettingsRecord,
 } from '../../models/conventionSettingsModel.js';
 import { getImplementationChunkModel } from '../../models/implementationChunkModel.js';
 import { getPrdModel } from '../../models/prdModel.js';
@@ -487,10 +487,7 @@ export class PrCreationService {
     accessToken: string,
     owner: string,
     repo: string,
-    rules: ConventionSettingsRecord['reviewerAssignmentRules'] | {
-      mode: 'round-robin' | 'code-owner-based' | 'manual-list';
-      reviewers?: string[];
-    },
+    rules: ReviewerAssignmentRules,
     changedPaths: string[],
   ): Promise<string[]> {
     if (rules.mode === 'code-owner-based') {

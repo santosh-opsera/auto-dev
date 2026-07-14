@@ -43,7 +43,7 @@ export function createRepositoryRouter(): Router {
     asyncHandler(requireSession),
     validateQuery(repositoryListQuerySchema),
     asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-      const query = req.query as {
+      const query = req.query as unknown as {
         page: number;
         perPage: number;
         q?: string;

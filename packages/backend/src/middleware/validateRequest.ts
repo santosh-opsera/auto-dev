@@ -1,10 +1,18 @@
 import type { NextFunction, Request, Response } from 'express';
-import type { ZodType } from 'zod';
 import { formatZodError, RequestValidationError } from '../utils/errors.js';
 
 type RequestPart = 'body' | 'query' | 'params';
 
-function validatePart<T>(part: RequestPart, schema: ZodType<T>) {
+/**
+ * Duck-typed Zod schema. Avoid importing ZodType from the hoist zod@4
+ * package, which is incompatible with shared-types’ zod@3 schemas.
+ */
+type SafeParseSchema<T> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  safeParse: (data: unknown) => { success: true; data: T } | { success: false; error: any };
+};
+
+function validatePart<T>(part: RequestPart, schema: SafeParseSchema<T>) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req[part]);
     if (!result.success) {
@@ -23,14 +31,14 @@ function validatePart<T>(part: RequestPart, schema: ZodType<T>) {
   };
 }
 
-export function validateBody<T>(schema: ZodType<T>) {
+export function validateBody<T>(schema: SafeParseSchema<T>) {
   return validatePart('body', schema);
 }
 
-export function validateQuery<T>(schema: ZodType<T>) {
+export function validateQuery<T>(schema: SafeParseSchema<T>) {
   return validatePart('query', schema);
 }
 
-export function validateParams<T>(schema: ZodType<T>) {
+export function validateParams<T>(schema: SafeParseSchema<T>) {
   return validatePart('params', schema);
 }

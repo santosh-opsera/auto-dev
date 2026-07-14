@@ -17,7 +17,8 @@ export async function requireApprovalClearance(
     return;
   }
 
-  const requestId = req.params.requestId;
+  const requestIdParam = req.params.requestId;
+  const requestId = Array.isArray(requestIdParam) ? requestIdParam[0] : requestIdParam;
   if (!requestId) {
     next(
       new AppError(

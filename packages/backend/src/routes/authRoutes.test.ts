@@ -36,11 +36,12 @@ vi.mock('../services/auth/atlassianAuthService.js', async (importOriginal) => {
 import { exchangeGitHubCode } from '../services/auth/githubAuthService.js';
 import { exchangeAtlassianCode } from '../services/auth/atlassianAuthService.js';
 
-function mergeSetCookieHeaders(...cookieHeaders: Array<string[] | undefined>): string {
+function mergeSetCookieHeaders(...cookieHeaders: Array<string | string[] | undefined>): string {
   const jar = new Map<string, string>();
 
   for (const headers of cookieHeaders) {
-    for (const header of headers ?? []) {
+    const list = headers === undefined ? [] : Array.isArray(headers) ? headers : [headers];
+    for (const header of list) {
       const [pair] = header.split(';');
       const [name, ...valueParts] = pair.split('=');
       jar.set(name.trim(), valueParts.join('=').trim());

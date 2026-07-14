@@ -1,4 +1,3 @@
-import type { FilterQuery } from 'mongoose';
 import {
   getAuditLogModel,
   type AuditLogDocument,
@@ -41,7 +40,7 @@ export class AuditLogRepository {
     page: number,
     limit: number,
   ): Promise<AuditLogQueryResult> {
-    const query: FilterQuery<AuditLogDocument> = {};
+    const query: Record<string, unknown> = {};
 
     if (filters.actor) {
       query.actor = filters.actor;
@@ -53,13 +52,14 @@ export class AuditLogRepository {
       query.operation = filters.operation;
     }
     if (filters.from || filters.to) {
-      query.createdAt = {};
+      const createdAt: Record<string, Date> = {};
       if (filters.from) {
-        query.createdAt.$gte = filters.from;
+        createdAt.$gte = filters.from;
       }
       if (filters.to) {
-        query.createdAt.$lte = filters.to;
+        createdAt.$lte = filters.to;
       }
+      query.createdAt = createdAt;
     }
 
     const skip = (page - 1) * limit;

@@ -168,12 +168,12 @@ describe('ProtectedRoute', () => {
     useAuthStore.getState().setAuth(mockAuthUser, authenticatedSession);
     renderProtected();
 
-    expect(vi.mocked(useSSE).mock.calls.at(-1)?.[0]?.enabled).toBe(true);
+    expect(vi.mocked(useSSE).mock.calls[vi.mocked(useSSE).mock.calls.length - 1]?.[0]?.enabled).toBe(true);
 
     useAuthStore.getState().clearAuth();
 
     await waitFor(() => {
-      expect(vi.mocked(useSSE).mock.calls.at(-1)?.[0]?.enabled).toBe(false);
+      expect(vi.mocked(useSSE).mock.calls[vi.mocked(useSSE).mock.calls.length - 1]?.[0]?.enabled).toBe(false);
     });
   });
 

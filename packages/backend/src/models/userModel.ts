@@ -1,4 +1,4 @@
-import mongoose, { type HydratedDocument, type Model } from 'mongoose';
+import mongoose, { type HydratedDocument, type Model, type Types } from 'mongoose';
 import { createBaseSchema, type AuditFields } from '../database/baseSchema.js';
 
 export type AuthProvider = 'github' | 'atlassian';
@@ -14,6 +14,7 @@ export interface ProviderTokens {
 }
 
 export interface UserDocument extends AuditFields {
+  _id: Types.ObjectId;
   email: string;
   displayName: string;
   role: 'user' | 'admin';
