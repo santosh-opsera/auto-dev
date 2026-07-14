@@ -1,5 +1,5 @@
 import { decryptSecret } from '@autodev/infrastructure';
-import { withRetry, isRetryableHttpStatus } from '../../lib/retry.js';
+import { withRetry, isRetryableHttpStatus } from '@autodev/infrastructure';
 import { AppError } from '../../utils/errors.js';
 import type { UserDocument } from '../../models/userModel.js';
 import { getAtlassianConfig } from '../../auth/oauthConfig.js';

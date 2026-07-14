@@ -33,3 +33,10 @@ export {
 export { type AuditFields } from './auditFields.js';
 export { BaseRepository } from './baseRepository.js';
 export { systemClock, type Clock } from './clock.js';
+export {
+  DEFAULT_RETRY_DELAYS_MS,
+  isRetryableHttpStatus,
+  sleep,
+  withRetry,
+  type WithRetryOptions,
+} from './retry.js';

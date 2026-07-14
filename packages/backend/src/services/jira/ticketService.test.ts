@@ -16,12 +16,6 @@ import { classifyJiraHttpError } from './jiraErrorClassifier.js';
 import { refreshAtlassianAccessToken } from '../auth/atlassianAuthService.js';
 import { getUserModel } from '../../models/userModel.js';
 
-vi.mock('../../lib/retry.js', () => ({
-  withRetry: vi.fn(async (operation: () => Promise<unknown>) => operation()),
-  DEFAULT_RETRY_DELAYS_MS: [1, 1, 1],
-  isRetryableHttpStatus: (status: number) => status === 429 || status >= 500,
-}));
-
 vi.mock('./jiraRestClient.js', () => ({
   jiraRestClient: {
     resolveCloudId: vi.fn(),
@@ -33,6 +27,9 @@ vi.mock('@autodev/infrastructure', () => ({
   decryptSecret: vi.fn((value: string) =>
     value === 'encrypted-refresh' ? 'plain-refresh-token' : 'access-token',
   ),
+  withRetry: vi.fn(async (operation: () => Promise<unknown>) => operation()),
+  DEFAULT_RETRY_DELAYS_MS: [1, 1, 1],
+  isRetryableHttpStatus: (status: number) => status === 429 || status >= 500,
 }));
 
 vi.mock('../../auth/sessionService.js', () => ({
