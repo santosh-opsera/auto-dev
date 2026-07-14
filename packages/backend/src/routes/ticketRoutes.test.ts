@@ -83,7 +83,6 @@ describe('ticket routes', () => {
     vi.mocked(ticketService.getTicket).mockResolvedValue({
       ticket: sampleNormalizedTicket,
       source: 'jira-rest',
-      fallbackUsed: true,
     });
   });
 
@@ -116,28 +115,10 @@ describe('ticket routes', () => {
     expect(response.body).toEqual({
       ticket: sampleNormalizedTicket,
       source: 'jira-rest',
-      fallbackUsed: true,
     });
     expect(ticketService.getTicket).toHaveBeenCalledWith(
       expect.objectContaining({ email: 'alex.dev@example.com' }),
       'OPL-1234',
-    );
-  });
-
-  it('supports manual fallback ticket retrieval', async () => {
-    const app = createApp();
-    const { sessionCookie } = await loginAsUser(app);
-
-    const response = await request(app)
-      .post('/api/v1/tickets/manual')
-      .set('Cookie', sessionCookie)
-      .send({ ticketKey: 'OPL-1234' });
-
-    expect(response.status).toBe(200);
-    expect(ticketService.getTicket).toHaveBeenCalledWith(
-      expect.objectContaining({ email: 'alex.dev@example.com' }),
-      'OPL-1234',
-      true,
     );
   });
 

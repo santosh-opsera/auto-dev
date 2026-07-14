@@ -21,10 +21,18 @@ describe('ticket schemas', () => {
     const payload = {
       ticket: sampleNormalizedTicket,
       source: 'jira-rest' as const,
-      fallbackUsed: true,
     };
 
     expect(ticketResponseSchema.parse(payload)).toEqual(payload);
     expect(normalizedTicketSchema.parse(sampleNormalizedTicket)).toEqual(sampleNormalizedTicket);
+  });
+
+  it('rejects forge as a ticket source', () => {
+    expect(() =>
+      ticketResponseSchema.parse({
+        ticket: sampleNormalizedTicket,
+        source: 'forge',
+      }),
+    ).toThrow();
   });
 });

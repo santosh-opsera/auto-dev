@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { GapItem, TicketIntent, TicketParseResponse, TicketResponse } from '@autodev/shared-types';
-import { fetchTicket, fetchTicketManual, parseTicket } from '../api/tickets';
+import { fetchTicket, parseTicket } from '../api/tickets';
 import { ApiError } from '../api/client';
 
 export type TicketIngestionPhase =
@@ -18,7 +18,6 @@ export interface TicketIngestionState {
   error: string | null;
   errorCode: string | null;
   progressMessage: string | null;
-  manualFallback: boolean;
 }
 
 const initialState: TicketIngestionState = {
@@ -29,7 +28,6 @@ const initialState: TicketIngestionState = {
   error: null,
   errorCode: null,
   progressMessage: null,
-  manualFallback: false,
 };
 
 export function useTicketIngestion() {
@@ -43,7 +41,7 @@ export function useTicketIngestion() {
     setLocalIntentOverrides({});
   }, []);
 
-  const ingestTicket = useCallback(async (ticketKey: string, useManualFallback = false): Promise<void> => {
+  const ingestTicket = useCallback(async (ticketKey: string): Promise<void> => {
     const trimmedKey = ticketKey.trim();
     setState({
       phase: 'fetching',
@@ -52,14 +50,11 @@ export function useTicketIngestion() {
       parseResult: null,
       error: null,
       errorCode: null,
-      progressMessage: useManualFallback ? 'Fetching ticket via Jira REST fallback…' : 'Fetching ticket from Jira…',
-      manualFallback: useManualFallback,
+      progressMessage: 'Fetching ticket from Jira…',
     });
 
     try {
-      const ticket = useManualFallback
-        ? await fetchTicketManual(trimmedKey)
-        : await fetchTicket(trimmedKey);
+      const ticket = await fetchTicket(trimmedKey);
 
       setState((previous) => ({
         ...previous,
@@ -99,14 +94,7 @@ export function useTicketIngestion() {
     if (!state.ticketKey) {
       return;
     }
-    await ingestTicket(state.ticketKey, state.manualFallback);
-  }, [ingestTicket, state.manualFallback, state.ticketKey]);
-
-  const retryWithManualFallback = useCallback(async (): Promise<void> => {
-    if (!state.ticketKey) {
-      return;
-    }
-    await ingestTicket(state.ticketKey, true);
+    await ingestTicket(state.ticketKey);
   }, [ingestTicket, state.ticketKey]);
 
   const handleSseProgress = useCallback((ticketKey: string, message: string) => {
@@ -151,7 +139,6 @@ export function useTicketIngestion() {
     canProceed,
     ingestTicket,
     retry,
-    retryWithManualFallback,
     reset,
     handleSseProgress,
     resolveGap,

@@ -30,7 +30,6 @@ vi.mock('../hooks/useTicketIngestion', () => ({
     canProceed: false,
     ingestTicket: vi.fn(),
     retry: vi.fn(),
-    retryWithManualFallback: vi.fn(),
     reset: vi.fn(),
     handleSseProgress: vi.fn(),
     resolveGap: vi.fn(),

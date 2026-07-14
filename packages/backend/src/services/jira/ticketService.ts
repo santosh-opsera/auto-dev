@@ -7,7 +7,6 @@ import { refreshAtlassianAccessToken } from '../auth/atlassianAuthService.js';
 import { encryptOAuthToken } from '../../auth/sessionService.js';
 import { getUserModel } from '../../models/userModel.js';
 import type { TicketResponse } from '@autodev/shared-types';
-import { forgeTicketClient } from './forgeTicketClient.js';
 import { jiraRestClient } from './jiraRestClient.js';
 import { normalizeJiraIssue } from './ticketNormalizer.js';
 import { userHasJiraScopes } from './jiraScopes.js';
@@ -28,6 +27,52 @@ async function clearAtlassianJiraAccess(userId: UserDocument['_id']): Promise<vo
 
 function isReauthorizeError(error: unknown): error is AppError {
   return error instanceof AppError && error.error === 'AtlassianReauthorizeRequired';
+}
+
+function getHttpStatus(error: unknown): number | undefined {
+  if (error && typeof error === 'object' && 'status' in error) {
+    const status = (error as { status?: unknown }).status;
+    return typeof status === 'number' ? status : undefined;
+  }
+  return undefined;
+}
+
+function mapJiraIssueError(error: unknown): AppError {
+  const status = getHttpStatus(error);
+
+  if (status === 401) {
+    return new AppError(
+      'AtlassianReauthorizeRequired',
+      'Atlassian session is invalid or expired.',
+      401,
+      'Reconnect Jira to authorize a new access token.',
+    );
+  }
+
+  if (status === 403) {
+    return new AppError(
+      'JiraForbidden',
+      'You do not have permission to access this Jira ticket.',
+      403,
+      'Request access to the ticket or use a different Jira account.',
+    );
+  }
+
+  if (status === 404) {
+    return new AppError(
+      'JiraTicketNotFound',
+      'The requested Jira ticket was not found.',
+      404,
+      'Verify the ticket key and try again.',
+    );
+  }
+
+  return new AppError(
+    'JiraTicketUnavailable',
+    'Unable to retrieve the Jira ticket after multiple attempts.',
+    502,
+    'Retry the request after a short delay.',
+  );
 }
 
 async function resolveAccessToken(user: UserDocument): Promise<string> {
@@ -104,7 +149,7 @@ async function resolveAccessToken(user: UserDocument): Promise<string> {
 }
 
 export class TicketService {
-  async getTicket(user: UserDocument, ticketKey: string, forceRest = false): Promise<TicketResponse> {
+  async getTicket(user: UserDocument, ticketKey: string): Promise<TicketResponse> {
     if (!userHasJiraScopes(user)) {
       throw new AppError(
         'JiraNotConnected',
@@ -129,20 +174,6 @@ export class TicketService {
       );
     }
 
-    if (!forceRest && forgeTicketClient.isConfigured()) {
-      try {
-        const issue = await withRetry(() =>
-          forgeTicketClient.getIssue(ticketKey, accessToken),
-        );
-        return {
-          ticket: normalizeJiraIssue(issue),
-          source: 'forge',
-        };
-      } catch {
-        // Fall through to direct Jira REST fallback.
-      }
-    }
-
     try {
       const issue = await withRetry(() =>
         jiraRestClient.getIssue({ cloudId, ticketKey, accessToken }),
@@ -151,15 +182,12 @@ export class TicketService {
       return {
         ticket: normalizeJiraIssue(issue),
         source: 'jira-rest',
-        fallbackUsed: !forceRest && forgeTicketClient.isConfigured(),
       };
-    } catch {
-      throw new AppError(
-        'JiraTicketUnavailable',
-        'Unable to retrieve the Jira ticket after multiple attempts.',
-        502,
-        'Retry the request or enter the ticket manually using the fallback endpoint.',
-      );
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw mapJiraIssueError(error);
     }
   }
 }

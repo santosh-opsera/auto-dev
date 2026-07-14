@@ -28,7 +28,7 @@ describe('useTicketIngestion', () => {
   });
 
   it('captures fetch errors', async () => {
-    vi.spyOn(ticketsApi, 'fetchTicket').mockRejectedValue(new Error('Forge unavailable'));
+    vi.spyOn(ticketsApi, 'fetchTicket').mockRejectedValue(new Error('Jira unavailable'));
 
     const { result } = renderHook(() => useTicketIngestion());
 
@@ -37,7 +37,7 @@ describe('useTicketIngestion', () => {
     });
 
     expect(result.current.phase).toBe('error');
-    expect(result.current.error).toBe('Forge unavailable');
+    expect(result.current.error).toBe('Jira unavailable');
     expect(result.current.errorCode).toBeNull();
   });
 

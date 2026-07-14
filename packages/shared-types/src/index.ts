@@ -229,7 +229,6 @@ export {
 
 export {
   linkedIssueSchema,
-  manualTicketRequestSchema,
   normalizedTicketSchema,
   sprintContextSchema,
   ticketAttachmentSchema,
@@ -241,7 +240,6 @@ export {
 } from './tickets.js';
 
 export type {
-  ManualTicketRequest,
   NormalizedTicket,
   TicketResponse,
   TicketSource,

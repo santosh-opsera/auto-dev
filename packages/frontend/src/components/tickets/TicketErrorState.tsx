@@ -2,8 +2,6 @@ interface TicketErrorStateProps {
   error: string;
   ticketKey: string | null;
   onRetry: () => void;
-  onManualFallback: () => void;
-  onManualEntry: () => void;
   onConnectJira?: () => void;
   connectJiraLabel?: string;
 }
@@ -12,8 +10,6 @@ export function TicketErrorState({
   error,
   ticketKey,
   onRetry,
-  onManualFallback,
-  onManualEntry,
   onConnectJira,
   connectJiraLabel = 'Connect Jira',
 }: TicketErrorStateProps) {
@@ -31,15 +27,7 @@ export function TicketErrorState({
             Retry
           </button>
         )}
-        <button type="button" className="secondary-button" onClick={onManualFallback}>
-          Retry with Jira REST fallback
-        </button>
       </div>
-      <p>
-        <button type="button" className="text-link" onClick={onManualEntry}>
-          Enter ticket key manually
-        </button>
-      </p>
     </section>
   );
 }

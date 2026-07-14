@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { getJiraConnectUrl } from '../api/auth';
 import { SessionWarningModal } from '../components/SessionWarningModal';
@@ -30,13 +30,11 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
     canProceed,
     ingestTicket,
     retry,
-    retryWithManualFallback,
     reset,
     handleSseProgress,
     resolveGap,
   } = useTicketIngestion();
 
-  const [showManualForm, setShowManualForm] = useState(false);
   const user = useAuthStore((state) => state.user);
   const jiraConnected = user?.integrations?.jira ?? false;
   const needsReauthorize =
@@ -63,7 +61,7 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
   const isLoading = phase === 'fetching' || phase === 'parsing';
 
   const handleSubmit = (key: string): void => {
-    void ingestTicket(key, showManualForm);
+    void ingestTicket(key);
   };
 
   return (
@@ -102,20 +100,6 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
 
       <section className="ticket-search-panel profile-card">
         <TicketKeyForm onSubmit={handleSubmit} isSubmitting={isLoading} initialValue={ticketKey ?? ''} />
-        <p>
-          <button
-            type="button"
-            className="text-link"
-            onClick={() => setShowManualForm((previous) => !previous)}
-          >
-            {showManualForm ? 'Use standard Forge fetch' : 'Enter ticket key manually (REST fallback)'}
-          </button>
-        </p>
-        {showManualForm ? (
-          <p className="field-hint" role="status">
-            Manual mode uses Jira REST API directly when Forge bridge is unavailable.
-          </p>
-        ) : null}
         {phase === 'complete' ? (
           <button type="button" className="secondary-button" onClick={reset}>
             Select another ticket
@@ -132,8 +116,6 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
           error={error}
           ticketKey={ticketKey}
           onRetry={() => void retry()}
-          onManualFallback={() => void retryWithManualFallback()}
-          onManualEntry={() => setShowManualForm(true)}
           onConnectJira={
             needsJiraConnect ? () => window.location.assign(getJiraConnectUrl()) : undefined
           }
@@ -147,7 +129,6 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
             <section className="profile-card ticket-source-badge">
               <p>
                 Loaded from <strong>{ticket.source}</strong>
-                {ticket.fallbackUsed ? ' (REST fallback used)' : null}
               </p>
             </section>
           ) : null}
