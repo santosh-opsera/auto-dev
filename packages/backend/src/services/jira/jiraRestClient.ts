@@ -1,5 +1,6 @@
 import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
 import type { JiraIssueResponse } from './ticketNormalizer.js';
+import { classifyJiraHttpError } from './jiraErrorClassifier.js';
 
 const ACCESSIBLE_RESOURCES_URL = 'https://api.atlassian.com/oauth/token/accessible-resources';
 
@@ -14,6 +15,14 @@ export type AccessibleResourcesFetcher = (
   accessToken: string,
 ) => Promise<AccessibleResource[]>;
 
+async function readErrorBody(response: Response): Promise<{ errorMessages?: string[]; message?: string } | null> {
+  try {
+    return (await response.json()) as { errorMessages?: string[]; message?: string };
+  } catch {
+    return null;
+  }
+}
+
 const defaultAccessibleResourcesFetcher: AccessibleResourcesFetcher = async (accessToken) => {
   assertAllowedUrl(ACCESSIBLE_RESOURCES_URL);
   const response = await fetch(ACCESSIBLE_RESOURCES_URL, {
@@ -24,7 +33,7 @@ const defaultAccessibleResourcesFetcher: AccessibleResourcesFetcher = async (acc
   });
 
   if (!response.ok) {
-    throw new Error('Failed to load Atlassian accessible resources');
+    throw classifyJiraHttpError(response.status, await readErrorBody(response));
   }
 
   return (await response.json()) as AccessibleResource[];
@@ -51,9 +60,7 @@ const defaultJiraIssueFetcher: JiraIssueFetcher = async ({ cloudId, ticketKey, a
   });
 
   if (!response.ok) {
-    const error = new Error(`Jira issue lookup failed with status ${String(response.status)}`);
-    (error as Error & { status?: number }).status = response.status;
-    throw error;
+    throw classifyJiraHttpError(response.status, await readErrorBody(response));
   }
 
   return (await response.json()) as JiraIssueResponse;

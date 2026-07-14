@@ -12,13 +12,14 @@ import {
 } from '../../fixtures/jira.js';
 import { TicketService, clearAtlassianRefreshInFlightForTests } from './ticketService.js';
 import { jiraRestClient } from './jiraRestClient.js';
+import { classifyJiraHttpError } from './jiraErrorClassifier.js';
 import { refreshAtlassianAccessToken } from '../auth/atlassianAuthService.js';
 import { getUserModel } from '../../models/userModel.js';
 
 vi.mock('../../lib/retry.js', () => ({
   withRetry: vi.fn(async (operation: () => Promise<unknown>) => operation()),
   DEFAULT_RETRY_DELAYS_MS: [1, 1, 1],
-  isRetryableHttpStatus: vi.fn(),
+  isRetryableHttpStatus: (status: number) => status === 429 || status >= 500,
 }));
 
 vi.mock('./jiraRestClient.js', () => ({
@@ -55,14 +56,6 @@ vi.mock('../../models/userModel.js', () => ({
   getUserModel: vi.fn(),
 }));
 
-function jiraHttpError(status: number): Error & { status: number } {
-  const error = new Error(`Jira issue lookup failed with status ${String(status)}`) as Error & {
-    status: number;
-  };
-  error.status = status;
-  return error;
-}
-
 describe('TicketService', () => {
   const user = {
     _id: 'user-1',
@@ -98,30 +91,30 @@ describe('TicketService', () => {
     expect(response.ticket).toEqual(sampleNormalizedTicket);
   });
 
-  it('maps 401 responses to AtlassianReauthorizeRequired', async () => {
-    vi.mocked(jiraRestClient.getIssue).mockRejectedValue(jiraHttpError(401));
+  it('propagates AtlassianTokenExpired from classified Jira 401', async () => {
+    vi.mocked(jiraRestClient.getIssue).mockRejectedValue(classifyJiraHttpError(401));
 
     const service = new TicketService();
 
     await expect(service.getTicket(user, 'OPL-1234')).rejects.toMatchObject({
-      error: 'AtlassianReauthorizeRequired',
+      error: 'AtlassianTokenExpired',
       statusCode: 401,
     });
   });
 
-  it('maps 403 responses to JiraForbidden', async () => {
-    vi.mocked(jiraRestClient.getIssue).mockRejectedValue(jiraHttpError(403));
+  it('propagates JiraPermissionDenied from classified Jira 403', async () => {
+    vi.mocked(jiraRestClient.getIssue).mockRejectedValue(classifyJiraHttpError(403));
 
     const service = new TicketService();
 
     await expect(service.getTicket(user, 'OPL-1234')).rejects.toMatchObject({
-      error: 'JiraForbidden',
+      error: 'JiraPermissionDenied',
       statusCode: 403,
     });
   });
 
-  it('maps 404 responses to JiraTicketNotFound', async () => {
-    vi.mocked(jiraRestClient.getIssue).mockRejectedValue(jiraHttpError(404));
+  it('propagates JiraTicketNotFound from classified Jira 404', async () => {
+    vi.mocked(jiraRestClient.getIssue).mockRejectedValue(classifyJiraHttpError(404));
 
     const service = new TicketService();
 
@@ -131,13 +124,13 @@ describe('TicketService', () => {
     });
   });
 
-  it('maps 5xx responses to JiraTicketUnavailable', async () => {
-    vi.mocked(jiraRestClient.getIssue).mockRejectedValue(jiraHttpError(503));
+  it('propagates JiraNetworkError from classified Jira 5xx', async () => {
+    vi.mocked(jiraRestClient.getIssue).mockRejectedValue(classifyJiraHttpError(503));
 
     const service = new TicketService();
 
     await expect(service.getTicket(user, 'OPL-1234')).rejects.toMatchObject({
-      error: 'JiraTicketUnavailable',
+      error: 'JiraNetworkError',
       statusCode: 502,
     });
   });

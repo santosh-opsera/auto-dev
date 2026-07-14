@@ -1,5 +1,5 @@
 import { decryptSecret } from '../../lib/encryption.js';
-import { withRetry } from '../../lib/retry.js';
+import { withRetry, isRetryableHttpStatus } from '../../lib/retry.js';
 import { AppError } from '../../utils/errors.js';
 import type { UserDocument } from '../../models/userModel.js';
 import { getAtlassianConfig } from '../../auth/oauthConfig.js';
@@ -30,7 +30,8 @@ function isReauthorizeError(error: unknown): error is AppError {
     error instanceof AppError &&
     (error.error === 'AtlassianReauthorizeRequired' ||
       error.error === 'AtlassianTokenRevoked' ||
-      error.error === 'AtlassianRefreshInvalid')
+      error.error === 'AtlassianRefreshInvalid' ||
+      error.error === 'AtlassianTokenExpired')
   );
 }
 
@@ -39,52 +40,6 @@ const refreshInFlight = new Map<string, Promise<string>>();
 
 export function clearAtlassianRefreshInFlightForTests(): void {
   refreshInFlight.clear();
-}
-
-function getHttpStatus(error: unknown): number | undefined {
-  if (error && typeof error === 'object' && 'status' in error) {
-    const status = (error as { status?: unknown }).status;
-    return typeof status === 'number' ? status : undefined;
-  }
-  return undefined;
-}
-
-function mapJiraIssueError(error: unknown): AppError {
-  const status = getHttpStatus(error);
-
-  if (status === 401) {
-    return new AppError(
-      'AtlassianReauthorizeRequired',
-      'Atlassian session is invalid or expired.',
-      401,
-      'Reconnect Jira to authorize a new access token.',
-    );
-  }
-
-  if (status === 403) {
-    return new AppError(
-      'JiraForbidden',
-      'You do not have permission to access this Jira ticket.',
-      403,
-      'Request access to the ticket or use a different Jira account.',
-    );
-  }
-
-  if (status === 404) {
-    return new AppError(
-      'JiraTicketNotFound',
-      'The requested Jira ticket was not found.',
-      404,
-      'Verify the ticket key and try again.',
-    );
-  }
-
-  return new AppError(
-    'JiraTicketUnavailable',
-    'Unable to retrieve the Jira ticket after multiple attempts.',
-    502,
-    'Retry the request after a short delay.',
-  );
 }
 
 async function resolveAccessToken(user: UserDocument): Promise<string> {
@@ -200,8 +155,13 @@ export class TicketService {
     }
 
     try {
-      const issue = await withRetry(() =>
-        jiraRestClient.getIssue({ cloudId, ticketKey, accessToken }),
+      const issue = await withRetry(
+        () => jiraRestClient.getIssue({ cloudId, ticketKey, accessToken }),
+        undefined,
+        {
+          shouldRetry: (error) =>
+            error instanceof AppError && isRetryableHttpStatus(error.statusCode),
+        },
       );
 
       return {
@@ -212,7 +172,12 @@ export class TicketService {
       if (error instanceof AppError) {
         throw error;
       }
-      throw mapJiraIssueError(error);
+      throw new AppError(
+        'JiraTicketUnavailable',
+        'Unable to retrieve the Jira ticket after multiple attempts.',
+        502,
+        'Retry the request after a short delay.',
+      );
     }
   }
 }
