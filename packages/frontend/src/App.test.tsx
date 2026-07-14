@@ -18,6 +18,6 @@ describe('App', () => {
     });
 
     expect(screen.getByRole('button', { name: 'Continue with GitHub' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue with Atlassian' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue with Atlassian' })).not.toBeInTheDocument();
   });
 });

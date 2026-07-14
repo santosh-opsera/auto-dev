@@ -28,9 +28,22 @@ export interface HeartbeatResponse {
 
 export { API_BASE_URL } from './client.js';
 
-export function getOAuthStartUrl(provider: 'github' | 'atlassian'): string {
+export function getOAuthStartUrl(provider: 'github'): string {
   const base = import.meta.env.VITE_API_URL ?? '';
   return `${base}/api/v1/auth/${provider}/start`;
+}
+
+/** Clears stale Atlassian remember cookies before showing GitHub-only login. */
+export async function prepareLoginPage(): Promise<void> {
+  const base = import.meta.env.VITE_API_URL ?? '';
+  try {
+    await fetch(`${base}/api/v1/auth/prepare-login`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+  } catch {
+    // Best-effort: login UI still works if the prepare call fails.
+  }
 }
 
 export function getJiraConnectUrl(): string {

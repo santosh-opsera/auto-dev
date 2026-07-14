@@ -7,7 +7,7 @@ test.describe('UI · auth session smoke', () => {
     await page.goto('/login');
     await expect(page.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Continue with GitHub' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Continue with Atlassian' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Continue with Atlassian' })).toHaveCount(0);
   });
 
   test('seeded session shows warning modal then logout returns to login', async ({ page }) => {
