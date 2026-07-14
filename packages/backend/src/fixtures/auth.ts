@@ -42,6 +42,22 @@ export const mockAtlassianRefreshFailureResponse = {
   error_description: 'refresh token is expired or revoked',
 };
 
+/** Refresh endpoint fixtures for WO-009 classified error / retry scenarios. */
+export const mockAtlassianRefreshUnauthorizedResponse = {
+  error: 'invalid_token',
+  error_description: 'Token is revoked',
+};
+
+export const mockAtlassianRefreshRateLimitedResponse = {
+  error: 'rate_limited',
+  error_description: 'Too many requests',
+};
+
+export const mockAtlassianRefreshUnavailableResponse = {
+  error: 'server_error',
+  error_description: 'Service temporarily unavailable',
+};
+
 export const mockAtlassianUserResponse = {
   account_id: 'atlassian-account-001',
   email: 'alex.dev@example.com',

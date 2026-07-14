@@ -10,7 +10,7 @@ import {
   mockUserWithJiraConnection,
   mockUserWithoutJiraConnection,
 } from '../../fixtures/jira.js';
-import { TicketService } from './ticketService.js';
+import { TicketService, clearAtlassianRefreshInFlightForTests } from './ticketService.js';
 import { jiraRestClient } from './jiraRestClient.js';
 import { refreshAtlassianAccessToken } from '../auth/atlassianAuthService.js';
 import { getUserModel } from '../../models/userModel.js';
@@ -36,6 +36,15 @@ vi.mock('../../lib/encryption.js', () => ({
 
 vi.mock('../../auth/sessionService.js', () => ({
   encryptOAuthToken: vi.fn((token: string) => `encrypted:${token}`),
+}));
+
+vi.mock('../../auth/oauthConfig.js', () => ({
+  getAtlassianConfig: vi.fn(() => ({
+    clientId: 'client-id',
+    clientSecret: 'client-secret',
+    redirectUri: 'http://localhost/callback',
+    frontendUrl: 'http://localhost:3001',
+  })),
 }));
 
 vi.mock('../auth/atlassianAuthService.js', () => ({
@@ -68,6 +77,7 @@ describe('TicketService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearAtlassianRefreshInFlightForTests();
     vi.mocked(jiraRestClient.resolveCloudId).mockResolvedValue('cloud-1');
     vi.mocked(jiraRestClient.getIssue).mockResolvedValue(sampleJiraIssueResponse);
     vi.mocked(getUserModel).mockReturnValue({ updateOne } as never);
@@ -165,13 +175,13 @@ describe('TicketService', () => {
     expect(response.source).toBe('jira-rest');
   });
 
-  it('signals re-authorize when refresh token is revoked', async () => {
+  it('signals AtlassianRefreshInvalid when refresh token is revoked', async () => {
     vi.mocked(refreshAtlassianAccessToken).mockRejectedValue(
       new AppError(
-        'AtlassianReauthorizeRequired',
-        'Atlassian refresh token expired or revoked.',
+        'AtlassianRefreshInvalid',
+        'Atlassian refresh token is invalid or expired.',
         401,
-        'Reconnect Jira to authorize a new access token.',
+        'Re-authorize Jira access',
       ),
     );
 
@@ -180,9 +190,9 @@ describe('TicketService', () => {
     await expect(
       service.getTicket(mockUserWithExpiredJiraToken as never, 'OPL-1234'),
     ).rejects.toMatchObject({
-      error: 'AtlassianReauthorizeRequired',
+      error: 'AtlassianRefreshInvalid',
       statusCode: 401,
-      suggestedAction: 'Reconnect Jira to authorize a new access token.',
+      suggestedAction: 'Re-authorize Jira access',
     });
 
     expect(updateOne).toHaveBeenCalledWith(
@@ -196,6 +206,27 @@ describe('TicketService', () => {
       }),
     );
     expect(mockAtlassianRefreshFailureResponse.error).toBe('invalid_grant');
+  });
+
+  it('deduplicates concurrent refresh calls for the same user', async () => {
+    let resolveRefresh!: (value: typeof mockAtlassianRefreshSuccessResponse) => void;
+    const refreshGate = new Promise<typeof mockAtlassianRefreshSuccessResponse>((resolve) => {
+      resolveRefresh = resolve;
+    });
+
+    vi.mocked(refreshAtlassianAccessToken).mockImplementation(() => refreshGate);
+
+    const service = new TicketService();
+    const first = service.getTicket(mockUserWithExpiredJiraToken as never, 'OPL-1234');
+    const second = service.getTicket(mockUserWithExpiredJiraToken as never, 'OPL-1234');
+
+    expect(refreshAtlassianAccessToken).toHaveBeenCalledTimes(1);
+    resolveRefresh(mockAtlassianRefreshSuccessResponse);
+
+    const [a, b] = await Promise.all([first, second]);
+    expect(a.ticket).toEqual(sampleNormalizedTicket);
+    expect(b.ticket).toEqual(sampleNormalizedTicket);
+    expect(refreshAtlassianAccessToken).toHaveBeenCalledTimes(1);
   });
 
   it('signals re-authorize when access token expired and refresh token is missing', async () => {
