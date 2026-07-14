@@ -6,6 +6,11 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
+  formatComposeVersionErrors,
+  findDeprecatedComposeVersionFields,
+  type ComposeVersionHit,
+} from './composeVersionGuard.js';
+import {
   findForbiddenPaths,
   formatForbiddenPathErrors,
   type ForbiddenPathHit,
@@ -46,6 +51,7 @@ export type PreCommitGuardResult = {
   ok: boolean;
   messages: string[];
   forbiddenHits: ForbiddenPathHit[];
+  composeVersionHits: ComposeVersionHit[];
   auditBlocked: boolean;
   sastFindings: SastFinding[];
 };
@@ -82,6 +88,16 @@ export function runPreCommitGuard(options: PreCommitGuardOptions): PreCommitGuar
     messages.push(formatForbiddenPathErrors(forbiddenHits));
   }
 
+  const readFile = options.readFile ?? defaultReadFile;
+  const composeVersionHits = findDeprecatedComposeVersionFields(
+    options.repoRoot,
+    undefined,
+    readFile,
+  );
+  if (composeVersionHits.length > 0) {
+    messages.push(formatComposeVersionErrors(composeVersionHits));
+  }
+
   let auditBlocked = false;
   if (!options.skipAudit) {
     const report =
@@ -96,7 +112,6 @@ export function runPreCommitGuard(options: PreCommitGuardOptions): PreCommitGuar
     }
   }
 
-  const readFile = options.readFile ?? defaultReadFile;
   const filePayloads: Array<{ path: string; content: string }> = [];
   for (const staged of options.stagedPaths) {
     if (forbiddenHits.some((h) => h.path === staged.replace(/\\/g, '/'))) {
@@ -127,6 +142,7 @@ export function runPreCommitGuard(options: PreCommitGuardOptions): PreCommitGuar
     ok: messages.length === 0,
     messages,
     forbiddenHits,
+    composeVersionHits,
     auditBlocked,
     sastFindings: blockingSast,
   };
