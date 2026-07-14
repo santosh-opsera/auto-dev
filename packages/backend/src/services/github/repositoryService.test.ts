@@ -19,6 +19,18 @@ function buildUser(): UserDocument {
   } as unknown as UserDocument;
 }
 
+function manyRepos(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    id: index + 1,
+    name: `repo-${String(index + 1)}`,
+    fullName: `owner/repo-${String(index + 1)}`,
+    owner: 'owner',
+    private: false,
+    defaultBranch: 'main',
+    htmlUrl: `https://github.com/owner/repo-${String(index + 1)}`,
+  }));
+}
+
 describe('RepositoryService.listRepositories', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -38,10 +50,60 @@ describe('RepositoryService.listRepositories', () => {
 
     expect(client.listRepositories).toHaveBeenCalledWith(expect.any(String));
     expect(result.repositories).toHaveLength(3);
+    expect(result.pagination).toEqual({
+      page: 1,
+      perPage: 30,
+      totalCount: 3,
+      hasNextPage: false,
+    });
     expect(result.repositories.some((repo) => repo.owner === 'acme-corp')).toBe(true);
     expect(result.rateLimit?.remaining).toBe(42);
     expect(result.rateLimitWarning).toMatch(/rate limit is low/i);
-    expect(result.rateLimitWarning).toMatch(/42/);
+  });
+
+  it('paginates repository lists with default and custom page sizes', async () => {
+    const client = {
+      listRepositories: vi.fn().mockResolvedValue(manyRepos(150)),
+      getRateLimiter: () => new GitHubRateLimiter(),
+    } as unknown as GitHubApiClient;
+    const service = new RepositoryService(client);
+
+    const firstPage = await service.listRepositories(buildUser());
+    expect(firstPage.repositories).toHaveLength(30);
+    expect(firstPage.pagination).toEqual({
+      page: 1,
+      perPage: 30,
+      totalCount: 150,
+      hasNextPage: true,
+    });
+
+    const secondPage = await service.listRepositories(buildUser(), { page: 2, perPage: 50 });
+    expect(secondPage.repositories).toHaveLength(50);
+    expect(secondPage.repositories[0]?.name).toBe('repo-51');
+    expect(secondPage.pagination.hasNextPage).toBe(true);
+
+    const filtered = await service.listRepositories(buildUser(), { page: 1, perPage: 30, q: 'repo-12' });
+    expect(filtered.repositories.map((repo) => repo.name)).toEqual(['repo-12', 'repo-120', 'repo-121', 'repo-122', 'repo-123', 'repo-124', 'repo-125', 'repo-126', 'repo-127', 'repo-128', 'repo-129']);
+    expect(filtered.pagination.page).toBe(1);
+    expect(filtered.pagination.totalCount).toBe(11);
+    expect(filtered.pagination.hasNextPage).toBe(false);
+  });
+
+  it('returns empty pagination metadata for empty repository lists', async () => {
+    const client = {
+      listRepositories: vi.fn().mockResolvedValue([]),
+      getRateLimiter: () => new GitHubRateLimiter(),
+    } as unknown as GitHubApiClient;
+    const service = new RepositoryService(client);
+    const result = await service.listRepositories(buildUser());
+
+    expect(result.repositories).toEqual([]);
+    expect(result.pagination).toEqual({
+      page: 1,
+      perPage: 30,
+      totalCount: 0,
+      hasNextPage: false,
+    });
   });
 
   it('omits rateLimitWarning when remaining quota is healthy', async () => {

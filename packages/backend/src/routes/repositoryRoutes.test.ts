@@ -82,6 +82,12 @@ describe('repository routes', () => {
   it('lists repositories for authenticated users after OAuth with optional rate-limit warning', async () => {
     vi.spyOn(repositoryService, 'listRepositories').mockResolvedValue({
       repositories: sampleGitHubRepositories,
+      pagination: {
+        page: 1,
+        perPage: 30,
+        totalCount: sampleGitHubRepositories.length,
+        hasNextPage: false,
+      },
       rateLimit: {
         limit: 5000,
         remaining: 42,
@@ -103,6 +109,47 @@ describe('repository routes', () => {
     expect(response.body.repositories[0].fullName).toBe('santosh-opsera/auto-dev');
     expect(response.body.rateLimitWarning).toMatch(/rate limit is low/i);
     expect(response.body.rateLimit.remaining).toBe(42);
+    expect(response.body.pagination).toEqual({
+      page: 1,
+      perPage: 30,
+      totalCount: sampleGitHubRepositories.length,
+      hasNextPage: false,
+    });
+  });
+
+  it('returns paginated repository slices for page and perPage query params', async () => {
+    vi.spyOn(repositoryService, 'listRepositories').mockImplementation(async (_user, options) => {
+      const page = options?.page ?? 1;
+      const perPage = options?.perPage ?? 30;
+      return {
+        repositories: sampleGitHubRepositories.slice(0, 1),
+        pagination: {
+          page,
+          perPage,
+          totalCount: 150,
+          hasNextPage: page * perPage < 150,
+        },
+      };
+    });
+
+    const app = createApp();
+    const { sessionCookie } = await loginAsUser(app);
+
+    const response = await request(app)
+      .get('/api/v1/repositories?page=2&perPage=50')
+      .set('Cookie', sessionCookie);
+
+    expect(response.status).toBe(200);
+    expect(repositoryService.listRepositories).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ page: 2, perPage: 50 }),
+    );
+    expect(response.body.pagination).toEqual({
+      page: 2,
+      perPage: 50,
+      totalCount: 150,
+      hasNextPage: true,
+    });
   });
 
   it('connects a repository and returns tree/file data', async () => {

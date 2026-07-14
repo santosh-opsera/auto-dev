@@ -283,9 +283,11 @@ export {
   repositoryConnectionSchema,
   repositoryFileParamsSchema,
   repositoryFileResponseSchema,
+  repositoryListQuerySchema,
   repositoryListResponseSchema,
   repositoryNameSchema,
   repositoryOwnerSchema,
+  repositoryPaginationSchema,
   repositoryParamsSchema,
   repositoryTreeEntrySchema,
   repositoryTreeResponseSchema,
@@ -298,15 +300,20 @@ export type {
   ConnectedRepositoryListResponse,
   RepositoryConnection,
   RepositoryFileResponse,
+  RepositoryListQuery,
   RepositoryListResponse,
+  RepositoryPagination,
   RepositoryTreeEntry,
   RepositoryTreeResponse,
 } from './repositories.js';
 
 export {
   mockGitHubApiFileResponse,
+  mockGitHubApiLinkHeaderLastPage,
+  mockGitHubApiLinkHeaderPage1,
   mockGitHubApiOrganizationsResponse,
   mockGitHubApiOrgRepositoryResponse,
+  mockGitHubApiPaginatedRepositoryPages,
   mockGitHubApiRateLimitExhaustedHeaders,
   mockGitHubApiRateLimitHeaders,
   mockGitHubApiRateLimitWarningHeaders,
@@ -315,6 +322,7 @@ export {
   sampleGitHubRateLimitStatus,
   sampleGitHubRepositories,
   sampleRepositoryFile,
+  sampleRepositoryPagination,
   sampleRepositoryTree,
 } from './fixtures/repositories.js';
 

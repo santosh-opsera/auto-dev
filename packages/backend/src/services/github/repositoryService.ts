@@ -110,14 +110,38 @@ export class RepositoryService {
     return toConnection(record);
   }
 
-  async listRepositories(user: UserDocument): Promise<RepositoryListResponse> {
+  async listRepositories(
+    user: UserDocument,
+    options: { page?: number; perPage?: number; q?: string } = {},
+  ): Promise<RepositoryListResponse> {
+    const page = options.page ?? 1;
+    const perPage = options.perPage ?? 30;
     const accessToken = resolveGitHubAccessToken(user);
-    const repositories = await this.client.listRepositories(accessToken);
+    const allRepositories = await this.client.listRepositories(accessToken);
+
+    const query = options.q?.trim().toLowerCase();
+    const filtered = query
+      ? allRepositories.filter(
+          (repository) =>
+            repository.fullName.toLowerCase().includes(query) ||
+            repository.name.toLowerCase().includes(query),
+        )
+      : allRepositories;
+
+    const totalCount = filtered.length;
+    const start = (page - 1) * perPage;
+    const repositories = filtered.slice(start, start + perPage);
     const rateLimit = this.getRateLimitStatus();
     const rateLimitWarning = buildRateLimitWarning(rateLimit);
 
     return {
       repositories,
+      pagination: {
+        page,
+        perPage,
+        totalCount,
+        hasNextPage: start + repositories.length < totalCount,
+      },
       rateLimit,
       ...(rateLimitWarning ? { rateLimitWarning } : {}),
     };

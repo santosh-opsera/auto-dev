@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -45,6 +45,12 @@ describe('RepositoriesPage', () => {
           htmlUrl: 'https://github.com/santosh-opsera/auto-dev',
         },
       ],
+      pagination: {
+        page: 1,
+        perPage: 30,
+        totalCount: 45,
+        hasNextPage: true,
+      },
       rateLimit: {
         limit: 5000,
         remaining: 42,
@@ -82,11 +88,67 @@ describe('RepositoriesPage', () => {
     );
 
     await waitFor(() => {
-      expect(listGitHubRepositories).toHaveBeenCalled();
+      expect(listGitHubRepositories).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1, perPage: 30 }),
+      );
     });
     expect(await screen.findByText('santosh-opsera/auto-dev')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /GitHub rate limit warning/i })).toBeInTheDocument();
     expect(screen.getByText(/42 of 5000 remaining/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Load more' })).toBeInTheDocument();
+    expect(screen.getByText(/Showing 1 of 45 repositories/i)).toBeInTheDocument();
+  });
+
+  it('resets to page 1 when a filter is applied', async () => {
+    useAuthStore.getState().setAuth(mockAuthUser, mockSessionMetadata);
+    listGitHubRepositories
+      .mockResolvedValueOnce({
+        repositories: [
+          {
+            id: 1,
+            name: 'auto-dev',
+            fullName: 'santosh-opsera/auto-dev',
+            owner: 'santosh-opsera',
+            private: false,
+            defaultBranch: 'main',
+            htmlUrl: 'https://github.com/santosh-opsera/auto-dev',
+          },
+        ],
+        pagination: { page: 1, perPage: 30, totalCount: 45, hasNextPage: true },
+      })
+      .mockResolvedValueOnce({
+        repositories: [
+          {
+            id: 2,
+            name: 'platform-ui',
+            fullName: 'santosh-opsera/platform-ui',
+            owner: 'santosh-opsera',
+            private: true,
+            defaultBranch: 'main',
+            htmlUrl: 'https://github.com/santosh-opsera/platform-ui',
+          },
+        ],
+        pagination: { page: 1, perPage: 30, totalCount: 1, hasNextPage: false },
+      });
+
+    render(
+      <MemoryRouter>
+        <RepositoriesPage />
+      </MemoryRouter>,
+    );
+
+    await screen.findByText('santosh-opsera/auto-dev');
+    fireEvent.change(screen.getByLabelText(/Filter repositories/i), {
+      target: { value: 'platform' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply filter' }));
+
+    await waitFor(() => {
+      expect(listGitHubRepositories).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 1, perPage: 30, q: 'platform' }),
+      );
+    });
+    expect(await screen.findByText('santosh-opsera/platform-ui')).toBeInTheDocument();
   });
 
   it('shows actionable rate-limit error with retry when auto-load is exhausted', async () => {

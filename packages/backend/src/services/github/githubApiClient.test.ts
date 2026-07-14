@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   mockGitHubApiFileResponse,
+  mockGitHubApiLinkHeaderLastPage,
+  mockGitHubApiLinkHeaderPage1,
   mockGitHubApiRepositoryResponse,
   mockGitHubApiTreeResponse,
 } from '@autodev/shared-types';
-import { GitHubApiClient } from './githubApiClient.js';
+import { GitHubApiClient, parseGitHubNextPageUrl } from './githubApiClient.js';
 import { GitHubRateLimiter } from './githubRateLimiter.js';
 
 function createHeaders(remaining = '100'): Headers {
@@ -16,6 +18,14 @@ function createHeaders(remaining = '100'): Headers {
 }
 
 describe('GitHubApiClient', () => {
+  it('parses GitHub Link headers into next-page URLs', () => {
+    expect(parseGitHubNextPageUrl(mockGitHubApiLinkHeaderPage1)).toBe(
+      'https://api.github.com/user/repos?page=2&per_page=100',
+    );
+    expect(parseGitHubNextPageUrl(mockGitHubApiLinkHeaderLastPage)).toBeNull();
+    expect(parseGitHubNextPageUrl(null)).toBeNull();
+  });
+
   it('lists personal and organization repositories with pagination', async () => {
     const fetchImpl = vi
       .fn()
@@ -48,10 +58,11 @@ describe('GitHubApiClient', () => {
 
     const repositories = await client.listRepositories('token');
 
-    expect(repositories).toHaveLength(2);
+    expect(repositories).toHaveLength(3);
     expect(repositories.map((repository) => repository.fullName)).toEqual([
       'opsera/org-platform',
       'santosh-opsera/auto-dev',
+      'santosh-opsera/platform-ui',
     ]);
     expect(fetchImpl.mock.calls[0]?.[0]).toContain('affiliation=owner,organization_member,collaborator');
     expect(fetchImpl.mock.calls[2]?.[0]).toContain('/orgs/opsera/repos');
