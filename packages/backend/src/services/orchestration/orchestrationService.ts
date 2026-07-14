@@ -14,7 +14,7 @@ import type { UserDocument } from '../../models/userModel.js';
 import { getWorkflowModel, type WorkflowRecord } from '../../models/workflowModel.js';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import {
   assertCanCancel,
   assertCanFail,

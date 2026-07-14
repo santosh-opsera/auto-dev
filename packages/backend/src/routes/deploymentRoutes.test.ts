@@ -12,7 +12,7 @@ import { getSessionModel } from '../models/sessionModel.js';
 import { getUserModel } from '../models/userModel.js';
 import { startMemoryMongo, stopMemoryMongo } from '../testHelpers/memoryServer.js';
 import { ensureIndexes } from '../database/indexes.js';
-import { eventBus } from '../services/events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { MockDockerClient } from '../services/deployment/dockerClient.js';
 import { MockHealthChecker } from '../services/deployment/healthCheck.js';
 import { deploymentService } from '../services/deployment/deploymentService.js';

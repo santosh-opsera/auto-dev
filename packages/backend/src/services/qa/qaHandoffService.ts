@@ -23,7 +23,7 @@ import { getTicketIntentModel } from '../../models/ticketIntentModel.js';
 import { getWorkflowModel, type WorkflowRecord } from '../../models/workflowModel.js';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { buildJiraTicketUrl } from '../github/prHelpers.js';
 
 function mapHandoff(doc: QaHandoffRecord): QaHandoffResponse {

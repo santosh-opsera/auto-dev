@@ -6,7 +6,7 @@ import {
   getCodebaseContextModel,
 } from '../../models/codebaseContextModel.js';
 import { AppError } from '../../utils/errors.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { repositoryService } from '../github/repositoryService.js';
 import {
   analyzeCodebase,

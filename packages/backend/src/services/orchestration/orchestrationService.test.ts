@@ -8,7 +8,7 @@ import { sampleUserDocuments, seedDocuments } from '../../fixtures/database.js';
 import { ensureIndexes } from '../../database/indexes.js';
 import { startMemoryMongo, stopMemoryMongo } from '../../testHelpers/memoryServer.js';
 import { AppError } from '../../utils/errors.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { orchestrationService } from './orchestrationService.js';
 
 async function advanceTo(user: UserDocument, id: string, states: WorkflowState[]) {

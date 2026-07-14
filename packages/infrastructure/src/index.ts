@@ -2,3 +2,9 @@
 export const INFRASTRUCTURE_PACKAGE = '@autodev/infrastructure' as const;
 
 export { CircuitBreaker, type CircuitState } from './circuitBreaker.js';
+export {
+  EventBus,
+  eventBus,
+  type EventHandler,
+} from './eventBus.js';
+export { noopLogger, type Logger } from './logger.js';

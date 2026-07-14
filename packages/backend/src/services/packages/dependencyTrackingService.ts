@@ -21,7 +21,7 @@ import {
 } from '../../models/dependencyTrackingModel.js';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { buildDependencyGraph, findConsumers } from './dependencyGraph.js';
 
 function mapProposal(doc: DependencyUpdateProposalRecord): DependencyUpdateProposal {

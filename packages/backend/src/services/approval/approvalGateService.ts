@@ -17,7 +17,7 @@ import { getDivergenceRecordModel } from '../../models/divergenceRecordModel.js'
 import { getTicketIntentModel } from '../../models/ticketIntentModel.js';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 
 function toIso(date: Date): string {
   return date.toISOString();

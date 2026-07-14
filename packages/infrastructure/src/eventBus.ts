@@ -5,7 +5,7 @@ import type {
   PublishEventOptions,
 } from '@autodev/shared-types';
 import { domainEventSchema } from '@autodev/shared-types';
-import { logger } from '../../utils/logger.js';
+import { noopLogger, type Logger } from './logger.js';
 
 export type EventHandler<T extends EventType = EventType> = (
   event: DomainEventByType<T>,
@@ -16,6 +16,16 @@ const MAX_EVENT_HISTORY = 100;
 export class EventBus {
   private readonly handlers = new Map<EventType, Set<EventHandler>>();
   private readonly history: DomainEvent[] = [];
+  private logger: Logger;
+
+  constructor(logger: Logger = noopLogger) {
+    this.logger = logger;
+  }
+
+  /** Wire the host application's logger (e.g. backend structured logger) at bootstrap. */
+  setLogger(logger: Logger): void {
+    this.logger = logger;
+  }
 
   subscribe<T extends EventType>(eventType: T, handler: EventHandler<T>): void {
     const handlers = this.handlers.get(eventType) ?? new Set<EventHandler>();
@@ -77,13 +87,13 @@ export class EventBus {
     try {
       await handler(event);
     } catch (error) {
-      logger.error('Event handler failed', {
+      this.logger.error('Event handler failed', {
         resource: 'event-bus',
         operation: event.type,
         actor: event.metadata.actor,
       });
       if (error instanceof Error) {
-        logger.error(error.message, {
+        this.logger.error(error.message, {
           resource: 'event-bus',
           operation: 'handler',
           actor: event.metadata.actor,

@@ -8,7 +8,7 @@ import {
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { requireSession, type AuthenticatedRequest } from '../middleware/requireSession.js';
 import { validateParams, validateQuery } from '../middleware/validateRequest.js';
-import { eventBus } from '../services/events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { metricsCollectionService } from '../services/metrics/metricsCollectionService.js';
 
 metricsCollectionService.initialize(eventBus);

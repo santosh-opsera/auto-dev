@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import { EVENT_TYPES, type DomainEvent } from '@autodev/shared-types';
 import { logger } from '../../utils/logger.js';
-import type { EventBus } from './eventBus.js';
+import type { EventBus } from '@autodev/infrastructure';
 import {
   formatSseEvent,
   formatSseHeartbeat,

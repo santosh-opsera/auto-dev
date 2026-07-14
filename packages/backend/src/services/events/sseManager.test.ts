@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Response } from 'express';
-import { EventBus } from './eventBus.js';
+import { EventBus } from '@autodev/infrastructure';
 import { SseManager } from './sseManager.js';
 import { SSE_HEARTBEAT_INTERVAL_MS } from './sseFormatting.js';
 import {

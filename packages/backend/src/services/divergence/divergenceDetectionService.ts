@@ -5,7 +5,7 @@ import { getCodebaseContextModel } from '../../models/codebaseContextModel.js';
 import { getDivergenceRecordModel } from '../../models/divergenceRecordModel.js';
 import { getTicketIntentModel } from '../../models/ticketIntentModel.js';
 import { AppError } from '../../utils/errors.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { buildDivergenceSummary, detectDivergences } from './divergenceDetector.js';
 
 export interface DetectDivergenceOptions {

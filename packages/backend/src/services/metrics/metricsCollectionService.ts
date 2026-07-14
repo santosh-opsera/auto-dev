@@ -18,8 +18,8 @@ import {
   type WorkflowMetricsDocument,
   type WorkflowMetricsRecord,
 } from '../../models/workflowMetricsModel.js';
-import type { EventBus } from '../events/eventBus.js';
-import { eventBus as defaultEventBus } from '../events/eventBus.js';
+import type { EventBus } from '@autodev/infrastructure';
+import { eventBus as defaultEventBus } from '@autodev/infrastructure';
 
 function toIso(date: Date | undefined | null): string | null {
   return date ? date.toISOString() : null;

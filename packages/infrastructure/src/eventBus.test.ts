@@ -1,28 +1,32 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { EventBus } from './eventBus.js';
 import {
   sampleChunkProgressEvent,
   sampleConventionUpdatedEvent,
   sampleTicketParsedEvent,
-} from '../../fixtures/events.js';
-import { parseLogLine, resetLogWriter, setLogWriter } from '../../utils/logger.js';
+} from '@autodev/shared-types';
+import { EventBus } from './eventBus.js';
+import type { Logger } from './logger.js';
 
 describe('EventBus', () => {
   let bus: EventBus;
-  const logLines: string[] = [];
+  const errorMessages: string[] = [];
+
+  const captureLogger: Logger = {
+    info() {},
+    warn() {},
+    error(message: string) {
+      errorMessages.push(message);
+    },
+  };
 
   beforeEach(() => {
-    bus = new EventBus();
-    logLines.length = 0;
-    setLogWriter((line, level) => {
-      if (level === 'error') {
-        logLines.push(line);
-      }
-    });
+    bus = new EventBus(captureLogger);
+    errorMessages.length = 0;
   });
 
   afterEach(() => {
-    resetLogWriter();
+    bus.clearSubscriptions();
+    bus.clearHistory();
   });
 
   it('delivers published events to subscribed handlers', async () => {
@@ -57,9 +61,7 @@ describe('EventBus', () => {
 
     expect(failingHandler).toHaveBeenCalled();
     expect(succeedingHandler).toHaveBeenCalled();
-    expect(logLines.some((line) => parseLogLine(line).message === 'Event handler failed')).toBe(
-      true,
-    );
+    expect(errorMessages).toContain('Event handler failed');
   });
 
   it('awaits async handlers when awaitHandlers is true', async () => {

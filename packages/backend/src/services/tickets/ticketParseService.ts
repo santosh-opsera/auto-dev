@@ -1,7 +1,7 @@
 import type { TicketParseResponse } from '@autodev/shared-types';
 import type { UserDocument } from '../../models/userModel.js';
 import { getTicketIntentModel } from '../../models/ticketIntentModel.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { ticketService } from '../jira/ticketService.js';
 import { canProceedToAnalysis, detectTicketGaps } from './gapDetectionService.js';
 import { parseTicketIntent } from './ticketParser.js';
