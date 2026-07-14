@@ -4,7 +4,7 @@ import type {
   RepositoryTreeEntry,
 } from '@autodev/shared-types';
 import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
-import { CircuitBreaker } from '../../lib/circuitBreaker.js';
+import { CircuitBreaker } from '@autodev/infrastructure';
 import { AppError } from '../../utils/errors.js';
 import { GitHubRateLimiter } from './githubRateLimiter.js';
 import { mapGitHubApiError } from './githubErrorMapper.js';

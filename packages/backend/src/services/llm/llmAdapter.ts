@@ -5,7 +5,7 @@ import type {
   LlmProvider,
   LlmRequestOptions,
 } from '@autodev/shared-types';
-import { CircuitBreaker } from '../../lib/circuitBreaker.js';
+import { CircuitBreaker } from '@autodev/infrastructure';
 import { withRetry } from '../../lib/retry.js';
 import { AppError } from '../../utils/errors.js';
 import { AnthropicProvider } from './anthropicProvider.js';

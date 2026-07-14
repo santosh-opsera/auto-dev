@@ -5,7 +5,7 @@ import type {
   LlmEmbeddingResponse,
   LlmRequestOptions,
 } from '@autodev/shared-types';
-import { CircuitBreaker } from '../../lib/circuitBreaker.js';
+import { CircuitBreaker } from '@autodev/infrastructure';
 import { AppError } from '../../utils/errors.js';
 import { LlmAdapterService } from './llmAdapter.js';
 import type { LlmProviderClient } from './llmTypes.js';

@@ -8,7 +8,7 @@
     "guard:build": "tsx src/tools/guards/cli/buildGuardCli.ts",
     "precommit:guard": "tsx src/tools/guards/cli/preCommitCli.ts",
     "migrate:atlassian-to-github": "tsx src/tools/migrations/cli/atlassianToGitHubCli.ts",
-    "build": "npm run guard:build && tsc",
+    "build": "npm run guard:build && npm run build -w @autodev/infrastructure && tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
     "lint": "eslint ."
