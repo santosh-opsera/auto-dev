@@ -19,7 +19,7 @@ export const sampleAdapterHealthUnhealthy: AdapterHealthResult = {
 export const sampleJiraAdapterInfo: IntegrationAdapterInfo = {
   name: 'jira',
   status: 'active',
-  capabilities: ['ticket-ingest', 'forge-bridge', 'gap-detection'],
+  capabilities: ['ticket-ingest', 'gap-detection'],
   lastHealthCheck: sampleAdapterHealthHealthy,
 };
 
