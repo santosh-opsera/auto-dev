@@ -46,6 +46,11 @@
   color: var(--sidebar-fg);
   border-right: 1px solid var(--sidebar-border);
   transition: var(--sidebar-transition);
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebar-nav.is-collapsed {
