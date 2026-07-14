@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Node 22 build & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        # actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Node.js 22
+        # actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Assert Node 22.x
+        run: |
+          node --version
+          node -e "const m=process.versions.node.split('.')[0]; if (m!=='22') { console.error('Expected Node 22, got', process.version); process.exit(1); }"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Reject Node 20 image references
+        run: |
+          set -euo pipefail
+          files=$(find . \
+            \( -path './node_modules' -o -path './.git' -o -path './dist' -o -path './packages/*/dist' \) -prune -o \
+            \( -name 'docker-compose*.yml' -o -name 'Dockerfile' -o -name 'Dockerfile.*' \) -print)
+          if echo "$files" | xargs grep -nE 'node:20([./-]|$)' 2>/dev/null; then
+            echo "::error::Forbidden node:20 references found in Docker/Compose files"
+            exit 1
+          fi
+          echo "No node:20 references found in Docker/Compose files"
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
