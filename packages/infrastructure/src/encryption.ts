@@ -69,6 +69,11 @@ export function encryptSecret(plaintext: string, encryptionKey?: string): string
   return encryptWithKey(plaintext, getKek(encryptionKey));
 }
 
+/**
+ * Decrypt a payload produced by {@link encryptSecret}.
+ * @param payload - Packed iv.authTag.ciphertext string
+ * @param encryptionKey - Optional KEK secret override
+ */
 export function decryptSecret(payload: string, encryptionKey?: string): string {
   return decryptWithKey(payload, getKek(encryptionKey));
 }
