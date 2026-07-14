@@ -38,7 +38,10 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
   const user = useAuthStore((state) => state.user);
   const jiraConnected = user?.integrations?.jira ?? false;
   const needsReauthorize =
-    errorCode === 'AtlassianReauthorizeRequired' || errorCode === 'AtlassianSessionExpired';
+    errorCode === 'AtlassianReauthorizeRequired' ||
+    errorCode === 'AtlassianSessionExpired' ||
+    errorCode === 'AtlassianTokenRevoked' ||
+    errorCode === 'AtlassianRefreshInvalid';
   const needsJiraConnect = (user !== null && !jiraConnected) || needsReauthorize;
   const hasAtlassianProvider = user?.connectedProviders.includes('atlassian') === true;
 

@@ -26,7 +26,19 @@ async function clearAtlassianJiraAccess(userId: UserDocument['_id']): Promise<vo
 }
 
 function isReauthorizeError(error: unknown): error is AppError {
-  return error instanceof AppError && error.error === 'AtlassianReauthorizeRequired';
+  return (
+    error instanceof AppError &&
+    (error.error === 'AtlassianReauthorizeRequired' ||
+      error.error === 'AtlassianTokenRevoked' ||
+      error.error === 'AtlassianRefreshInvalid')
+  );
+}
+
+/** In-flight refresh promises keyed by user id — prevents concurrent Atlassian rotations. */
+const refreshInFlight = new Map<string, Promise<string>>();
+
+export function clearAtlassianRefreshInFlightForTests(): void {
+  refreshInFlight.clear();
 }
 
 function getHttpStatus(error: unknown): number | undefined {
@@ -104,48 +116,61 @@ async function resolveAccessToken(user: UserDocument): Promise<string> {
     );
   }
 
-  const config = getAtlassianConfig();
-
-  try {
-    const refreshed = await refreshAtlassianAccessToken({
-      refreshToken: decryptSecret(atlassian.encryptedRefreshToken),
-      clientId: config.clientId,
-      clientSecret: config.clientSecret,
-    });
-
-    await getUserModel().updateOne(
-      { _id: user._id },
-      {
-        $set: {
-          'atlassian.encryptedAccessToken': encryptOAuthToken(refreshed.access_token),
-          ...(refreshed.refresh_token
-            ? { 'atlassian.encryptedRefreshToken': encryptOAuthToken(refreshed.refresh_token) }
-            : {}),
-          ...(refreshed.expires_in
-            ? {
-                'atlassian.tokenExpiresAt': new Date(Date.now() + refreshed.expires_in * 1000),
-              }
-            : {}),
-          ...(refreshed.scope ? { 'atlassian.scopes': refreshed.scope.split(' ') } : {}),
-        },
-      },
-    );
-
-    return refreshed.access_token;
-  } catch (error) {
-    await clearAtlassianJiraAccess(user._id);
-
-    if (isReauthorizeError(error)) {
-      throw error;
-    }
-
-    throw new AppError(
-      'AtlassianReauthorizeRequired',
-      'Atlassian refresh token expired or revoked.',
-      401,
-      'Reconnect Jira to authorize a new access token.',
-    );
+  const userId = String(user._id);
+  const pending = refreshInFlight.get(userId);
+  if (pending) {
+    return pending;
   }
+
+  const refreshPromise = (async (): Promise<string> => {
+    const config = getAtlassianConfig();
+
+    try {
+      const refreshed = await refreshAtlassianAccessToken({
+        refreshToken: decryptSecret(atlassian.encryptedRefreshToken!),
+        clientId: config.clientId,
+        clientSecret: config.clientSecret,
+      });
+
+      await getUserModel().updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            'atlassian.encryptedAccessToken': encryptOAuthToken(refreshed.access_token),
+            ...(refreshed.refresh_token
+              ? { 'atlassian.encryptedRefreshToken': encryptOAuthToken(refreshed.refresh_token) }
+              : {}),
+            ...(refreshed.expires_in
+              ? {
+                  'atlassian.tokenExpiresAt': new Date(Date.now() + refreshed.expires_in * 1000),
+                }
+              : {}),
+            ...(refreshed.scope ? { 'atlassian.scopes': refreshed.scope.split(' ') } : {}),
+          },
+        },
+      );
+
+      return refreshed.access_token;
+    } catch (error) {
+      await clearAtlassianJiraAccess(user._id);
+
+      if (isReauthorizeError(error)) {
+        throw error;
+      }
+
+      throw new AppError(
+        'AtlassianRefreshFailed',
+        'Atlassian refresh token exchange failed.',
+        502,
+        'Retry the request after a short delay.',
+      );
+    } finally {
+      refreshInFlight.delete(userId);
+    }
+  })();
+
+  refreshInFlight.set(userId, refreshPromise);
+  return refreshPromise;
 }
 
 export class TicketService {

@@ -1,5 +1,10 @@
 import { ATLASSIAN_LOGIN_SCOPES } from '../../auth/constants.js';
 import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
+import {
+  DEFAULT_RETRY_DELAYS_MS,
+  isRetryableHttpStatus,
+  withRetry,
+} from '../../lib/retry.js';
 import { generateCodeChallenge, generateCodeVerifier } from '../../auth/pkce.js';
 import { AppError } from '../../utils/errors.js';
 import type { OAuthProfile } from './userAuthService.js';
@@ -143,49 +148,101 @@ export async function exchangeAtlassianCode(
   };
 }
 
+export class RetryableAtlassianRefreshError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message = 'Atlassian refresh token exchange failed') {
+    super(message);
+    this.name = 'RetryableAtlassianRefreshError';
+    this.status = status;
+  }
+}
+
+function classifyRefreshFailure(
+  status: number,
+  oauthError: string,
+): AppError | RetryableAtlassianRefreshError {
+  if (status === 401) {
+    return new AppError(
+      'AtlassianTokenRevoked',
+      'Atlassian access was revoked.',
+      401,
+      'Re-connect Jira from the integrations page',
+    );
+  }
+
+  if (status === 400 && (oauthError === 'invalid_grant' || oauthError === '')) {
+    return new AppError(
+      'AtlassianRefreshInvalid',
+      'Atlassian refresh token is invalid or expired.',
+      401,
+      'Re-authorize Jira access',
+    );
+  }
+
+  if (
+    status === 400 &&
+    (oauthError === 'invalid_token' || oauthError === 'unauthorized_client')
+  ) {
+    return new AppError(
+      'AtlassianRefreshInvalid',
+      'Atlassian refresh token is invalid or expired.',
+      401,
+      'Re-authorize Jira access',
+    );
+  }
+
+  if (isRetryableHttpStatus(status)) {
+    return new RetryableAtlassianRefreshError(status);
+  }
+
+  return new AppError(
+    'AtlassianRefreshFailed',
+    'Atlassian refresh token exchange failed.',
+    502,
+    'Retry the request after a short delay.',
+  );
+}
+
 export async function refreshAtlassianAccessToken(input: {
   refreshToken: string;
   clientId: string;
   clientSecret: string;
+  /** Override backoff delays (tests use [0,0,0]). */
+  delaysMs?: readonly number[];
 }): Promise<AtlassianTokenResponse> {
   assertAllowedUrl(ATLASSIAN_TOKEN_URL);
-  const response = await fetch(ATLASSIAN_TOKEN_URL, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+
+  return withRetry(
+    async () => {
+      const response = await fetch(ATLASSIAN_TOKEN_URL, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          grant_type: 'refresh_token',
+          client_id: input.clientId,
+          client_secret: input.clientSecret,
+          refresh_token: input.refreshToken,
+        }),
+      });
+
+      if (response.ok) {
+        return (await response.json()) as AtlassianTokenResponse;
+      }
+
+      const errorBody = (await response.json().catch(() => null)) as { error?: string } | null;
+      const oauthError = errorBody?.error ?? '';
+      throw classifyRefreshFailure(response.status, oauthError);
     },
-    body: JSON.stringify({
-      grant_type: 'refresh_token',
-      client_id: input.clientId,
-      client_secret: input.clientSecret,
-      refresh_token: input.refreshToken,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = (await response.json().catch(() => null)) as { error?: string } | null;
-    const oauthError = errorBody?.error ?? '';
-    const requiresReauth =
-      response.status === 400 ||
-      response.status === 401 ||
-      oauthError === 'invalid_grant' ||
-      oauthError === 'invalid_token' ||
-      oauthError === 'unauthorized_client';
-
-    if (requiresReauth) {
-      throw new AppError(
-        'AtlassianReauthorizeRequired',
-        'Atlassian refresh token expired or revoked.',
-        401,
-        'Reconnect Jira to authorize a new access token.',
-      );
-    }
-
-    throw new Error('Atlassian refresh token exchange failed');
-  }
-
-  return (await response.json()) as AtlassianTokenResponse;
+    input.delaysMs ?? DEFAULT_RETRY_DELAYS_MS,
+    {
+      shouldRetry: (error) =>
+        error instanceof RetryableAtlassianRefreshError && isRetryableHttpStatus(error.status),
+    },
+  );
 }
 
 export const atlassianAuthInternals = {

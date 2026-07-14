@@ -10,10 +10,17 @@ export function isRetryableHttpStatus(status: number): boolean {
   return status === 429 || status >= 500;
 }
 
+export interface WithRetryOptions {
+  /** When false, stop retrying immediately and rethrow. Defaults to retry-all. */
+  shouldRetry?: (error: unknown) => boolean;
+}
+
 export async function withRetry<T>(
   operation: () => Promise<T>,
   delaysMs: readonly number[] = DEFAULT_RETRY_DELAYS_MS,
+  options: WithRetryOptions = {},
 ): Promise<T> {
+  const shouldRetry = options.shouldRetry ?? (() => true);
   let lastError: unknown;
 
   for (let attempt = 0; attempt < delaysMs.length; attempt += 1) {
@@ -22,7 +29,7 @@ export async function withRetry<T>(
     } catch (error) {
       lastError = error;
 
-      if (attempt >= delaysMs.length - 1) {
+      if (!shouldRetry(error) || attempt >= delaysMs.length - 1) {
         break;
       }
 
