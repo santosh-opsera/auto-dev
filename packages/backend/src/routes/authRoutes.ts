@@ -1,12 +1,10 @@
-import { Router, type Request, type Response } from 'express';
+import { Router, type Response } from 'express';
 import {
   ATLASSIAN_JIRA_SCOPES,
   ATLASSIAN_LOGIN_SCOPES,
   GITHUB_LOGIN_SCOPES,
   GITHUB_REPO_CONNECT_SCOPES,
-  OAUTH_LINK_USER_COOKIE_NAME,
   SESSION_COOKIE_NAME,
-  PKCE_COOKIE_NAME,
 } from '../auth/constants.js';
 import {
   clearAtlassianRememberCookie,
@@ -17,18 +15,19 @@ import {
   setPkceCookie,
   setSessionCookie,
 } from '../auth/cookies.js';
-import { clearAuthFailures, isLockedOut, recordAuthFailure } from '../auth/lockoutService.js';
+import { clearAuthFailures } from '../auth/lockoutService.js';
 import { authRateLimitMiddleware } from '../middleware/appRateLimits.js';
+import { getAtlassianConfig, getGitHubConfig } from '../auth/oauthConfig.js';
 import { generateStateToken } from '../auth/pkce.js';
+import { getClientIp, getCookieValue } from '../auth/requestCookies.js';
 import {
-  createSession,
   invalidateSession,
   rotateRefreshToken,
   touchSession,
 } from '../auth/sessionService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { AppError } from '../utils/errors.js';
-import { findUserById, getUserModel } from '../models/userModel.js';
+import { findUserById } from '../models/userModel.js';
 import { userHasGitHubRepoScopes } from '../services/github/githubScopes.js';
 import { userHasJiraScopes } from '../services/jira/jiraScopes.js';
 import {
@@ -41,51 +40,15 @@ import {
   createAtlassianPkcePair,
   exchangeAtlassianCode,
 } from '../services/auth/atlassianAuthService.js';
-import { upsertUserFromOAuth, linkProviderToUser } from '../services/auth/userAuthService.js';
+import { handleAuthFailure } from '../services/auth/authAuditHelpers.js';
+import {
+  REFRESH_COOKIE_NAME,
+  createDefaultOAuthCallbackDeps,
+  handleOAuthJsonLoginCallback,
+  handleOAuthRedirectCallback,
+} from '../services/auth/oauthCallbackHandler.js';
 import { auditService } from '../services/audit/auditService.js';
 import { sseManager } from '../services/events/sseManager.js';
-
-const REFRESH_COOKIE_NAME = 'autodev_refresh';
-
-function getClientIp(req: Request): string {
-  return req.ip ?? 'unknown';
-}
-
-function getCookieValue(req: Request, name: string): string | undefined {
-  const cookies = req.cookies as Record<string, unknown>;
-  const value = cookies[name];
-  return typeof value === 'string' ? value : undefined;
-}
-
-function getAtlassianConfig(): {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  frontendUrl: string;
-} {
-  return {
-    clientId: process.env.ATLASSIAN_CLIENT_ID ?? 'atlassian-client-id',
-    clientSecret: process.env.ATLASSIAN_CLIENT_SECRET ?? 'atlassian-client-secret',
-    redirectUri:
-      process.env.ATLASSIAN_REDIRECT_URI ?? 'http://localhost:3002/api/v1/auth/atlassian/callback',
-    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3001',
-  };
-}
-
-function getGitHubConfig(): {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  frontendUrl: string;
-} {
-  return {
-    clientId: process.env.GITHUB_CLIENT_ID ?? 'github-client-id',
-    clientSecret: process.env.GITHUB_CLIENT_SECRET ?? 'github-client-secret',
-    redirectUri:
-      process.env.GITHUB_REDIRECT_URI ?? 'http://localhost:3002/api/v1/auth/github/callback',
-    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3001',
-  };
-}
 
 /**
  * Atlassian sign-in resume is retired (GitHub-only login). Clear stale remember cookie.
@@ -94,69 +57,22 @@ function clearStaleAtlassianRemember(res: Response): void {
   clearAtlassianRememberCookie(res);
 }
 
-function ensureNotLocked(req: Request): void {
-  if (isLockedOut(getClientIp(req))) {
-    void auditService.logSafe({
-      resource: 'auth/sessions',
-      operation: 'lockout',
-      actor: 'anonymous',
-      ipAddress: getClientIp(req),
-    });
-    throw new AppError(
-      'AccountLocked',
-      'Too many failed authentication attempts. Try again later.',
-      423,
-      'Wait 15 minutes before retrying authentication.',
-    );
-  }
-}
-
-function handleAuthFailure(req: Request, metadata?: Record<string, unknown>): never {
-  void auditService.logSafe({
-    resource: 'auth/sessions',
-    operation: 'login_failed',
-    actor: 'anonymous',
-    ipAddress: getClientIp(req),
-    newValue: metadata,
-  });
-  recordAuthFailure(getClientIp(req));
-  throw new AppError(
-    'AuthenticationFailed',
-    'Authentication failed.',
-    401,
-    'Verify OAuth credentials and retry.',
-  );
-}
-
-function logAuthSuccess(req: Request, userId: string, provider: 'github' | 'atlassian'): void {
-  void auditService.logSafe({
-    resource: 'auth/sessions',
-    operation: 'login',
-    actor: userId,
-    ipAddress: getClientIp(req),
-    newValue: { provider },
-  });
-}
-
 export function createAuthRouter(): Router {
   const router = Router();
+  const githubCallbackDeps = createDefaultOAuthCallbackDeps(exchangeGitHubCode);
+  const atlassianCallbackDeps = createDefaultOAuthCallbackDeps(exchangeAtlassianCode);
 
   router.use(authRateLimitMiddleware);
 
   router.get('/github/start', (_req, res) => {
-      const { clientId, redirectUri } = getGitHubConfig();
-      const { codeVerifier, codeChallenge } = createGitHubPkcePair();
-      const state = generateStateToken();
-      setPkceCookie(res, codeVerifier);
+    const { clientId, redirectUri } = getGitHubConfig();
+    const { codeVerifier, codeChallenge } = createGitHubPkcePair();
+    const state = generateStateToken();
+    setPkceCookie(res, codeVerifier);
 
-      const authorizationUrl = buildGitHubAuthorizationUrl(
-        clientId,
-        redirectUri,
-        codeChallenge,
-        state,
-      );
-
-      res.redirect(authorizationUrl);
+    res.redirect(
+      buildGitHubAuthorizationUrl(clientId, redirectUri, codeChallenge, state),
+    );
   });
 
   router.get(
@@ -178,131 +94,42 @@ export function createAuthRouter(): Router {
       setPkceCookie(res, codeVerifier);
       setOAuthLinkUserCookie(res, session.userId);
 
-      const authorizationUrl = buildGitHubAuthorizationUrl(
-        clientId,
-        redirectUri,
-        codeChallenge,
-        state,
-        [...GITHUB_LOGIN_SCOPES, ...GITHUB_REPO_CONNECT_SCOPES],
+      res.redirect(
+        buildGitHubAuthorizationUrl(
+          clientId,
+          redirectUri,
+          codeChallenge,
+          state,
+          [...GITHUB_LOGIN_SCOPES, ...GITHUB_REPO_CONNECT_SCOPES],
+        ),
       );
-
-      res.redirect(authorizationUrl);
     }),
   );
 
   router.post(
     '/github/callback',
     asyncHandler(async (req, res) => {
-      ensureNotLocked(req);
-
-      const { code, code_verifier: bodyVerifier } = req.body as {
-        code?: string;
-        code_verifier?: string;
-      };
-      const codeVerifier = bodyVerifier ?? getCookieValue(req, PKCE_COOKIE_NAME);
-
-      if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
-        handleAuthFailure(req, { provider: 'github', reason: 'missing_oauth_parameters' });
-      }
-
-      try {
-        const config = getGitHubConfig();
-        const profile = await exchangeGitHubCode({
-          code,
-          codeVerifier,
-          clientId: config.clientId,
-          clientSecret: config.clientSecret,
-          redirectUri: config.redirectUri,
-        });
-
-        const user = await upsertUserFromOAuth(profile);
-        const session = await createSession(String(user._id));
-
-        clearAuthFailures(getClientIp(req));
-        clearPkceCookie(res);
-        setSessionCookie(res, session.sessionId);
-        res.cookie(REFRESH_COOKIE_NAME, session.refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/',
-        });
-        logAuthSuccess(req, String(user._id), 'github');
-
-        res.status(200).json({
-          user: {
-            email: user.email,
-            displayName: user.displayName,
-            connectedProviders: user.connectedProviders,
-          },
-          session: session.metadata,
-        });
-      } catch {
-        handleAuthFailure(req, { provider: 'github' });
-      }
+      await handleOAuthJsonLoginCallback({
+        req,
+        res,
+        provider: 'github',
+        config: getGitHubConfig(),
+        deps: githubCallbackDeps,
+      });
     }),
   );
 
   router.get(
     '/github/callback',
     asyncHandler(async (req, res) => {
-      ensureNotLocked(req);
-
-      const code = req.query.code;
-      const codeVerifier = getCookieValue(req, PKCE_COOKIE_NAME);
-
-      if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
-        handleAuthFailure(req, { provider: 'github', reason: 'missing_oauth_parameters' });
-      }
-
-      try {
-        const config = getGitHubConfig();
-        const profile = await exchangeGitHubCode({
-          code,
-          codeVerifier,
-          clientId: config.clientId,
-          clientSecret: config.clientSecret,
-          redirectUri: config.redirectUri,
-        });
-
-        const linkUserId = getCookieValue(req, OAUTH_LINK_USER_COOKIE_NAME);
-        const sessionId = getCookieValue(req, SESSION_COOKIE_NAME);
-        const existingSession = sessionId ? await touchSession(sessionId) : null;
-
-        if (linkUserId && existingSession?.userId === linkUserId) {
-          const linked = await linkProviderToUser(linkUserId, profile);
-
-          if (!linked) {
-            handleAuthFailure(req, { provider: 'github', reason: 'link_user_not_found' });
-          }
-
-          clearAuthFailures(getClientIp(req));
-          clearPkceCookie(res);
-          clearOAuthLinkUserCookie(res);
-          logAuthSuccess(req, linkUserId, 'github');
-
-          res.redirect(`${config.frontendUrl}/repositories`);
-          return;
-        }
-
-        const user = await upsertUserFromOAuth(profile);
-        const session = await createSession(String(user._id));
-
-        clearAuthFailures(getClientIp(req));
-        clearPkceCookie(res);
-        setSessionCookie(res, session.sessionId);
-        res.cookie(REFRESH_COOKIE_NAME, session.refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/',
-        });
-        logAuthSuccess(req, String(user._id), 'github');
-
-        res.redirect(`${config.frontendUrl}/dashboard`);
-      } catch {
-        handleAuthFailure(req, { provider: 'github' });
-      }
+      await handleOAuthRedirectCallback({
+        req,
+        res,
+        provider: 'github',
+        config: getGitHubConfig(),
+        linkRedirectPath: '/repositories',
+        deps: githubCallbackDeps,
+      });
     }),
   );
 
@@ -359,62 +186,20 @@ export function createAuthRouter(): Router {
   router.post(
     '/atlassian/callback',
     asyncHandler(async (req, res) => {
-      ensureNotLocked(req);
-
-      const { code, code_verifier: bodyVerifier } = req.body as {
-        code?: string;
-        code_verifier?: string;
-      };
-      const codeVerifier = bodyVerifier ?? getCookieValue(req, PKCE_COOKIE_NAME);
-
-      if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
-        handleAuthFailure(req, { provider: 'atlassian', reason: 'missing_oauth_parameters' });
-      }
-
-      try {
-        const config = getAtlassianConfig();
-        const profile = await exchangeAtlassianCode({
-          code,
-          codeVerifier,
-          clientId: config.clientId,
-          clientSecret: config.clientSecret,
-          redirectUri: config.redirectUri,
-        });
-
-        const user = await upsertUserFromOAuth(profile);
-        const session = await createSession(String(user._id));
-
-        clearAuthFailures(getClientIp(req));
-        clearPkceCookie(res);
-        setSessionCookie(res, session.sessionId);
-        res.cookie(REFRESH_COOKIE_NAME, session.refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/',
-        });
-        clearStaleAtlassianRemember(res);
-        logAuthSuccess(req, String(user._id), 'atlassian');
-
-        res.status(200).json({
-          user: {
-            email: user.email,
-            displayName: user.displayName,
-            connectedProviders: user.connectedProviders,
-          },
-          session: session.metadata,
-        });
-      } catch {
-        handleAuthFailure(req, { provider: 'atlassian' });
-      }
+      await handleOAuthJsonLoginCallback({
+        req,
+        res,
+        provider: 'atlassian',
+        config: getAtlassianConfig(),
+        afterLogin: clearStaleAtlassianRemember,
+        deps: atlassianCallbackDeps,
+      });
     }),
   );
 
   router.get(
     '/atlassian/callback',
     asyncHandler(async (req, res) => {
-      ensureNotLocked(req);
-
       const oauthError = req.query.error;
       if (typeof oauthError === 'string') {
         const frontendUrl = getAtlassianConfig().frontendUrl;
@@ -427,62 +212,15 @@ export function createAuthRouter(): Router {
         return;
       }
 
-      const code = req.query.code;
-      const codeVerifier = getCookieValue(req, PKCE_COOKIE_NAME);
-
-      if (!code || typeof code !== 'string' || !codeVerifier || typeof codeVerifier !== 'string') {
-        handleAuthFailure(req, { provider: 'atlassian', reason: 'missing_oauth_parameters' });
-      }
-
-      try {
-        const config = getAtlassianConfig();
-        const profile = await exchangeAtlassianCode({
-          code,
-          codeVerifier,
-          clientId: config.clientId,
-          clientSecret: config.clientSecret,
-          redirectUri: config.redirectUri,
-        });
-
-        const linkUserId = getCookieValue(req, OAUTH_LINK_USER_COOKIE_NAME);
-        const sessionId = getCookieValue(req, SESSION_COOKIE_NAME);
-        const existingSession = sessionId ? await touchSession(sessionId) : null;
-
-        if (linkUserId && existingSession?.userId === linkUserId) {
-          const linked = await linkProviderToUser(linkUserId, profile);
-
-          if (!linked) {
-            handleAuthFailure(req, { provider: 'atlassian', reason: 'link_user_not_found' });
-          }
-
-          clearAuthFailures(getClientIp(req));
-          clearPkceCookie(res);
-          clearOAuthLinkUserCookie(res);
-          logAuthSuccess(req, linkUserId, 'atlassian');
-
-          res.redirect(`${config.frontendUrl}/integrations`);
-          return;
-        }
-
-        const user = await upsertUserFromOAuth(profile);
-        const session = await createSession(String(user._id));
-
-        clearAuthFailures(getClientIp(req));
-        clearPkceCookie(res);
-        setSessionCookie(res, session.sessionId);
-        res.cookie(REFRESH_COOKIE_NAME, session.refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/',
-        });
-        clearStaleAtlassianRemember(res);
-        logAuthSuccess(req, String(user._id), 'atlassian');
-
-        res.redirect(`${config.frontendUrl}/dashboard`);
-      } catch {
-        handleAuthFailure(req, { provider: 'atlassian' });
-      }
+      await handleOAuthRedirectCallback({
+        req,
+        res,
+        provider: 'atlassian',
+        config: getAtlassianConfig(),
+        linkRedirectPath: '/integrations',
+        afterLogin: clearStaleAtlassianRemember,
+        deps: atlassianCallbackDeps,
+      });
     }),
   );
 

@@ -2,6 +2,7 @@ import { decryptSecret } from '../../lib/encryption.js';
 import { withRetry } from '../../lib/retry.js';
 import { AppError } from '../../utils/errors.js';
 import type { UserDocument } from '../../models/userModel.js';
+import { getAtlassianConfig } from '../../auth/oauthConfig.js';
 import { refreshAtlassianAccessToken } from '../auth/atlassianAuthService.js';
 import { encryptOAuthToken } from '../../auth/sessionService.js';
 import { getUserModel } from '../../models/userModel.js';
@@ -10,16 +11,6 @@ import { forgeTicketClient } from './forgeTicketClient.js';
 import { jiraRestClient } from './jiraRestClient.js';
 import { normalizeJiraIssue } from './ticketNormalizer.js';
 import { userHasJiraScopes } from './jiraScopes.js';
-
-function getAtlassianConfig(): {
-  clientId: string;
-  clientSecret: string;
-} {
-  return {
-    clientId: process.env.ATLASSIAN_CLIENT_ID ?? 'atlassian-client-id',
-    clientSecret: process.env.ATLASSIAN_CLIENT_SECRET ?? 'atlassian-client-secret',
-  };
-}
 
 async function clearAtlassianJiraAccess(userId: UserDocument['_id']): Promise<void> {
   await getUserModel().updateOne(
