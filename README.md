@@ -13,8 +13,8 @@ packages/
 
 ## Prerequisites
 
-- Node.js 20+
-- Docker & Docker Compose (for full stack)
+- Node.js 22+
+- Docker with Compose V5 (`docker compose` plugin; not the legacy `docker-compose` binary)
 
 ## Quick Start
 
@@ -28,8 +28,8 @@ cp .env.example .env.local
 # Run backend + frontend locally
 npm run dev
 
-# Or run full stack with MongoDB
-docker-compose up
+# Or run full stack with MongoDB (Compose V5 file format — no version: field)
+docker compose up --build
 ```
 
 ## Scripts

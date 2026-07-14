@@ -20,7 +20,9 @@ export interface BuildComposeCommandInput {
   baseUrl: string;
 }
 
-/** Pure helpers for Docker Compose CLI argument construction (unit-testable). */
+/** Pure helpers for Docker Compose V5 CLI argument construction (unit-testable).
+ * Always uses `docker compose` (plugin), never the legacy `docker-compose` binary.
+ */
 export function buildComposeBuildCommand(input: BuildComposeCommandInput): DockerComposeCommand {
   return {
     command: 'docker',

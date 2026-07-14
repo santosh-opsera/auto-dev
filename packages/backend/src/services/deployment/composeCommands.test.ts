@@ -28,7 +28,11 @@ describe('composeCommands', () => {
       baseUrl: 'http://localhost:4000',
     };
 
-    expect(buildComposeBuildCommand(input)).toEqual({
+    const build = buildComposeBuildCommand(input);
+    expect(build.command).toBe('docker');
+    expect(build.command).not.toBe('docker-compose');
+    expect(build.args[0]).toBe('compose');
+    expect(build).toEqual({
       command: 'docker',
       args: ['compose', '-f', 'docker-compose.qa.yml', '-p', 'autodev-qa-workflow-001', 'build'],
       cwd: '/tmp/qa',
