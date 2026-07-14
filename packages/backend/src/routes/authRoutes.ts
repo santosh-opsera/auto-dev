@@ -4,16 +4,20 @@ import {
   ATLASSIAN_LOGIN_SCOPES,
   GITHUB_LOGIN_SCOPES,
   GITHUB_REPO_CONNECT_SCOPES,
+  OAUTH_RETURN_PATH_COOKIE_NAME,
   SESSION_COOKIE_NAME,
 } from '../auth/constants.js';
 import {
   clearAtlassianRememberCookie,
   clearOAuthLinkUserCookie,
+  clearOAuthReturnPathCookie,
   clearPkceCookie,
   clearSessionCookie,
   setOAuthLinkUserCookie,
+  setOAuthReturnPathCookie,
   setPkceCookie,
   setSessionCookie,
+  sanitizeOAuthReturnPath,
 } from '../auth/cookies.js';
 import { clearAuthFailures } from '../auth/lockoutService.js';
 import { authRateLimitMiddleware } from '../middleware/appRateLimits.js';
@@ -164,6 +168,13 @@ export function createAuthRouter(): Router {
         throw new AppError('Unauthorized', 'Session expired.', 401, 'Sign in before connecting Jira.');
       }
 
+      const returnTo = sanitizeOAuthReturnPath(req.query.returnTo);
+      if (returnTo) {
+        setOAuthReturnPathCookie(res, returnTo);
+      } else {
+        clearOAuthReturnPathCookie(res);
+      }
+
       const { clientId, redirectUri } = getAtlassianConfig();
       const { codeVerifier, codeChallenge } = createAtlassianPkcePair();
       const state = generateStateToken();
@@ -200,24 +211,31 @@ export function createAuthRouter(): Router {
   router.get(
     '/atlassian/callback',
     asyncHandler(async (req, res) => {
+      const frontendUrl = getAtlassianConfig().frontendUrl;
+      const returnPath =
+        sanitizeOAuthReturnPath(getCookieValue(req, OAUTH_RETURN_PATH_COOKIE_NAME)) ?? '/integrations';
+
       const oauthError = req.query.error;
       if (typeof oauthError === 'string') {
-        const frontendUrl = getAtlassianConfig().frontendUrl;
         clearStaleAtlassianRemember(res);
         clearPkceCookie(res);
         clearOAuthLinkUserCookie(res);
+        clearOAuthReturnPathCookie(res);
+        const failurePath = returnPath.startsWith('/tickets') ? returnPath : '/login';
         res.redirect(
-          `${frontendUrl}/login?error=atlassian_oauth&reason=${encodeURIComponent(oauthError)}`,
+          `${frontendUrl}${failurePath}?error=atlassian_oauth&reason=${encodeURIComponent(oauthError)}`,
         );
         return;
       }
+
+      clearOAuthReturnPathCookie(res);
 
       await handleOAuthRedirectCallback({
         req,
         res,
         provider: 'atlassian',
         config: getAtlassianConfig(),
-        linkRedirectPath: '/integrations',
+        linkRedirectPath: returnPath,
         afterLogin: clearStaleAtlassianRemember,
         deps: atlassianCallbackDeps,
       });

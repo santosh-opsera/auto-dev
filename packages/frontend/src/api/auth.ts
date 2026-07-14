@@ -47,9 +47,14 @@ export async function prepareLoginPage(): Promise<void> {
   }
 }
 
-export function getJiraConnectUrl(): string {
+export function getJiraConnectUrl(returnTo?: string): string {
   const base = import.meta.env.VITE_API_URL ?? '';
-  return `${base}/api/v1/auth/atlassian/jira/connect`;
+  const url = `${base}/api/v1/auth/atlassian/jira/connect`;
+  if (!returnTo) {
+    return url;
+  }
+  const params = new URLSearchParams({ returnTo });
+  return `${url}?${params.toString()}`;
 }
 
 export function getGitHubReposConnectUrl(): string {

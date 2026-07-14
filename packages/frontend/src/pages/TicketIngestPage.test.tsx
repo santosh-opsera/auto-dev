@@ -24,6 +24,7 @@ vi.mock('../hooks/useTicketIngestion', () => ({
     ticket: null,
     error: null,
     errorCode: null,
+    suggestedAction: null,
     progressMessage: null,
     displayIntent: null,
     displayGaps: [],
@@ -39,6 +40,22 @@ vi.mock('../hooks/useTicketIngestion', () => ({
 vi.mock('../components/SessionWarningModal', () => ({
   SessionWarningModal: () => null,
 }));
+
+vi.mock('../api/auth', async () => {
+  const actual = await vi.importActual<typeof import('../api/auth')>('../api/auth');
+  return {
+    ...actual,
+    fetchCurrentUser: vi.fn().mockResolvedValue({
+      user: {
+        email: 'alex.dev@example.com',
+        displayName: 'Alex Developer',
+        connectedProviders: ['github', 'atlassian'],
+        integrations: { jira: true, githubRepos: true },
+      },
+      session: { remainingMs: 60_000 },
+    }),
+  };
+});
 
 afterEach(() => {
   cleanup();
@@ -64,7 +81,7 @@ describe('TicketIngestPage Connect Jira prompt', () => {
     expect(mockGithubOnlyAuthUser.connectedProviders).not.toContain('atlassian');
   });
 
-  it('hides Connect Jira prompt when Jira is connected', () => {
+  it('hides Connect Jira prompt when Jira is connected', async () => {
     useAuthStore.getState().setAuth(mockAuthUserWithJira, mockSessionMetadata);
 
     render(
