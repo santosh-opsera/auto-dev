@@ -47,6 +47,9 @@ jobs:
           fi
           echo "No node:20 references found in Docker/Compose files"
 
+      - name: Lint boundaries
+        run: npm run lint:boundaries
+
       - name: Build
         run: npm run build
 
