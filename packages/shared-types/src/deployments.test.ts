@@ -71,6 +71,8 @@ describe('deployment schemas', () => {
     expect(healthCheckResultSchema.safeParse(sampleHealthCheckFailing).success).toBe(true);
     expect(sampleDockerComposeYaml).toContain('healthcheck:');
     expect(sampleDockerBuildOutput).toContain('autodev-qa:local');
+    expect(sampleDockerBuildOutput).toContain('node:22.23-alpine3.18');
+    expect(sampleDockerBuildOutput).not.toContain('node:20');
     expect(sampleDockerBuildFailureOutput).toContain('ERESOLVE');
   });
 });
