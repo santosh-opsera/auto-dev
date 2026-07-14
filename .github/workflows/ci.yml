@@ -51,4 +51,8 @@ jobs:
         run: npm run build
 
       - name: Test
-        run: npm test
+        run: |
+          npm run test -w @autodev/shared-types \
+            -w @autodev/infrastructure \
+            -w @autodev/backend \
+            -w @autodev/frontend

@@ -32,7 +32,8 @@ describe('Node 22 runtime pins (WO-026)', () => {
     expect(workflow).toMatch(/node-version-file:\s*['"]?\.nvmrc['"]?/);
     expect(workflow).toContain('npm ci');
     expect(workflow).toContain('npm run build');
-    expect(workflow).toContain('npm test');
+    expect(workflow).toContain('npm run test');
+    expect(workflow).toContain('@autodev/backend');
     expect(workflow).toContain('node:20');
     expect(readFileSync(join(repoRoot, '.npmrc'), 'utf8')).toContain('engine-strict=true');
   });
