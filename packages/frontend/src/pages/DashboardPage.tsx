@@ -1,21 +1,13 @@
 import { Link } from 'react-router-dom';
 import { logout } from '../api/auth';
-import { SessionWarningModal } from '../components/SessionWarningModal';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
-import { useSSE } from '../hooks/useSSE';
+import { useProtectedRouteOutlet } from '../components/ProtectedRoute';
 import { useAuthStore } from '../store/authStore';
 
-interface DashboardPageProps {
-  onLogoutComplete: () => void;
-}
-
-export function DashboardPage({ onLogoutComplete }: DashboardPageProps) {
+export function DashboardPage() {
+  const { onLogoutComplete } = useProtectedRouteOutlet();
   const user = useAuthStore((state) => state.user);
   const session = useAuthStore((state) => state.session);
   const clearAuth = useAuthStore((state) => state.clearAuth);
-
-  useSessionHeartbeat(true);
-  useSSE({ enabled: true });
 
   const handleLogout = async (): Promise<void> => {
     try {
@@ -32,8 +24,6 @@ export function DashboardPage({ onLogoutComplete }: DashboardPageProps) {
 
   return (
     <main className="dashboard-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>Dashboard</h1>

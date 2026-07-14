@@ -7,18 +7,11 @@ import {
   WIZARD_STEPS,
   type ConventionSectionId,
 } from '../components/conventions/ConventionSetupWizard';
-import { SessionWarningModal } from '../components/SessionWarningModal';
 import { useConventionSettings } from '../hooks/useConventionSettings';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
-import { useSSE } from '../hooks/useSSE';
 import {
   mergeSectionIntoSettings,
   validateConventionSection,
 } from '../utils/conventionValidation';
-
-interface ConventionsPageProps {
-  onLogoutComplete: () => void;
-}
 
 type Tab = 'configure' | 'history';
 
@@ -29,7 +22,7 @@ const SECTION_LABELS: Record<ConventionSectionId, string> = {
   reviewers: 'Reviewer assignment settings',
 };
 
-export function ConventionsPage({ onLogoutComplete }: ConventionsPageProps) {
+export function ConventionsPage() {
   const { active, defaults, history, loading, error, save, initialForm, isFirstTime } =
     useConventionSettings();
   const [tab, setTab] = useState<Tab>('configure');
@@ -42,9 +35,6 @@ export function ConventionsPage({ onLogoutComplete }: ConventionsPageProps) {
   const autoSavedRef = useRef(false);
 
   const currentSectionId = WIZARD_STEPS[stepIndex]?.id as ConventionSectionId;
-
-  useSessionHeartbeat(true);
-  useSSE({ enabled: true });
 
   useEffect(() => {
     if (!loading) {
@@ -123,8 +113,6 @@ export function ConventionsPage({ onLogoutComplete }: ConventionsPageProps) {
 
   return (
     <main className="conventions-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>Convention settings</h1>

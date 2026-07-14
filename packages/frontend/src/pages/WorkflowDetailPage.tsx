@@ -1,12 +1,10 @@
 import { useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { DomainEvent } from '@autodev/shared-types';
-import { SessionWarningModal } from '../components/SessionWarningModal';
 import { WorkflowActions } from '../components/workflows/WorkflowActions';
 import { WorkflowStateBadge } from '../components/workflows/WorkflowStateBadge';
 import { WorkflowTimeline } from '../components/workflows/WorkflowTimeline';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
-import { useSSE } from '../hooks/useSSE';
+import { useSSESubscription } from '../hooks/useSSESubscription';
 import { useWorkflowDetail } from '../hooks/useWorkflowDetail';
 import { useLocaleStore } from '../store/localeStore';
 import { formatNumber } from '../utils/localeFormat';
@@ -16,11 +14,7 @@ import {
   getWorkflowTitle,
 } from '../utils/workflowHelpers';
 
-interface WorkflowDetailPageProps {
-  onLogoutComplete: () => void;
-}
-
-export function WorkflowDetailPage({ onLogoutComplete }: WorkflowDetailPageProps) {
+export function WorkflowDetailPage() {
   const { id } = useParams<{ id: string }>();
   const locale = useLocaleStore((state) => state.locale);
   const {
@@ -36,8 +30,6 @@ export function WorkflowDetailPage({ onLogoutComplete }: WorkflowDetailPageProps
     refresh,
   } = useWorkflowDetail(id);
 
-  useSessionHeartbeat(true);
-
   const onSseEvent = useCallback(
     (event: DomainEvent) => {
       handleSseEvent(event);
@@ -45,12 +37,10 @@ export function WorkflowDetailPage({ onLogoutComplete }: WorkflowDetailPageProps
     [handleSseEvent],
   );
 
-  useSSE({ enabled: Boolean(id), onEvent: onSseEvent });
+  useSSESubscription(onSseEvent, Boolean(id));
 
   return (
     <main className="workflows-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>Workflow detail</h1>

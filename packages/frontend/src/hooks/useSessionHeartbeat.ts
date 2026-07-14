@@ -10,6 +10,9 @@ import { saveDraftToLocalStorage } from '../utils/draftStorage';
 
 export function useSessionHeartbeat(enabled: boolean): void {
   const navigate = useNavigate();
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+
   const updateSession = useAuthStore((state) => state.updateSession);
   const setShowSessionWarning = useAuthStore((state) => state.setShowSessionWarning);
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -28,7 +31,7 @@ export function useSessionHeartbeat(enabled: boolean): void {
       } catch {
         saveDraftToLocalStorage();
         clearAuth();
-        navigate('/login', { replace: true });
+        navigateRef.current('/login', { replace: true });
       }
     };
 
@@ -42,5 +45,5 @@ export function useSessionHeartbeat(enabled: boolean): void {
         window.clearInterval(intervalRef.current);
       }
     };
-  }, [clearAuth, enabled, navigate, setShowSessionWarning, updateSession]);
+  }, [clearAuth, enabled, setShowSessionWarning, updateSession]);
 }
