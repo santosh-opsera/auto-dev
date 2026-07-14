@@ -246,21 +246,29 @@ describe('auth routes', () => {
       );
 
     expect(callback.status).toBe(302);
-    expect(callback.headers.location).toBe('http://localhost:3001/tickets');
+    expect(callback.headers.location).toBe('http://localhost:3001/integrations');
 
     const me = await request(app)
       .get('/api/v1/auth/me')
       .set('Cookie', sessionCookies);
 
-    const meBody = me.body as { user: { connectedProviders: string[]; integrations: { jira: boolean } } };
+    const meBody = me.body as {
+      user: {
+        connectedProviders: string[];
+        integrations: { jira: boolean; atlassianEmail?: string };
+      };
+    };
     expect(me.status).toBe(200);
     expect(meBody.user.connectedProviders).toEqual(
       expect.arrayContaining(['github', 'atlassian']),
     );
     expect(meBody.user.integrations.jira).toBe(true);
+    expect(meBody.user.integrations.atlassianEmail).toBe('alex.dev@example.com');
 
     const users = await getUserModel().find({ email: 'alex.dev@example.com' }).exec();
     expect(users).toHaveLength(1);
+    expect(users[0]?.atlassian?.encryptedAccessToken).toBeTruthy();
+    expect(users[0]?.atlassian?.accountEmail).toBe('alex.dev@example.com');
   });
 
   it('links GitHub repo scopes to the current Atlassian session via github repos connect callback', async () => {

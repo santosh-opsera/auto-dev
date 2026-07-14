@@ -38,5 +38,28 @@ describe('useTicketIngestion', () => {
 
     expect(result.current.phase).toBe('error');
     expect(result.current.error).toBe('Forge unavailable');
+    expect(result.current.errorCode).toBeNull();
+  });
+
+  it('captures AtlassianReauthorizeRequired error codes from API errors', async () => {
+    const { ApiError } = await import('../api/client');
+    vi.spyOn(ticketsApi, 'fetchTicket').mockRejectedValue(
+      new ApiError(
+        'Atlassian refresh token expired or revoked.',
+        401,
+        undefined,
+        'AtlassianReauthorizeRequired',
+        'Reconnect Jira to authorize a new access token.',
+      ),
+    );
+
+    const { result } = renderHook(() => useTicketIngestion());
+
+    await act(async () => {
+      await result.current.ingestTicket('OPL-1234');
+    });
+
+    expect(result.current.phase).toBe('error');
+    expect(result.current.errorCode).toBe('AtlassianReauthorizeRequired');
   });
 });

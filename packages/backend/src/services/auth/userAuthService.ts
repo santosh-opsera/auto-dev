@@ -21,6 +21,7 @@ export interface OAuthProfile {
 function toStoredTokens(profile: OAuthProfile): ProviderTokens {
   return {
     providerUserId: profile.providerUserId,
+    accountEmail: profile.email,
     encryptedAccessToken: encryptOAuthToken(profile.accessToken),
     encryptedRefreshToken: profile.refreshToken
       ? encryptOAuthToken(profile.refreshToken)

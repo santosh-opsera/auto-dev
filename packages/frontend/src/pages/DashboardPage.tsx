@@ -72,6 +72,14 @@ export function DashboardPage({ onLogoutComplete }: DashboardPageProps) {
         </Link>
       </section>
 
+      <section aria-labelledby="integrations-heading" className="profile-card">
+        <h2 id="integrations-heading">Integrations</h2>
+        <p>Connect Jira and GitHub before ingesting tickets or analyzing repositories.</p>
+        <Link to="/integrations" className="primary-link">
+          Manage integrations
+        </Link>
+      </section>
+
       <section aria-labelledby="repositories-heading" className="profile-card">
         <h2 id="repositories-heading">Repositories</h2>
         <p>Connect GitHub repositories before running codebase analysis on your tickets.</p>

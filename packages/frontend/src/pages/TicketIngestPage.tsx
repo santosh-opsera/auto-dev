@@ -23,6 +23,7 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
     ticketKey,
     ticket,
     error,
+    errorCode,
     progressMessage,
     displayIntent,
     displayGaps,
@@ -38,7 +39,9 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
   const [showManualForm, setShowManualForm] = useState(false);
   const user = useAuthStore((state) => state.user);
   const jiraConnected = user?.integrations?.jira ?? false;
-  const needsJiraConnect = user !== null && !jiraConnected;
+  const needsReauthorize =
+    errorCode === 'AtlassianReauthorizeRequired' || errorCode === 'AtlassianSessionExpired';
+  const needsJiraConnect = (user !== null && !jiraConnected) || needsReauthorize;
   const hasAtlassianProvider = user?.connectedProviders.includes('atlassian') === true;
 
   useSessionHeartbeat(true);
@@ -81,14 +84,16 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
 
       {needsJiraConnect ? (
         <section className="profile-card jira-connect-banner" role="status">
-          <h2>Jira access required</h2>
+          <h2>{needsReauthorize ? 'Jira re-authorization required' : 'Jira access required'}</h2>
           <p>
-            {hasAtlassianProvider
-              ? 'Your Atlassian account is signed in, but Jira read permissions are not granted yet. Connect Jira before loading tickets.'
-              : 'GitHub sign-in does not include Jira access. Link your Atlassian account and grant Jira read permissions before loading tickets.'}
+            {needsReauthorize
+              ? 'Your Jira session expired or was revoked. Reconnect Jira to continue loading tickets.'
+              : hasAtlassianProvider
+                ? 'Your Atlassian account is signed in, but Jira read permissions are not granted yet. Connect Jira before loading tickets.'
+                : 'GitHub sign-in does not include Jira access. Link your Atlassian account and grant Jira read permissions before loading tickets.'}
           </p>
           <a href={getJiraConnectUrl()} className="primary-link">
-            Connect Jira permissions
+            {needsReauthorize ? 'Re-authorize Jira' : 'Connect Jira'}
           </a>
         </section>
       ) : null}
@@ -132,6 +137,7 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
           onConnectJira={
             needsJiraConnect ? () => window.location.assign(getJiraConnectUrl()) : undefined
           }
+          connectJiraLabel={needsReauthorize ? 'Re-authorize Jira' : 'Connect Jira'}
         />
       ) : null}
 

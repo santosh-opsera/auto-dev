@@ -460,7 +460,7 @@ export function createAuthRouter(): Router {
           clearOAuthLinkUserCookie(res);
           logAuthSuccess(req, linkUserId, 'atlassian');
 
-          res.redirect(`${config.frontendUrl}/tickets`);
+          res.redirect(`${config.frontendUrl}/integrations`);
           return;
         }
 
@@ -604,6 +604,7 @@ export function createAuthRouter(): Router {
           integrations: {
             jira: userHasJiraScopes(user),
             githubRepos: userHasGitHubRepoScopes(user),
+            atlassianEmail: user.atlassian?.accountEmail ?? undefined,
           },
         },
         session: metadata,

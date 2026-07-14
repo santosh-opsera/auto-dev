@@ -1,6 +1,7 @@
 import { ATLASSIAN_LOGIN_SCOPES } from '../../auth/constants.js';
 import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
 import { generateCodeChallenge, generateCodeVerifier } from '../../auth/pkce.js';
+import { AppError } from '../../utils/errors.js';
 import type { OAuthProfile } from './userAuthService.js';
 
 const ATLASSIAN_TOKEN_URL = 'https://auth.atlassian.com/oauth/token';
@@ -163,6 +164,24 @@ export async function refreshAtlassianAccessToken(input: {
   });
 
   if (!response.ok) {
+    const errorBody = (await response.json().catch(() => null)) as { error?: string } | null;
+    const oauthError = errorBody?.error ?? '';
+    const requiresReauth =
+      response.status === 400 ||
+      response.status === 401 ||
+      oauthError === 'invalid_grant' ||
+      oauthError === 'invalid_token' ||
+      oauthError === 'unauthorized_client';
+
+    if (requiresReauth) {
+      throw new AppError(
+        'AtlassianReauthorizeRequired',
+        'Atlassian refresh token expired or revoked.',
+        401,
+        'Reconnect Jira to authorize a new access token.',
+      );
+    }
+
     throw new Error('Atlassian refresh token exchange failed');
   }
 

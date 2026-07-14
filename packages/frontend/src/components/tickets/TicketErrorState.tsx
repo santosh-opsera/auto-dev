@@ -5,6 +5,7 @@ interface TicketErrorStateProps {
   onManualFallback: () => void;
   onManualEntry: () => void;
   onConnectJira?: () => void;
+  connectJiraLabel?: string;
 }
 
 export function TicketErrorState({
@@ -14,6 +15,7 @@ export function TicketErrorState({
   onManualFallback,
   onManualEntry,
   onConnectJira,
+  connectJiraLabel = 'Connect Jira',
 }: TicketErrorStateProps) {
   return (
     <section className="ticket-error-state" role="alert">
@@ -22,7 +24,7 @@ export function TicketErrorState({
       <div className="wizard-actions">
         {onConnectJira ? (
           <button type="button" className="primary-button" onClick={onConnectJira}>
-            Connect Jira permissions
+            {connectJiraLabel}
           </button>
         ) : (
           <button type="button" className="primary-button" onClick={onRetry}>

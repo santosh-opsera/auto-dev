@@ -1,16 +1,24 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import {
   mockAtlassianTokenResponse,
   mockAtlassianUserResponse,
+  mockAtlassianRefreshSuccessResponse,
+  mockAtlassianRefreshFailureResponse,
 } from '../../fixtures/auth.js';
 import { assertAllowedUrl } from '../../lib/urlAllowlist.js';
+import { AppError } from '../../utils/errors.js';
 import {
   buildAtlassianAuthorizationUrl,
   exchangeAtlassianCode,
+  refreshAtlassianAccessToken,
   resolveAtlassianRetryPrompt,
 } from './atlassianAuthService.js';
 
 describe('atlassianAuthService', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('exchanges OAuth code for a normalized profile using mocked Atlassian APIs', async () => {
     const profile = await exchangeAtlassianCode(
       {
@@ -51,6 +59,57 @@ describe('atlassianAuthService', () => {
       assertAllowedUrl('https://auth.atlassian.com/oauth/token'),
     ).not.toThrow();
     expect(() => assertAllowedUrl('https://api.atlassian.com/me')).not.toThrow();
+  });
+
+  it('refreshes an access token successfully', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockAtlassianRefreshSuccessResponse,
+      }),
+    );
+
+    const refreshed = await refreshAtlassianAccessToken({
+      refreshToken: 'refresh-token',
+      clientId: 'client-id',
+      clientSecret: 'client-secret',
+    });
+
+    expect(refreshed.access_token).toBe(mockAtlassianRefreshSuccessResponse.access_token);
+    expect(refreshed.refresh_token).toBe(mockAtlassianRefreshSuccessResponse.refresh_token);
+  });
+
+  it('throws AtlassianReauthorizeRequired when refresh token is revoked', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => mockAtlassianRefreshFailureResponse,
+      }),
+    );
+
+    await expect(
+      refreshAtlassianAccessToken({
+        refreshToken: 'revoked-refresh-token',
+        clientId: 'client-id',
+        clientSecret: 'client-secret',
+      }),
+    ).rejects.toEqual(
+      expect.objectContaining({
+        error: 'AtlassianReauthorizeRequired',
+        statusCode: 401,
+      }),
+    );
+
+    await expect(
+      refreshAtlassianAccessToken({
+        refreshToken: 'revoked-refresh-token',
+        clientId: 'client-id',
+        clientSecret: 'client-secret',
+      }),
+    ).rejects.toBeInstanceOf(AppError);
   });
 });
 

@@ -20,6 +20,17 @@ export const seededSessionUser = {
   integrations: {
     jira: true,
     githubRepos: true,
+    atlassianEmail: 'e2e.alex@example.com',
+  },
+};
+
+export const seededGithubOnlyUser = {
+  email: 'e2e.alex@example.com',
+  displayName: 'E2E Alex',
+  connectedProviders: ['github'] as const,
+  integrations: {
+    jira: false,
+    githubRepos: true,
   },
 };
 
