@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
+import { SidebarProfileSection } from './SidebarProfileSection';
 
 export const SIDEBAR_COLLAPSE_MQ = '(max-width: 767px)';
 
@@ -143,6 +144,7 @@ export function SidebarNav() {
           </li>
         ))}
       </ul>
+      <SidebarProfileSection collapsed={collapsed} />
     </nav>
   );
 }
