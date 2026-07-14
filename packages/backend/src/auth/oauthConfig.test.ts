@@ -13,6 +13,7 @@ describe('createOAuthConfig', () => {
   });
 
   it('reads env vars and returns a typed config object', () => {
+    process.env.NODE_ENV = 'development';
     process.env.TEST_CLIENT_ID = 'env-client-id';
     process.env.TEST_CLIENT_SECRET = 'env-client-secret';
     process.env.TEST_REDIRECT_URI = 'https://example.com/callback';
@@ -37,35 +38,32 @@ describe('createOAuthConfig', () => {
     });
   });
 
-  it('falls back to placeholder defaults when env vars are unset', () => {
+  it('throws outside test when client credentials are unset', () => {
+    process.env.NODE_ENV = 'development';
     delete process.env.TEST_CLIENT_ID;
     delete process.env.TEST_CLIENT_SECRET;
-    delete process.env.TEST_REDIRECT_URI;
-    delete process.env.FRONTEND_URL;
 
-    const config = createOAuthConfig({
-      clientIdEnv: 'TEST_CLIENT_ID',
-      clientSecretEnv: 'TEST_CLIENT_SECRET',
-      redirectUriEnv: 'TEST_REDIRECT_URI',
-      defaults: {
-        clientId: 'default-id',
-        clientSecret: 'default-secret',
-        redirectUri: 'http://localhost/callback',
-      },
-    });
-
-    expect(config.clientId).toBe('default-id');
-    expect(config.clientSecret).toBe('default-secret');
-    expect(config.redirectUri).toBe('http://localhost/callback');
-    expect(config.frontendUrl).toBe('http://localhost:3001');
+    expect(() =>
+      createOAuthConfig({
+        clientIdEnv: 'TEST_CLIENT_ID',
+        clientSecretEnv: 'TEST_CLIENT_SECRET',
+        redirectUriEnv: 'TEST_REDIRECT_URI',
+        defaults: {
+          clientId: 'default-id',
+          clientSecret: 'default-secret',
+          redirectUri: 'http://localhost/callback',
+        },
+      }),
+    ).toThrow(/OAuth config incomplete/);
   });
 
-  it('getGitHubConfig and getAtlassianConfig delegate to createOAuthConfig', () => {
+  it('uses test-only defaults when NODE_ENV=test and env vars are unset', () => {
+    process.env.NODE_ENV = 'test';
     delete process.env.GITHUB_CLIENT_ID;
     delete process.env.ATLASSIAN_CLIENT_ID;
 
-    expect(getGitHubConfig().clientId).toBe('github-client-id');
-    expect(getAtlassianConfig().clientId).toBe('atlassian-client-id');
+    expect(getGitHubConfig().clientId).toBe('test-github-client-id');
+    expect(getAtlassianConfig().clientId).toBe('test-atlassian-client-id');
     expect(getGitHubConfig().redirectUri).toContain('/auth/github/callback');
     expect(getAtlassianConfig().redirectUri).toContain('/auth/atlassian/callback');
   });
