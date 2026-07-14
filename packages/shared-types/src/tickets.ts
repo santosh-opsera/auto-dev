@@ -46,7 +46,7 @@ export const normalizedTicketSchema = z.object({
 
 export type NormalizedTicket = z.infer<typeof normalizedTicketSchema>;
 
-export const ticketSourceSchema = z.enum(['forge', 'jira-rest']);
+export const ticketSourceSchema = z.enum(['jira-rest']);
 
 export type TicketSource = z.infer<typeof ticketSourceSchema>;
 
@@ -57,9 +57,3 @@ export const ticketResponseSchema = z.object({
 });
 
 export type TicketResponse = z.infer<typeof ticketResponseSchema>;
-
-export const manualTicketRequestSchema = z.object({
-  ticketKey: ticketKeySchema,
-});
-
-export type ManualTicketRequest = z.infer<typeof manualTicketRequestSchema>;

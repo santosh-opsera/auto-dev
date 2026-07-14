@@ -9,7 +9,6 @@ import type { TicketParseResponse, TicketResponse } from '@autodev/shared-types'
 export const mockTicketResponse: TicketResponse = {
   ticket: sampleNormalizedTicket,
   source: 'jira-rest',
-  fallbackUsed: false,
 };
 
 export const mockTicketParseSuccess: TicketParseResponse = {
