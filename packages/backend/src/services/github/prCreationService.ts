@@ -7,7 +7,7 @@ import type {
   ReviewerAssignmentRules,
 } from '@autodev/shared-types';
 import { labelForChangeType } from '@autodev/shared-types';
-import { decryptSecret } from '../../lib/encryption.js';
+import { decryptSecret } from '@autodev/infrastructure';
 import { isRetryableHttpStatus } from '../../lib/retry.js';
 import type { UserDocument } from '../../models/userModel.js';
 import {

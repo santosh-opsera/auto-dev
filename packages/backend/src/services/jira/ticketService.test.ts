@@ -29,7 +29,7 @@ vi.mock('./jiraRestClient.js', () => ({
   },
 }));
 
-vi.mock('../../lib/encryption.js', () => ({
+vi.mock('@autodev/infrastructure', () => ({
   decryptSecret: vi.fn((value: string) =>
     value === 'encrypted-refresh' ? 'plain-refresh-token' : 'access-token',
   ),

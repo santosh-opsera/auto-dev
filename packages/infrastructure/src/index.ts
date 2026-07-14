@@ -8,3 +8,25 @@ export {
   type EventHandler,
 } from './eventBus.js';
 export { noopLogger, type Logger } from './logger.js';
+export {
+  cryptographicallyErase,
+  cryptographicallyEraseSecret,
+  decryptConfidentialField,
+  decryptConfidentialFields,
+  decryptOAuthToken,
+  decryptRestricted,
+  decryptSecret,
+  decryptWithPerRecordDek,
+  encryptConfidentialField,
+  encryptConfidentialFields,
+  encryptOAuthToken,
+  encryptRestricted,
+  encryptSecret,
+  encryptWithPerRecordDek,
+  ERASED_DEK_MARKER,
+  getKek,
+  hashValue,
+  unwrapDek,
+  wrapDek,
+  type WrappedEncryptedPayload,
+} from './encryption.js';

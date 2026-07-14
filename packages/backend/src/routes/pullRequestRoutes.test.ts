@@ -11,7 +11,7 @@ import { mockGitHubTokenResponse, mockGitHubUserResponse } from '../fixtures/aut
 import { sampleUserDocuments, seedDocuments } from '../fixtures/database.js';
 import { resetAuthRateLimits } from '../middleware/appRateLimits.js';
 import { resetLockouts } from '../auth/lockoutService.js';
-import { encryptSecret } from '../lib/encryption.js';
+import { encryptSecret } from '@autodev/infrastructure';
 import { getAuditLogModel } from '../models/auditLogModel.js';
 import { getConventionSettingsModel } from '../models/conventionSettingsModel.js';
 import { getImplementationChunkModel } from '../models/implementationChunkModel.js';

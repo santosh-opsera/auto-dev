@@ -5,7 +5,7 @@ import {
   samplePrCreationConventions,
   samplePrdSections,
 } from '@autodev/shared-types';
-import { encryptSecret } from '../../lib/encryption.js';
+import { encryptSecret } from '@autodev/infrastructure';
 import { getConventionSettingsModel } from '../../models/conventionSettingsModel.js';
 import { getImplementationChunkModel } from '../../models/implementationChunkModel.js';
 import { getPrdModel } from '../../models/prdModel.js';

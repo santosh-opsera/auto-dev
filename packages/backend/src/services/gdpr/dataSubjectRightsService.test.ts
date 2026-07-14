@@ -12,7 +12,7 @@ import {
   cryptographicallyErase,
   decryptWithPerRecordDek,
   encryptWithPerRecordDek,
-} from '../../lib/encryption.js';
+} from '@autodev/infrastructure';
 
 describe('dataSubjectRightsService (unit)', () => {
   beforeEach(() => {

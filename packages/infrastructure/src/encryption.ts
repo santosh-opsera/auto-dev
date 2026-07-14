@@ -5,6 +5,7 @@ const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 const DEK_LENGTH = 32;
 const GCM_OPTIONS = { authTagLength: AUTH_TAG_LENGTH };
+const DEFAULT_DEV_KEY = 'dev-only-encryption-key-change-me';
 
 /** Marker stored in place of a destroyed wrapped DEK after cryptographic erasure. */
 export const ERASED_DEK_MARKER = 'ERASED';
@@ -17,8 +18,9 @@ export interface WrappedEncryptedPayload {
   erased: boolean;
 }
 
-function getKek(): Buffer {
-  const secret = process.env.ENCRYPTION_KEY ?? 'dev-only-encryption-key-change-me';
+/** Resolve the 256-bit KEK from an explicit secret or ENCRYPTION_KEY / dev default. */
+export function getKek(encryptionKey?: string): Buffer {
+  const secret = encryptionKey ?? process.env.ENCRYPTION_KEY ?? DEFAULT_DEV_KEY;
   return createHash('sha256').update(secret).digest();
 }
 
@@ -63,41 +65,50 @@ function decryptWithKey(payload: string, key: Buffer): string {
  * Encrypt Restricted data (OAuth tokens, API keys) with AES-256-GCM.
  * Uses ENCRYPTION_KEY from the environment (hashed to 256-bit KEK).
  */
-export function encryptSecret(plaintext: string): string {
-  return encryptWithKey(plaintext, getKek());
+export function encryptSecret(plaintext: string, encryptionKey?: string): string {
+  return encryptWithKey(plaintext, getKek(encryptionKey));
 }
 
-export function decryptSecret(payload: string): string {
-  return decryptWithKey(payload, getKek());
+export function decryptSecret(payload: string, encryptionKey?: string): string {
+  return decryptWithKey(payload, getKek(encryptionKey));
 }
 
 /** Alias for Restricted-tier at-rest encryption (AES-256-GCM). */
 export const encryptRestricted = encryptSecret;
 export const decryptRestricted = decryptSecret;
 
+/** OAuth token alias over Restricted AES-256-GCM encryption. */
+export const encryptOAuthToken = encryptSecret;
+export const decryptOAuthToken = decryptSecret;
+
 /**
  * Field-level encryption for Confidential data (profiles, emails).
  * Uses the same AES-256-GCM primitive with a purpose-bound key derivation.
  */
-export function encryptConfidentialField(plaintext: string): string {
-  const fieldKey = createHash('sha256').update(Buffer.concat([getKek(), Buffer.from('confidential')])).digest();
+export function encryptConfidentialField(plaintext: string, encryptionKey?: string): string {
+  const fieldKey = createHash('sha256')
+    .update(Buffer.concat([getKek(encryptionKey), Buffer.from('confidential')]))
+    .digest();
   return encryptWithKey(plaintext, fieldKey);
 }
 
-export function decryptConfidentialField(payload: string): string {
-  const fieldKey = createHash('sha256').update(Buffer.concat([getKek(), Buffer.from('confidential')])).digest();
+export function decryptConfidentialField(payload: string, encryptionKey?: string): string {
+  const fieldKey = createHash('sha256')
+    .update(Buffer.concat([getKek(encryptionKey), Buffer.from('confidential')]))
+    .digest();
   return decryptWithKey(payload, fieldKey);
 }
 
 export function encryptConfidentialFields<T extends Record<string, unknown>>(
   record: T,
   fields: readonly (keyof T & string)[],
+  encryptionKey?: string,
 ): T {
   const next = { ...record };
   for (const field of fields) {
     const value = next[field];
     if (typeof value === 'string' && value.length > 0) {
-      next[field] = encryptConfidentialField(value) as T[typeof field];
+      next[field] = encryptConfidentialField(value, encryptionKey) as T[typeof field];
     }
   }
   return next;
@@ -106,48 +117,55 @@ export function encryptConfidentialFields<T extends Record<string, unknown>>(
 export function decryptConfidentialFields<T extends Record<string, unknown>>(
   record: T,
   fields: readonly (keyof T & string)[],
+  encryptionKey?: string,
 ): T {
   const next = { ...record };
   for (const field of fields) {
     const value = next[field];
     if (typeof value === 'string' && value.length > 0) {
-      next[field] = decryptConfidentialField(value) as T[typeof field];
+      next[field] = decryptConfidentialField(value, encryptionKey) as T[typeof field];
     }
   }
   return next;
 }
 
-function wrapDek(dek: Buffer): string {
-  return encryptWithKey(dek.toString('base64url'), getKek());
+export function wrapDek(dek: Buffer, encryptionKey?: string): string {
+  return encryptWithKey(dek.toString('base64url'), getKek(encryptionKey));
 }
 
-function unwrapDek(wrappedDek: string): Buffer {
+export function unwrapDek(wrappedDek: string, encryptionKey?: string): Buffer {
   if (wrappedDek === ERASED_DEK_MARKER) {
     throw new Error('Data encryption key has been destroyed (cryptographic erasure)');
   }
-  return Buffer.from(decryptWithKey(wrappedDek, getKek()), 'base64url');
+  return Buffer.from(decryptWithKey(wrappedDek, getKek(encryptionKey)), 'base64url');
 }
 
 /**
  * Encrypt with a per-record DEK wrapped by the environment KEK.
  * Destroying the wrapped DEK renders ciphertext permanently unrecoverable.
  */
-export function encryptWithPerRecordDek(plaintext: string): WrappedEncryptedPayload {
+export function encryptWithPerRecordDek(
+  plaintext: string,
+  encryptionKey?: string,
+): WrappedEncryptedPayload {
   const dek = randomBytes(DEK_LENGTH);
   try {
     const ciphertext = encryptWithKey(plaintext, dek);
-    const wrappedDek = wrapDek(dek);
+    const wrappedDek = wrapDek(dek, encryptionKey);
     return { ciphertext, wrappedDek, erased: false };
   } finally {
     dek.fill(0);
   }
 }
 
-export function decryptWithPerRecordDek(payload: WrappedEncryptedPayload): string {
+export function decryptWithPerRecordDek(
+  payload: WrappedEncryptedPayload,
+  encryptionKey?: string,
+): string {
   if (payload.erased || payload.wrappedDek === ERASED_DEK_MARKER) {
     throw new Error('Data encryption key has been destroyed (cryptographic erasure)');
   }
-  const dek = unwrapDek(payload.wrappedDek);
+  const dek = unwrapDek(payload.wrappedDek, encryptionKey);
   try {
     return decryptWithKey(payload.ciphertext, dek);
   } finally {
@@ -168,6 +186,8 @@ export function cryptographicallyErase(
     erased: true,
   };
 }
+
+export const cryptographicallyEraseSecret = cryptographicallyErase;
 
 export function hashValue(value: string): string {
   return createHash('sha256').update(value).digest('hex');

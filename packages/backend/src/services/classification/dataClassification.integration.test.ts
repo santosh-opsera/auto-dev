@@ -21,7 +21,7 @@ import {
   encryptConfidentialFields,
   encryptRestricted,
   encryptWithPerRecordDek,
-} from '../../lib/encryption.js';
+} from '@autodev/infrastructure';
 import { maskPiiInText } from '../../lib/piiMasking.js';
 import { logger, parseLogLine, resetLogWriter, setLogWriter } from '../../utils/logger.js';
 import { runRetentionPurge } from './retentionJob.js';
