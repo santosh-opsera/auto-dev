@@ -319,11 +319,22 @@ export function createAuthRouter(): Router {
       const metadata = await touchSession(sessionId);
 
       if (!metadata) {
-        throw new AppError('Unauthorized', 'Session expired.', 401, 'Sign in again.');
+        throw new AppError(
+          'SessionExpired',
+          'Session expired.',
+          401,
+          'Re-authenticate to continue.',
+        );
       }
 
       res.status(200).json({
-        session: metadata,
+        session: {
+          sessionId: metadata.sessionId,
+          userId: metadata.userId,
+          expiresAt: metadata.expiresAt.toISOString(),
+          remainingMs: metadata.remainingMs,
+          warning: metadata.warning,
+        },
         warning: metadata.warning
           ? 'Your session will expire in less than 5 minutes.'
           : undefined,

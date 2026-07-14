@@ -156,6 +156,108 @@ describe('auth routes', () => {
     expect(typeof heartbeatBody.session.remainingMs).toBe('number');
   });
 
+  it('heartbeat returns sessionId, ISO expiresAt, and remainingMs for a valid session', async () => {
+    const app = createApp();
+    const login = await request(app)
+      .post('/api/v1/auth/github/callback')
+      .send({ code: 'mock-code', code_verifier: 'mock-verifier' });
+
+    const cookies = login.headers['set-cookie'];
+    const before = await getSessionModel().findOne({}).lean().exec();
+    expect(before).toBeTruthy();
+
+    const heartbeat = await request(app).post('/api/v1/auth/heartbeat').set('Cookie', cookies);
+    const body = heartbeat.body as {
+      session: {
+        sessionId: string;
+        expiresAt: string;
+        remainingMs: number;
+        warning: boolean;
+      };
+      warning?: string;
+    };
+
+    expect(heartbeat.status).toBe(200);
+    expect(body.session.sessionId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+    expect(body.session.expiresAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/);
+    expect(body.session.remainingMs).toBeGreaterThan(0);
+    expect(body.session.warning).toBe(false);
+    expect(body.warning).toBeUndefined();
+
+    const after = await getSessionModel().findOne({ sessionId: body.session.sessionId }).lean().exec();
+    expect(after).toBeTruthy();
+    expect(after!.expiresAt.getTime()).toBeGreaterThanOrEqual(before!.expiresAt.getTime());
+    expect(new Date(body.session.expiresAt).getTime()).toBe(after!.expiresAt.getTime());
+  });
+
+  it('heartbeat returns 401 SessionExpired for an expired session', async () => {
+    const app = createApp();
+    const login = await request(app)
+      .post('/api/v1/auth/github/callback')
+      .send({ code: 'mock-code', code_verifier: 'mock-verifier' });
+
+    const cookies = login.headers['set-cookie'];
+    const session = await getSessionModel().findOne({}).lean().exec();
+    expect(session).toBeTruthy();
+
+    await getSessionModel()
+      .updateOne({ sessionId: session!.sessionId }, { $set: { expiresAt: new Date(Date.now() - 1_000) } })
+      .exec();
+
+    const heartbeat = await request(app).post('/api/v1/auth/heartbeat').set('Cookie', cookies);
+    const body = heartbeat.body as {
+      error: string;
+      suggestedAction: string;
+    };
+
+    expect(heartbeat.status).toBe(401);
+    expect(body.error).toBe('SessionExpired');
+    expect(body.suggestedAction.toLowerCase()).toMatch(/re-authenticate|sign in/);
+  });
+
+  it('heartbeat returns 401 without creating a session when cookie is missing', async () => {
+    const app = createApp();
+    const beforeCount = await getSessionModel().countDocuments();
+
+    const heartbeat = await request(app).post('/api/v1/auth/heartbeat');
+    const body = heartbeat.body as { error: string };
+
+    expect(heartbeat.status).toBe(401);
+    expect(body.error).toBe('Unauthorized');
+    expect(await getSessionModel().countDocuments()).toBe(beforeCount);
+  });
+
+  it('supports authenticate → heartbeat → extended expiry → expiry → 401', async () => {
+    const app = createApp();
+    const login = await request(app)
+      .post('/api/v1/auth/github/callback')
+      .send({ code: 'mock-code', code_verifier: 'mock-verifier' });
+
+    const cookies = login.headers['set-cookie'];
+    const initial = await getSessionModel().findOne({}).lean().exec();
+    expect(initial).toBeTruthy();
+
+    const heartbeat = await request(app).post('/api/v1/auth/heartbeat').set('Cookie', cookies);
+    expect(heartbeat.status).toBe(200);
+
+    const extended = await getSessionModel().findOne({ sessionId: initial!.sessionId }).lean().exec();
+    expect(extended).toBeTruthy();
+    expect(extended!.expiresAt.getTime()).toBeGreaterThanOrEqual(initial!.expiresAt.getTime());
+
+    await getSessionModel()
+      .updateOne(
+        { sessionId: initial!.sessionId },
+        { $set: { expiresAt: new Date(Date.now() - 5_000) } },
+      )
+      .exec();
+
+    const expired = await request(app).post('/api/v1/auth/heartbeat').set('Cookie', cookies);
+    expect(expired.status).toBe(401);
+    expect((expired.body as { error: string }).error).toBe('SessionExpired');
+  });
+
   it('logs out and clears the session cookie', async () => {
     const app = createApp();
     const login = await request(app)

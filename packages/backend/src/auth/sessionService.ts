@@ -70,17 +70,25 @@ export async function rotateRefreshToken(
   };
 }
 
+/**
+ * Atomically extends a non-expired session idle TTL.
+ * Returns null when the session is missing or already expired (no write).
+ */
 export async function touchSession(sessionId: string): Promise<SessionMetadata | null> {
-  const session = await getSessionById(sessionId);
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + SESSION_IDLE_MS);
+
+  const session = await getSessionModel()
+    .findOneAndUpdate(
+      { sessionId, expiresAt: { $gt: now } },
+      { $set: { lastActivityAt: now, expiresAt } },
+      { returnDocument: 'after' },
+    )
+    .exec();
 
   if (!session) {
     return null;
   }
-
-  const now = new Date();
-  session.lastActivityAt = now;
-  session.expiresAt = new Date(now.getTime() + SESSION_IDLE_MS);
-  await (session as SessionDocument & { save: () => Promise<SessionDocument> }).save();
 
   return buildSessionMetadata(sessionId, String(session.userId), session.expiresAt);
 }
