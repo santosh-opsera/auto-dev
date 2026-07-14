@@ -12,6 +12,7 @@ import { getAuditLogModel } from '../../backend/src/models/auditLogModel.js';
 import { getConventionSettingsModel } from '../../backend/src/models/conventionSettingsModel.js';
 import { getDivergenceRecordModel } from '../../backend/src/models/divergenceRecordModel.js';
 import { getLockoutModel } from '../../backend/src/models/lockoutModel.js';
+import { getRateLimitModel } from '../../backend/src/models/rateLimitModel.js';
 import { getSessionModel } from '../../backend/src/models/sessionModel.js';
 import { getTicketIntentModel } from '../../backend/src/models/ticketIntentModel.js';
 import { getUserModel } from '../../backend/src/models/userModel.js';
@@ -30,6 +31,7 @@ export function installE2EApiHarness(): void {
       getSessionModel(),
       getAuditLogModel(),
       getLockoutModel(),
+      getRateLimitModel(),
       getConventionSettingsModel(),
       getTicketIntentModel(),
       getDivergenceRecordModel(),
@@ -42,7 +44,7 @@ export function installE2EApiHarness(): void {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     eventBus.clearHistory();
 
@@ -51,6 +53,7 @@ export function installE2EApiHarness(): void {
       getSessionModel().deleteMany({}),
       getAuditLogModel().deleteMany({}),
       getLockoutModel().deleteMany({}),
+      getRateLimitModel().deleteMany({}),
       getConventionSettingsModel().deleteMany({}),
       getTicketIntentModel().deleteMany({}),
       getDivergenceRecordModel().deleteMany({}),

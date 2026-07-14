@@ -54,7 +54,7 @@ describe('integration routes', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     adapterRegistry.reset();
     await getUserModel().deleteMany({});

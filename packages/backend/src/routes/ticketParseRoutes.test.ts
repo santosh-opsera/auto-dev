@@ -68,7 +68,7 @@ describe('ticket parse integration', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});

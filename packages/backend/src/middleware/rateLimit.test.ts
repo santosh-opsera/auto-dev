@@ -1,15 +1,19 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { createRateLimitMiddleware, createResetRateLimitStore } from './rateLimit.js';
+import {
+  createRateLimitMiddleware,
+  createResetRateLimitStore,
+  InMemoryRateLimitStore,
+} from './rateLimit.js';
 import { errorHandler } from './errorHandler.js';
 
 describe('createRateLimitMiddleware', () => {
-  const store = new Map();
+  const store = new InMemoryRateLimitStore();
   const reset = createResetRateLimitStore(store);
 
-  afterEach(() => {
-    reset();
+  afterEach(async () => {
+    await reset();
   });
 
   it('returns 429 with Retry-After when the limit is exceeded', async () => {

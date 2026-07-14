@@ -68,6 +68,14 @@ describe('GET /api/v1/health/db', () => {
 });
 
 describe('error handling integration', () => {
+  beforeAll(async () => {
+    await startMemoryMongo();
+  }, 60_000);
+
+  afterAll(async () => {
+    await stopMemoryMongo();
+  });
+
   it('handles unhandled exceptions with structured 500 responses', async () => {
     const app = createApp();
     const response = await request(app).get('/api/v1/test/error');

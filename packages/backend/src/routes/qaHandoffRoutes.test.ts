@@ -65,7 +65,7 @@ describe('qa handoff routes', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     eventBus.clearHistory();
     await getUserModel().deleteMany({});

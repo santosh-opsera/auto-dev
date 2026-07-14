@@ -53,11 +53,11 @@ export function createApp(): Application {
 
   app.use(corsMiddleware);
   app.use(securityHeadersMiddleware);
-  app.use(standardRateLimitMiddleware);
   app.use(express.json());
   app.use(cookieParser());
   app.use(correlationIdMiddleware);
 
+  // Health probes stay ahead of rate limiting so they work when Mongo is unavailable.
   app.get('/api/v1/health', (_req: Request, res: Response) => {
     const payload = {
       status: 'ok' as const,
@@ -92,6 +92,8 @@ export function createApp(): Application {
     });
     res.status(503).json(payload);
   });
+
+  app.use(standardRateLimitMiddleware);
 
   app.use('/api/v1/auth', createAuthRouter());
   app.use('/api/v1/audit', createAuditRouter());

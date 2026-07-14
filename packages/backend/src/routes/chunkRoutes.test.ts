@@ -67,7 +67,7 @@ describe('chunk routes', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     process.env.LLM_LOCAL_MOCK_RESPONSE = sampleChunkLlmJsonResponse;
     eventBus.clearHistory();

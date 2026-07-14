@@ -42,6 +42,7 @@ export const COLLECTION_DEFAULT_CLASSIFICATION = {
   users: 'confidential',
   sessions: 'restricted',
   auth_lockouts: 'internal',
+  rate_limits: 'internal',
   oauth_tokens: 'restricted',
   audit_events: 'confidential',
   codebase_contexts: 'internal',
