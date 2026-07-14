@@ -11,7 +11,8 @@
     "build": "npm run guard:build && npm run build -w @autodev/infrastructure && tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lint:boundaries": "eslint -c eslint.boundaries.config.js \"src/**/*.{ts,tsx}\" --max-warnings 0"
   },
 
   "dependencies": {
