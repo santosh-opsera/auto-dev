@@ -7,17 +7,23 @@ import type {
 import { domainEventSchema } from '@autodev/shared-types';
 import { noopLogger, type Logger } from './logger.js';
 
+/** Handler for a typed {@link DomainEvent}. */
 export type EventHandler<T extends EventType = EventType> = (
   event: DomainEventByType<T>,
 ) => void | Promise<void>;
 
 const MAX_EVENT_HISTORY = 100;
 
+/**
+ * In-process typed pub/sub for domain events (Zod-validated via shared-types).
+ * Handler failures are isolated and logged through the injected {@link Logger}.
+ */
 export class EventBus {
   private readonly handlers = new Map<EventType, Set<EventHandler>>();
   private readonly history: DomainEvent[] = [];
   private logger: Logger;
 
+  /** @param logger - Logger used when handlers throw (default {@link noopLogger}) */
   constructor(logger: Logger = noopLogger) {
     this.logger = logger;
   }
@@ -27,12 +33,14 @@ export class EventBus {
     this.logger = logger;
   }
 
+  /** Register a handler for `eventType`. */
   subscribe<T extends EventType>(eventType: T, handler: EventHandler<T>): void {
     const handlers = this.handlers.get(eventType) ?? new Set<EventHandler>();
     handlers.add(handler as unknown as EventHandler);
     this.handlers.set(eventType, handlers);
   }
 
+  /** Remove a previously registered handler. */
   unsubscribe<T extends EventType>(eventType: T, handler: EventHandler<T>): void {
     const handlers = this.handlers.get(eventType);
     if (!handlers) {
@@ -45,6 +53,11 @@ export class EventBus {
     }
   }
 
+  /**
+   * Validate and dispatch an event to subscribers.
+   * @param event - Domain event payload
+   * @param options - When `awaitHandlers` is true, wait for all handlers
+   */
   async publish(event: DomainEvent, options?: PublishEventOptions): Promise<void> {
     const validated = domainEventSchema.parse(event);
     this.recordHistory(validated);
@@ -64,14 +77,17 @@ export class EventBus {
     void Promise.all(dispatch);
   }
 
+  /** Snapshot of the last up to 100 published events. */
   getHistory(): DomainEvent[] {
     return [...this.history];
   }
 
+  /** Clear the in-memory event history buffer. */
   clearHistory(): void {
     this.history.length = 0;
   }
 
+  /** Remove all subscriptions (primarily for tests). */
   clearSubscriptions(): void {
     this.handlers.clear();
   }
@@ -103,4 +119,5 @@ export class EventBus {
   }
 }
 
+/** Process-wide {@link EventBus} singleton used by backend services. */
 export const eventBus = new EventBus();
