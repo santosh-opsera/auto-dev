@@ -339,6 +339,7 @@ export function createAuthRouter(): Router {
           email: user.email,
           displayName: user.displayName,
           connectedProviders: user.connectedProviders,
+          requiresGitHubReauth: user.requiresGitHubReauth === true,
           integrations: {
             jira: userHasJiraScopes(user),
             githubRepos: userHasGitHubRepoScopes(user),

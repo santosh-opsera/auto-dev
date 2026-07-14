@@ -40,17 +40,24 @@ export async function upsertUserFromOAuth(profile: OAuthProfile): Promise<UserRe
       ? existing.connectedProviders
       : [...existing.connectedProviders, profile.provider];
 
+    // Merge provider into the existing document by email — never create a duplicate.
+    // Atlassian (Jira) tokens on other provider fields are left untouched by this patch.
+    const update: Record<string, unknown> = {
+      displayName: profile.displayName,
+      connectedProviders,
+      [profile.provider]: tokens,
+      updatedBy: profile.email,
+    };
+
+    if (profile.provider === 'github' && existing.requiresGitHubReauth) {
+      update.requiresGitHubReauth = false;
+    }
+
     const updated = await getUserModel()
-      .findByIdAndUpdate(
-        existing._id,
-        {
-          displayName: profile.displayName,
-          connectedProviders,
-          [profile.provider]: tokens,
-          updatedBy: profile.email,
-        },
-        { new: true, runValidators: true },
-      )
+      .findByIdAndUpdate(existing._id, update, {
+        returnDocument: 'after',
+        runValidators: true,
+      })
       .exec();
 
     if (!updated) {
@@ -86,15 +93,17 @@ export async function linkProviderToUser(
     ? user.connectedProviders
     : [...user.connectedProviders, profile.provider];
 
+  const update: Record<string, unknown> = {
+    connectedProviders,
+    [profile.provider]: toStoredTokens(profile),
+    updatedBy: profile.email,
+  };
+
+  if (profile.provider === 'github' && user.requiresGitHubReauth) {
+    update.requiresGitHubReauth = false;
+  }
+
   return getUserModel()
-    .findByIdAndUpdate(
-      userId,
-      {
-        connectedProviders,
-        [profile.provider]: toStoredTokens(profile),
-        updatedBy: profile.email,
-      },
-      { new: true, runValidators: true },
-    )
+    .findByIdAndUpdate(userId, update, { returnDocument: 'after', runValidators: true })
     .exec();
 }

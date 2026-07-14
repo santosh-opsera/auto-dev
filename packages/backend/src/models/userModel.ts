@@ -20,6 +20,11 @@ export interface UserDocument extends AuditFields {
   connectedProviders: AuthProvider[];
   github?: ProviderTokens;
   atlassian?: ProviderTokens;
+  /**
+   * Set by the Atlassian→GitHub migration for Atlassian-only users.
+   * Cleared when the user successfully links GitHub via OAuth (email match).
+   */
+  requiresGitHubReauth?: boolean;
 }
 
 export type UserRecord = HydratedDocument<UserDocument>;
@@ -55,6 +60,7 @@ const userSchema = createBaseSchema({
     },
     required: false,
   },
+  requiresGitHubReauth: { type: Boolean, required: false, default: false },
 });
 
 userSchema.index({ email: 1 }, { unique: true });
