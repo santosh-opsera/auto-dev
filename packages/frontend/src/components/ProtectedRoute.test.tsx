@@ -9,10 +9,12 @@ import {
   mockAuthUser,
   mockGithubOnlyAuthUser,
 } from '../fixtures/auth';
+import { integrationsStatusGitHubDisconnected } from '../fixtures/integrations';
 import { HEARTBEAT_INTERVAL_MS, useAuthStore } from '../store/authStore';
 import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
 import { useSSE } from '../hooks/useSSE';
 import { clearSSEListeners } from '../hooks/sseEventBus';
+import * as integrationsApi from '../api/integrations';
 
 vi.mock('../hooks/useSessionHeartbeat', () => ({
   useSessionHeartbeat: vi.fn(),
@@ -46,6 +48,32 @@ vi.mock('../api/auth', async () => {
   };
 });
 
+vi.mock('../api/integrations', async () => {
+  const actual = await vi.importActual<typeof import('../api/integrations')>(
+    '../api/integrations',
+  );
+  return {
+    ...actual,
+    fetchIntegrationsStatus: vi.fn().mockResolvedValue({
+      github: {
+        name: 'github',
+        connected: true,
+        tokenValid: true,
+        connectionState: 'connected',
+        lastCheckedAt: '2026-07-14T12:00:00.000Z',
+      },
+      jira: {
+        name: 'jira',
+        connected: true,
+        tokenValid: true,
+        connectionState: 'connected',
+        lastCheckedAt: '2026-07-14T12:00:00.000Z',
+      },
+      checkedAt: '2026-07-14T12:00:00.000Z',
+    }),
+  };
+});
+
 function StubPage({ label }: { label: string }) {
   return (
     <main>
@@ -72,6 +100,7 @@ function renderProtected(initialPath = '/dashboard') {
 describe('ProtectedRoute', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     clearSSEListeners();
     useAuthStore.setState({
       user: null,
@@ -83,10 +112,14 @@ describe('ProtectedRoute', () => {
 
   afterEach(() => {
     cleanup();
+    sessionStorage.clear();
     clearSSEListeners();
   });
 
-  it('renders shared shell for authenticated users', () => {
+  it('renders shared shell for authenticated users', async () => {
+    vi.mocked(integrationsApi.fetchIntegrationsStatus).mockResolvedValue(
+      integrationsStatusGitHubDisconnected,
+    );
     useAuthStore.getState().setAuth(mockGithubOnlyAuthUser, authenticatedSession);
 
     renderProtected();
@@ -95,7 +128,7 @@ describe('ProtectedRoute', () => {
     expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByTestId('session-warning-modal')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(/Connect Jira/);
+    expect(await screen.findByRole('status')).toHaveTextContent(/GitHub not connected/);
   });
 
   it('redirects unauthenticated users to /login within 500ms', async () => {
