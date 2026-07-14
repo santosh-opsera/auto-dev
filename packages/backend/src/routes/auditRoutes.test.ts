@@ -39,7 +39,7 @@ describe('audit routes', () => {
 
   beforeEach(async () => {
     resetAuthRateLimits();
-    resetLockouts();
+    await resetLockouts();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});
     await getAuditLogModel().collection.deleteMany({});
@@ -132,7 +132,7 @@ describe('audit integration', () => {
 
   beforeEach(async () => {
     resetAuthRateLimits();
-    resetLockouts();
+    await resetLockouts();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});
     await getAuditLogModel().collection.deleteMany({});

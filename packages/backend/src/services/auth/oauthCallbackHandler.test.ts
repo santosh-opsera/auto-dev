@@ -18,9 +18,9 @@ import {
 } from './oauthCallbackHandler.js';
 
 vi.mock('../../auth/lockoutService.js', () => ({
-  isLockedOut: vi.fn(() => false),
-  recordAuthFailure: vi.fn(),
-  clearAuthFailures: vi.fn(),
+  isLockedOut: vi.fn(async () => false),
+  recordAuthFailure: vi.fn(async () => ({ locked: false, remainingAttempts: 10 })),
+  clearAuthFailures: vi.fn(async () => undefined),
 }));
 
 vi.mock('../audit/auditService.js', () => ({
@@ -133,7 +133,7 @@ describe('handleOAuthRedirectCallback', () => {
         },
       }),
       touchUserSession: vi.fn().mockResolvedValue({ userId: 'mock-user-id' }),
-      clearFailures: vi.fn(),
+      clearFailures: vi.fn(async () => undefined),
     };
   });
 

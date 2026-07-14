@@ -1,60 +1,105 @@
 import { LOCKOUT_THRESHOLD, LOCKOUT_WINDOW_MS } from './constants.js';
+import {
+  buildLockoutExpiry,
+  buildLockoutWindowExpiry,
+  getLockoutModel,
+  type LockoutDocument,
+} from '../models/lockoutModel.js';
 
-interface LockoutEntry {
-  failures: number;
-  firstFailureAt: number;
-  lockedUntil?: number;
+export type LockoutResult = { locked: boolean; remainingAttempts: number };
+
+function toMillis(value: Date | number | undefined): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  return typeof value === 'number' ? value : value.getTime();
 }
 
-const lockouts = new Map<string, LockoutEntry>();
+function isActivelyLocked(entry: Pick<LockoutDocument, 'lockedUntil'>, now: number): boolean {
+  const lockedUntil = toMillis(entry.lockedUntil);
+  return lockedUntil !== undefined && lockedUntil > now;
+}
 
-export function recordAuthFailure(key: string): { locked: boolean; remainingAttempts: number } {
+export async function recordAuthFailure(key: string): Promise<LockoutResult> {
   const now = Date.now();
-  const entry = lockouts.get(key) ?? { failures: 0, firstFailureAt: now };
+  const model = getLockoutModel();
+  const existing = await model.findOne({ key }).lean().exec();
 
-  if (entry.lockedUntil && entry.lockedUntil > now) {
+  if (existing && isActivelyLocked(existing, now)) {
     return { locked: true, remainingAttempts: 0 };
   }
 
-  if (now - entry.firstFailureAt > LOCKOUT_WINDOW_MS) {
-    entry.failures = 0;
-    entry.firstFailureAt = now;
-    entry.lockedUntil = undefined;
-  }
+  const windowExpired =
+    !existing || now - existing.firstFailureAt.getTime() > LOCKOUT_WINDOW_MS;
 
-  entry.failures += 1;
+  const failures = windowExpired ? 1 : existing.failures + 1;
+  const firstFailureAt = windowExpired ? new Date(now) : existing.firstFailureAt;
 
-  if (entry.failures >= LOCKOUT_THRESHOLD) {
-    entry.lockedUntil = now + LOCKOUT_WINDOW_MS;
-    lockouts.set(key, entry);
+  if (failures >= LOCKOUT_THRESHOLD) {
+    const lockedUntil = new Date(now + LOCKOUT_WINDOW_MS);
+    await model
+      .findOneAndUpdate(
+        { key },
+        {
+          $set: {
+            failures,
+            firstFailureAt,
+            lockedUntil,
+            expiresAt: buildLockoutExpiry(lockedUntil),
+            dataClassification: 'internal',
+          },
+          $setOnInsert: { key },
+        },
+        { upsert: true, returnDocument: 'after' },
+      )
+      .exec();
+
     return { locked: true, remainingAttempts: 0 };
   }
 
-  lockouts.set(key, entry);
+  await model
+    .findOneAndUpdate(
+      { key },
+      {
+        $set: {
+          failures,
+          firstFailureAt,
+          expiresAt: buildLockoutWindowExpiry(firstFailureAt),
+          dataClassification: 'internal',
+        },
+        $unset: { lockedUntil: 1 },
+        $setOnInsert: { key },
+      },
+      { upsert: true, returnDocument: 'after' },
+    )
+    .exec();
+
   return {
     locked: false,
-    remainingAttempts: LOCKOUT_THRESHOLD - entry.failures,
+    remainingAttempts: LOCKOUT_THRESHOLD - failures,
   };
 }
 
-export function clearAuthFailures(key: string): void {
-  lockouts.delete(key);
+export async function clearAuthFailures(key: string): Promise<void> {
+  await getLockoutModel().deleteOne({ key }).exec();
 }
 
-export function isLockedOut(key: string): boolean {
-  const entry = lockouts.get(key);
+export async function isLockedOut(key: string): Promise<boolean> {
+  const entry = await getLockoutModel().findOne({ key }).lean().exec();
   if (!entry?.lockedUntil) {
     return false;
   }
 
-  if (entry.lockedUntil <= Date.now()) {
-    lockouts.delete(key);
+  const lockedUntil = entry.lockedUntil.getTime();
+  if (lockedUntil <= Date.now()) {
+    await getLockoutModel().deleteOne({ key }).exec();
     return false;
   }
 
   return true;
 }
 
-export function resetLockouts(): void {
-  lockouts.clear();
+/** Test helper — clears all lockout documents. */
+export async function resetLockouts(): Promise<void> {
+  await getLockoutModel().deleteMany({}).exec();
 }

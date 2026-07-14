@@ -10,9 +10,11 @@ import {
   mockGitHubUserResponse,
 } from '../fixtures/auth.js';
 import { createApp } from '../index.js';
+import { getLockoutModel } from '../models/lockoutModel.js';
 import { getSessionModel } from '../models/sessionModel.js';
 import { getUserModel } from '../models/userModel.js';
 import { startMemoryMongo, stopMemoryMongo } from '../testHelpers/memoryServer.js';
+import { ensureIndexes } from '../database/indexes.js';
 
 vi.mock('../services/auth/githubAuthService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/auth/githubAuthService.js')>();
@@ -52,6 +54,7 @@ function mergeSetCookieHeaders(...cookieHeaders: Array<string[] | undefined>): s
 describe('auth routes', () => {
   beforeAll(async () => {
     await startMemoryMongo();
+    await ensureIndexes([getUserModel(), getSessionModel(), getLockoutModel()]);
   }, 60_000);
 
   afterAll(async () => {
@@ -60,9 +63,10 @@ describe('auth routes', () => {
 
   beforeEach(async () => {
     resetAuthRateLimits();
-    resetLockouts();
+    await resetLockouts();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});
+    await getLockoutModel().deleteMany({});
     vi.mocked(exchangeGitHubCode).mockResolvedValue({
       provider: 'github',
       providerUserId: String(mockGitHubUserResponse.id),

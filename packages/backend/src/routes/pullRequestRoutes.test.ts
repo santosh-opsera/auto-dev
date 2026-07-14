@@ -71,7 +71,7 @@ describe('pull request routes', () => {
 
   beforeEach(async () => {
     resetAuthRateLimits();
-    resetLockouts();
+    await resetLockouts();
     eventBus.clearHistory();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});

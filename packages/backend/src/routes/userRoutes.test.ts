@@ -81,7 +81,7 @@ describe('GDPR data subject rights API (integration)', () => {
 
   beforeEach(async () => {
     resetAuthRateLimits();
-    resetLockouts();
+    await resetLockouts();
     await Promise.all([
       getUserModel().deleteMany({}),
       getSessionModel().deleteMany({}),

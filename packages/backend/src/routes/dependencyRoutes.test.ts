@@ -65,7 +65,7 @@ describe('dependency tracking routes', () => {
 
   beforeEach(async () => {
     resetAuthRateLimits();
-    resetLockouts();
+    await resetLockouts();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});
     await getAuditLogModel().deleteMany({});

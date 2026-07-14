@@ -55,7 +55,7 @@ describe('integration routes', () => {
 
   beforeEach(async () => {
     resetAuthRateLimits();
-    resetLockouts();
+    await resetLockouts();
     adapterRegistry.reset();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});
