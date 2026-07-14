@@ -1,3 +1,4 @@
+import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { getGitHubReposConnectUrl } from '../api/auth';
 import { useRepositories } from '../hooks/useRepositories';
@@ -13,19 +14,30 @@ export function RepositoriesPage() {
     available,
     connected,
     loading,
+    loadingMore,
     error,
     errorCode,
     rateLimitWarning,
+    pagination,
+    searchQuery,
     connectingKey,
     analyzingKey,
     analysisResults,
     connectedKeys,
     refresh,
+    loadMore,
+    setSearchQuery,
     connect,
     analyze,
   } = useRepositories({ fetchAvailable: githubReposReady });
 
+  const [filterDraft, setFilterDraft] = useState(searchQuery);
   const isRateLimitError = errorCode === 'GitHubRateLimited';
+
+  const applyFilter = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    setSearchQuery(filterDraft);
+  };
 
   return (
     <main className="repositories-page">
@@ -119,9 +131,28 @@ export function RepositoriesPage() {
       {githubReposReady ? (
         <section className="profile-card" aria-labelledby="available-heading">
           <h2 id="available-heading">Available from GitHub</h2>
+          <form className="repository-search" onSubmit={applyFilter}>
+            <label htmlFor="repository-filter">Filter repositories</label>
+            <div className="repository-search-row">
+              <input
+                id="repository-filter"
+                type="search"
+                value={filterDraft}
+                placeholder="Search by name"
+                onChange={(event) => setFilterDraft(event.target.value)}
+              />
+              <button type="submit" className="secondary-button">
+                Apply filter
+              </button>
+            </div>
+          </form>
           {loading ? <p>Loading GitHub repositories…</p> : null}
           {!loading && available.length === 0 && !error ? (
-            <p>No repositories returned from GitHub for this account.</p>
+            <p>
+              {searchQuery.trim()
+                ? 'No repositories match this filter.'
+                : 'No repositories returned from GitHub for this account.'}
+            </p>
           ) : null}
           {!loading && available.length > 0 ? (
             <ul className="repository-list">
@@ -149,6 +180,21 @@ export function RepositoriesPage() {
                 );
               })}
             </ul>
+          ) : null}
+          {pagination?.hasNextPage ? (
+            <button
+              type="button"
+              className="secondary-button"
+              disabled={loadingMore}
+              onClick={() => void loadMore()}
+            >
+              {loadingMore ? 'Loading…' : 'Load more'}
+            </button>
+          ) : null}
+          {pagination && !loading ? (
+            <p className="field-hint" role="status">
+              Showing {available.length} of {pagination.totalCount} repositories
+            </p>
           ) : null}
         </section>
       ) : null}

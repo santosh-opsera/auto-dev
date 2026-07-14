@@ -38,8 +38,26 @@ export const githubRateLimitStatusSchema = z.object({
 
 export type GitHubRateLimitStatus = z.infer<typeof githubRateLimitStatusSchema>;
 
+export const repositoryListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  perPage: z.coerce.number().int().min(1).max(100).default(30),
+  q: z.string().trim().max(200).optional(),
+});
+
+export type RepositoryListQuery = z.infer<typeof repositoryListQuerySchema>;
+
+export const repositoryPaginationSchema = z.object({
+  page: z.number().int().min(1),
+  perPage: z.number().int().min(1).max(100),
+  totalCount: z.number().int().nonnegative(),
+  hasNextPage: z.boolean(),
+});
+
+export type RepositoryPagination = z.infer<typeof repositoryPaginationSchema>;
+
 export const repositoryListResponseSchema = z.object({
   repositories: z.array(githubRepositorySchema),
+  pagination: repositoryPaginationSchema,
   rateLimitWarning: z.string().optional(),
   rateLimit: githubRateLimitStatusSchema.optional(),
 });

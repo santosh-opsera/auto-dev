@@ -118,6 +118,37 @@ export const sampleGitHubRateLimitStatus: GitHubRateLimitStatus = {
   queuedRequests: 0,
 };
 
+/** Link header for page 1 of a multi-page GitHub list response. */
+export const mockGitHubApiLinkHeaderPage1 =
+  '<https://api.github.com/user/repos?page=2&per_page=100>; rel="next", <https://api.github.com/user/repos?page=3&per_page=100>; rel="last"';
+
+/** Link header for the final page (no next). */
+export const mockGitHubApiLinkHeaderLastPage =
+  '<https://api.github.com/user/repos?page=2&per_page=100>; rel="prev", <https://api.github.com/user/repos?page=1&per_page=100>; rel="first"';
+
+/** Two pages of user repos for pagination fixture coverage. */
+export const mockGitHubApiPaginatedRepositoryPages = {
+  page1: mockGitHubApiRepositoryResponse,
+  page2: [
+    {
+      id: 10,
+      name: 'extra-tools',
+      full_name: 'santosh-opsera/extra-tools',
+      owner: { login: 'santosh-opsera' },
+      private: false,
+      default_branch: 'main',
+      html_url: 'https://github.com/santosh-opsera/extra-tools',
+    },
+  ],
+};
+
+export const sampleRepositoryPagination = {
+  page: 1,
+  perPage: 30,
+  totalCount: sampleGitHubRepositories.length,
+  hasNextPage: false,
+};
+
 export const mockGitHubApiTreeResponse = {
   sha: 'tree-sha',
   tree: [

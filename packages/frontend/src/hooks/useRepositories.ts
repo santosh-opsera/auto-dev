@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { CodebaseAnalysisResponse, GitHubRateLimitStatus, GitHubRepository, RepositoryConnection } from '@autodev/shared-types';
+import type {
+  CodebaseAnalysisResponse,
+  GitHubRateLimitStatus,
+  GitHubRepository,
+  RepositoryConnection,
+  RepositoryPagination,
+} from '@autodev/shared-types';
 import { ApiError } from '../api/client';
 import {
   analyzeRepository,
@@ -8,15 +13,19 @@ import {
   listGitHubRepositories,
   repositoryKey,
 } from '../api/repositories';
+import { useCallback, useEffect, useState } from 'react';
 
 interface RepositoryState {
   available: GitHubRepository[];
   connected: RepositoryConnection[];
   loading: boolean;
+  loadingMore: boolean;
   error: string | null;
   errorCode: string | null;
   rateLimitWarning: string | null;
   rateLimit: GitHubRateLimitStatus | null;
+  pagination: RepositoryPagination | null;
+  searchQuery: string;
   connectingKey: string | null;
   analyzingKey: string | null;
   analysisResults: Record<string, CodebaseAnalysisResponse>;
@@ -26,10 +35,13 @@ const initialState: RepositoryState = {
   available: [],
   connected: [],
   loading: true,
+  loadingMore: false,
   error: null,
   errorCode: null,
   rateLimitWarning: null,
   rateLimit: null,
+  pagination: null,
+  searchQuery: '',
   connectingKey: null,
   analyzingKey: null,
   analysisResults: {},
@@ -43,56 +55,88 @@ interface UseRepositoriesOptions {
 export function useRepositories({ fetchAvailable = true }: UseRepositoriesOptions = {}) {
   const [state, setState] = useState<RepositoryState>(initialState);
 
-  const refresh = useCallback(async (): Promise<void> => {
-    setState((previous) => ({
-      ...previous,
-      loading: true,
-      error: null,
-      errorCode: null,
-      rateLimitWarning: null,
-    }));
+  const loadPage = useCallback(
+    async (page: number, append: boolean, searchQuery: string): Promise<void> => {
+      setState((previous) => ({
+        ...previous,
+        loading: !append,
+        loadingMore: append,
+        error: null,
+        errorCode: null,
+        ...(append ? {} : { rateLimitWarning: null }),
+      }));
 
-    try {
-      const connectedResponse = await listConnectedRepositories();
-      let available: GitHubRepository[] = [];
-      let rateLimitWarning: string | null = null;
-      let rateLimit: GitHubRateLimitStatus | null = null;
+      try {
+        const connectedResponse = await listConnectedRepositories();
+        let available: GitHubRepository[] = [];
+        let rateLimitWarning: string | null = null;
+        let rateLimit: GitHubRateLimitStatus | null = null;
+        let pagination: RepositoryPagination | null = null;
 
-      if (fetchAvailable) {
-        const availableResponse = await listGitHubRepositories();
-        available = availableResponse.repositories;
-        rateLimitWarning = availableResponse.rateLimitWarning ?? null;
-        rateLimit = availableResponse.rateLimit ?? null;
+        if (fetchAvailable) {
+          const availableResponse = await listGitHubRepositories({
+            page,
+            perPage: 30,
+            q: searchQuery.trim() || undefined,
+          });
+          available = availableResponse.repositories;
+          rateLimitWarning = availableResponse.rateLimitWarning ?? null;
+          rateLimit = availableResponse.rateLimit ?? null;
+          pagination = availableResponse.pagination;
+        }
+
+        setState((previous) => ({
+          ...previous,
+          available: append ? [...previous.available, ...available] : available,
+          connected: connectedResponse.connections,
+          loading: false,
+          loadingMore: false,
+          rateLimitWarning: append ? previous.rateLimitWarning : rateLimitWarning,
+          rateLimit: rateLimit ?? previous.rateLimit,
+          pagination,
+        }));
+      } catch (loadError) {
+        const message =
+          loadError instanceof ApiError
+            ? [loadError.message, loadError.suggestedAction].filter(Boolean).join(' ')
+            : loadError instanceof Error
+              ? loadError.message
+              : 'Failed to load repositories.';
+
+        setState((previous) => ({
+          ...previous,
+          loading: false,
+          loadingMore: false,
+          error: message,
+          errorCode: loadError instanceof ApiError ? (loadError.errorCode ?? null) : null,
+        }));
       }
+    },
+    [fetchAvailable],
+  );
 
-      setState((previous) => ({
-        ...previous,
-        available,
-        connected: connectedResponse.connections,
-        loading: false,
-        rateLimitWarning,
-        rateLimit,
-      }));
-    } catch (loadError) {
-      const message =
-        loadError instanceof ApiError
-          ? [loadError.message, loadError.suggestedAction].filter(Boolean).join(' ')
-          : loadError instanceof Error
-            ? loadError.message
-            : 'Failed to load repositories.';
+  const refresh = useCallback(async (): Promise<void> => {
+    await loadPage(1, false, state.searchQuery);
+  }, [loadPage, state.searchQuery]);
 
-      setState((previous) => ({
-        ...previous,
-        loading: false,
-        error: message,
-        errorCode: loadError instanceof ApiError ? (loadError.errorCode ?? null) : null,
-      }));
+  const loadMore = useCallback(async (): Promise<void> => {
+    if (!state.pagination?.hasNextPage || state.loadingMore) {
+      return;
     }
-  }, [fetchAvailable]);
+    await loadPage(state.pagination.page + 1, true, state.searchQuery);
+  }, [loadPage, state.loadingMore, state.pagination, state.searchQuery]);
+
+  const setSearchQuery = useCallback(
+    (searchQuery: string): void => {
+      setState((previous) => ({ ...previous, searchQuery }));
+      void loadPage(1, false, searchQuery);
+    },
+    [loadPage],
+  );
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    void loadPage(1, false, '');
+  }, [loadPage]);
 
   const connectedKeys = new Set(state.connected.map((connection) => `${connection.owner}/${connection.repo}`));
 
@@ -171,6 +215,8 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
     ...state,
     connectedKeys,
     refresh,
+    loadMore,
+    setSearchQuery,
     connect,
     analyze,
   };

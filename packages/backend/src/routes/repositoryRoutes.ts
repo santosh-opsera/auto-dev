@@ -5,13 +5,14 @@ import {
   repositoryConnectResponseSchema,
   repositoryFileParamsSchema,
   repositoryFileResponseSchema,
+  repositoryListQuerySchema,
   repositoryListResponseSchema,
   repositoryParamsSchema,
   repositoryTreeResponseSchema,
 } from '@autodev/shared-types';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { requireSession, type AuthenticatedRequest } from '../middleware/requireSession.js';
-import { validateParams } from '../middleware/validateRequest.js';
+import { validateParams, validateQuery } from '../middleware/validateRequest.js';
 import { repositoryService } from '../services/github/repositoryService.js';
 
 export function createRepositoryRouter(): Router {
@@ -40,8 +41,18 @@ export function createRepositoryRouter(): Router {
   router.get(
     '/',
     asyncHandler(requireSession),
+    validateQuery(repositoryListQuerySchema),
     asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-      const payload = await repositoryService.listRepositories(req.user!);
+      const query = req.query as {
+        page: number;
+        perPage: number;
+        q?: string;
+      };
+      const payload = await repositoryService.listRepositories(req.user!, {
+        page: query.page,
+        perPage: query.perPage,
+        q: query.q,
+      });
       repositoryListResponseSchema.parse(payload);
       res.status(200).json(payload);
     }),

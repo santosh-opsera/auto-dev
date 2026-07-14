@@ -57,7 +57,8 @@ interface GitHubOrgResponse {
   login: string;
 }
 
-function parseNextPageUrl(linkHeader: string | null): string | null {
+/** Parse GitHub `Link` header and return the `rel="next"` URL when present. */
+export function parseGitHubNextPageUrl(linkHeader: string | null): string | null {
   if (!linkHeader) {
     return null;
   }
@@ -73,6 +74,10 @@ function parseNextPageUrl(linkHeader: string | null): string | null {
 
   const match = nextLink.match(/<([^>]+)>/);
   return match?.[1] ?? null;
+}
+
+function parseNextPageUrl(linkHeader: string | null): string | null {
+  return parseGitHubNextPageUrl(linkHeader);
 }
 
 function dedupeRepositories(repositories: GitHubRepository[]): GitHubRepository[] {
