@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { SESSION_IDLE_MS, SESSION_WARNING_MS } from '../auth/constants.js';
 import { encryptSecret, hashValue } from '../lib/encryption.js';
 import { getSessionModel, type SessionDocument } from '../models/sessionModel.js';
+import { sseManager } from '../services/events/sseManager.js';
 
 export interface SessionMetadata {
   sessionId: string;
@@ -41,8 +42,17 @@ export async function getSessionById(sessionId: string): Promise<SessionDocument
   return getSessionModel().findOne({ sessionId }).exec();
 }
 
+/**
+ * Deletes the session and closes any SSE clients owned by that user.
+ * Security-sensitive: must tear down real-time streams when auth ends.
+ */
 export async function invalidateSession(sessionId: string): Promise<void> {
+  const session = await getSessionById(sessionId);
   await getSessionModel().deleteOne({ sessionId }).exec();
+
+  if (session?.userId) {
+    sseManager.closeUserConnections(String(session.userId));
+  }
 }
 
 export async function rotateRefreshToken(

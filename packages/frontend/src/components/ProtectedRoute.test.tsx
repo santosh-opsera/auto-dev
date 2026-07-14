@@ -164,6 +164,19 @@ describe('ProtectedRoute', () => {
     );
   });
 
+  it('disables SSE when auth is cleared (logout / session expiry)', async () => {
+    useAuthStore.getState().setAuth(mockAuthUser, authenticatedSession);
+    renderProtected();
+
+    expect(vi.mocked(useSSE).mock.calls.at(-1)?.[0]?.enabled).toBe(true);
+
+    useAuthStore.getState().clearAuth();
+
+    await waitFor(() => {
+      expect(vi.mocked(useSSE).mock.calls.at(-1)?.[0]?.enabled).toBe(false);
+    });
+  });
+
   it('keeps a single ProtectedRoute-owned SSE/heartbeat wiring while navigating', () => {
     useAuthStore.getState().setAuth(mockAuthUser, authenticatedSession);
 
