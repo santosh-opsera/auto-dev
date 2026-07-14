@@ -34,9 +34,12 @@ const SEVERITY_RANK: Record<SastSeverity, number> = {
   low: 1,
 };
 
-/** Build rule regexes from string pieces so this file does not self-match. */
+/** Build rule regexes from string pieces so this file does not self-match JS SAST lines. */
 function rulePattern(source: string, flags?: string): RegExp {
-  return flags ? new RegExp(source, flags) : new RegExp(source);
+  // Sources are hardcoded policy strings composed in this module — never user input.
+  return flags === undefined
+    ? new RegExp(source) // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
+    : new RegExp(source, flags); // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
 }
 
 export const DEFAULT_SAST_RULES: readonly SastRule[] = [

@@ -115,16 +115,24 @@ export const prdListResponseSchema = z.object({
 
 export type PrdListResponse = z.infer<typeof prdListResponseSchema>;
 
+const HTML_ENTITY_MAP: Readonly<Record<string, string>> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
 /**
  * Escape HTML entities so AI-generated PRD content is XSS-safe when rendered.
+ * Uses a lookup map (not replaceAll) so escaping stays explicit and complete.
  */
 export function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+  let result = '';
+  for (const char of value) {
+    result += HTML_ENTITY_MAP[char] ?? char;
+  }
+  return result;
 }
 
 export function encodePrdSections(sections: PrdSections): PrdSections {
