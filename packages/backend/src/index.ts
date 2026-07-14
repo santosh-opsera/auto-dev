@@ -39,13 +39,16 @@ import { requireApprovalClearance } from './middleware/requireApprovalClearance.
 import { requireSession, type AuthenticatedRequest } from './middleware/requireSession.js';
 import { auditService } from './services/audit/auditService.js';
 import { sampleAuditMutationPayload } from './fixtures/audit.js';
-import { eventBus } from './services/events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { metricsCollectionService } from './services/metrics/metricsCollectionService.js';
 import { domainEventSchema } from '@autodev/shared-types';
 import { registerDefaultAdapters } from './services/integrations/registerDefaultAdapters.js';
 
 export function createApp(): Application {
   const app = express();
+
+  // Wire host logger into shared EventBus (WO-030).
+  eventBus.setLogger(logger);
 
   // Registration-only: new adapters are added via registerDefaultAdapters, not here.
   registerDefaultAdapters();
@@ -245,4 +248,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 export { connectMongo, disconnectMongo };
-export { eventBus } from './services/events/eventBus.js';
+export { eventBus } from '@autodev/infrastructure';

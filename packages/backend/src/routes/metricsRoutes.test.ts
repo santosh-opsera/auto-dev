@@ -18,7 +18,7 @@ import { getUserModel } from '../models/userModel.js';
 import { getWorkflowMetricsModel } from '../models/workflowMetricsModel.js';
 import { startMemoryMongo, stopMemoryMongo } from '../testHelpers/memoryServer.js';
 import { ensureIndexes } from '../database/indexes.js';
-import { eventBus } from '../services/events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { metricsCollectionService } from '../services/metrics/metricsCollectionService.js';
 
 vi.mock('../services/auth/githubAuthService.js', async (importOriginal) => {

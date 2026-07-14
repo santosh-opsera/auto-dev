@@ -12,7 +12,7 @@ import {
 } from '../../models/deploymentModel.js';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import {
   DEFAULT_COMPOSE_FILE,
   DEFAULT_HEALTH_CHECK_PATH,

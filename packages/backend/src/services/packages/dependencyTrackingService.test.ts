@@ -11,7 +11,7 @@ import {
 import { getUserModel } from '../../models/userModel.js';
 import { ensureIndexes } from '../../database/indexes.js';
 import { startMemoryMongo, stopMemoryMongo } from '../../testHelpers/memoryServer.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { dependencyTrackingService } from './dependencyTrackingService.js';
 
 describe('dependencyTrackingService', () => {

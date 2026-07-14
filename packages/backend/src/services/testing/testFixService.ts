@@ -28,7 +28,7 @@ import { getWorkflowModel, type WorkflowRecord } from '../../models/workflowMode
 import { AppError } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
 import { auditService } from '../audit/auditService.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { llmAdapter } from '../llm/llmAdapter.js';
 import type { LlmAdapter } from '../llm/llmTypes.js';
 import {

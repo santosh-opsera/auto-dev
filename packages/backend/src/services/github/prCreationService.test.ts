@@ -15,7 +15,7 @@ import { getWorkflowModel } from '../../models/workflowModel.js';
 import { sampleUserDocuments, seedDocuments } from '../../fixtures/database.js';
 import { ensureIndexes } from '../../database/indexes.js';
 import { startMemoryMongo, stopMemoryMongo } from '../../testHelpers/memoryServer.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import * as githubApiClientModule from './githubApiClient.js';
 import { PrCreationService } from './prCreationService.js';
 

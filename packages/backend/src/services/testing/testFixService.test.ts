@@ -19,7 +19,7 @@ import { getPrdModel } from '../../models/prdModel.js';
 import { getUserModel, type UserRecord } from '../../models/userModel.js';
 import { getWorkflowModel } from '../../models/workflowModel.js';
 import { startMemoryMongo, stopMemoryMongo } from '../../testHelpers/memoryServer.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import type { LlmAdapter } from '../llm/llmTypes.js';
 import { TestFixService } from './testFixService.js';
 import { VitestRunner } from './vitestRunner.js';

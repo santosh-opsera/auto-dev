@@ -1,7 +1,7 @@
 import { Router, type Response } from 'express';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { requireSession, type AuthenticatedRequest } from '../middleware/requireSession.js';
-import { eventBus } from '../services/events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { sseManager } from '../services/events/sseManager.js';
 
 sseManager.initializeEventBusBridge(eventBus);

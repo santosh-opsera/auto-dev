@@ -19,7 +19,7 @@ import { getWorkflowModel, type WorkflowRecord } from '../../models/workflowMode
 import { withRetry } from '../../lib/retry.js';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { llmAdapter } from '../llm/llmAdapter.js';
 import { dependenciesSatisfied, orderChunksByDependencies } from './chunkOrdering.js';
 import { parseChunkLlmOutput } from './chunkParser.js';

@@ -10,7 +10,7 @@ import { getUserModel } from '../../models/userModel.js';
 import { sampleUserDocuments, seedDocuments } from '../../fixtures/database.js';
 import { ensureIndexes } from '../../database/indexes.js';
 import { startMemoryMongo, stopMemoryMongo } from '../../testHelpers/memoryServer.js';
-import { eventBus } from '../events/eventBus.js';
+import { eventBus } from '@autodev/infrastructure';
 import { MockDockerClient } from './dockerClient.js';
 import { MockHealthChecker } from './healthCheck.js';
 import { DeploymentService } from './deploymentService.js';
