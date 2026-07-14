@@ -100,6 +100,36 @@ describe('auth routes', () => {
     expect(cookieHeader).toContain('SameSite=Strict');
   });
 
+  it('returns 410 Gone for Atlassian login start and clears the remember cookie', async () => {
+    const app = createApp();
+    const response = await request(app)
+      .get('/api/v1/auth/atlassian/start')
+      .set('Cookie', 'autodev_atlassian_uid=stale-user-id');
+
+    expect(response.status).toBe(410);
+    const body = response.body as { error: string; message: string };
+    expect(body.error).toBe('AtlassianLoginRemoved');
+    expect(body.message).toMatch(/GitHub/i);
+
+    const cookieHeader = Array.isArray(response.headers['set-cookie'])
+      ? response.headers['set-cookie'].join(';')
+      : String(response.headers['set-cookie'] ?? '');
+    expect(cookieHeader.toLowerCase()).toContain('autodev_atlassian_uid=');
+  });
+
+  it('clears the Atlassian remember cookie on prepare-login', async () => {
+    const app = createApp();
+    const response = await request(app)
+      .get('/api/v1/auth/prepare-login')
+      .set('Cookie', 'autodev_atlassian_uid=stale-user-id');
+
+    expect(response.status).toBe(204);
+    const cookieHeader = Array.isArray(response.headers['set-cookie'])
+      ? response.headers['set-cookie'].join(';')
+      : String(response.headers['set-cookie'] ?? '');
+    expect(cookieHeader.toLowerCase()).toContain('autodev_atlassian_uid=');
+  });
+
   it('rotates refresh tokens and extends heartbeat metadata', async () => {
     const app = createApp();
     const login = await request(app)

@@ -2,7 +2,6 @@ import { Router, type Request, type Response } from 'express';
 import {
   ATLASSIAN_JIRA_SCOPES,
   ATLASSIAN_LOGIN_SCOPES,
-  ATLASSIAN_REMEMBER_COOKIE_NAME,
   GITHUB_LOGIN_SCOPES,
   GITHUB_REPO_CONNECT_SCOPES,
   OAUTH_LINK_USER_COOKIE_NAME,
@@ -14,7 +13,6 @@ import {
   clearOAuthLinkUserCookie,
   clearPkceCookie,
   clearSessionCookie,
-  setAtlassianRememberCookie,
   setOAuthLinkUserCookie,
   setPkceCookie,
   setSessionCookie,
@@ -24,12 +22,10 @@ import { authRateLimitMiddleware } from '../middleware/appRateLimits.js';
 import { generateStateToken } from '../auth/pkce.js';
 import {
   createSession,
-  encryptOAuthToken,
   invalidateSession,
   rotateRefreshToken,
   touchSession,
 } from '../auth/sessionService.js';
-import { decryptSecret } from '../lib/encryption.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { AppError } from '../utils/errors.js';
 import { findUserById, getUserModel } from '../models/userModel.js';
@@ -44,9 +40,6 @@ import {
   buildAtlassianAuthorizationUrl,
   createAtlassianPkcePair,
   exchangeAtlassianCode,
-  refreshAtlassianAccessToken,
-  resolveAtlassianRetryPrompt,
-  type AtlassianAuthPrompt,
 } from '../services/auth/atlassianAuthService.js';
 import { upsertUserFromOAuth, linkProviderToUser } from '../services/auth/userAuthService.js';
 import { auditService } from '../services/audit/auditService.js';
@@ -94,71 +87,11 @@ function getGitHubConfig(): {
   };
 }
 
-function issueSessionCookies(
-  res: Response,
-  session: { sessionId: string; refreshToken: string },
-): void {
-  setSessionCookie(res, session.sessionId);
-  res.cookie(REFRESH_COOKIE_NAME, session.refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    path: '/',
-  });
-}
-
 /**
- * Resume session via stored Atlassian refresh token (skips dev-mode grant screen).
+ * Atlassian sign-in resume is retired (GitHub-only login). Clear stale remember cookie.
  */
-async function tryResumeAtlassianSession(req: Request, res: Response): Promise<boolean> {
-  const rememberedUserId = getCookieValue(req, ATLASSIAN_REMEMBER_COOKIE_NAME);
-  if (!rememberedUserId) {
-    return false;
-  }
-
-  const user = await findUserById(rememberedUserId);
-  const encryptedRefresh = user?.atlassian?.encryptedRefreshToken;
-  if (!user || !encryptedRefresh) {
-    clearAtlassianRememberCookie(res);
-    return false;
-  }
-
-  try {
-    const config = getAtlassianConfig();
-    const tokenResponse = await refreshAtlassianAccessToken({
-      refreshToken: decryptSecret(encryptedRefresh),
-      clientId: config.clientId,
-      clientSecret: config.clientSecret,
-    });
-
-    await getUserModel()
-      .findByIdAndUpdate(user._id, {
-        atlassian: {
-          providerUserId: user.atlassian?.providerUserId,
-          encryptedAccessToken: encryptOAuthToken(tokenResponse.access_token),
-          encryptedRefreshToken: tokenResponse.refresh_token
-            ? encryptOAuthToken(tokenResponse.refresh_token)
-            : encryptedRefresh,
-          tokenExpiresAt: tokenResponse.expires_in
-            ? new Date(Date.now() + tokenResponse.expires_in * 1000)
-            : user.atlassian?.tokenExpiresAt,
-          scopes: tokenResponse.scope?.split(' ') ?? user.atlassian?.scopes ?? [],
-        },
-        updatedBy: user.email,
-      })
-      .exec();
-
-    const session = await createSession(String(user._id));
-    clearAuthFailures(getClientIp(req));
-    issueSessionCookies(res, session);
-    setAtlassianRememberCookie(res, String(user._id));
-    logAuthSuccess(req, String(user._id), 'atlassian');
-    res.redirect(`${config.frontendUrl}/dashboard`);
-    return true;
-  } catch {
-    clearAtlassianRememberCookie(res);
-    return false;
-  }
+function clearStaleAtlassianRemember(res: Response): void {
+  clearAtlassianRememberCookie(res);
 }
 
 function ensureNotLocked(req: Request): void {
@@ -373,22 +306,23 @@ export function createAuthRouter(): Router {
     }),
   );
 
-  router.get('/atlassian/start', asyncHandler(async (req, res) => {
-    if (await tryResumeAtlassianSession(req, res)) {
-      return;
-    }
+  router.get('/prepare-login', (_req, res) => {
+    clearStaleAtlassianRemember(res);
+    res.status(204).send();
+  });
 
-    const { clientId, redirectUri } = getAtlassianConfig();
-    const { codeVerifier, codeChallenge } = createAtlassianPkcePair();
-    const state = generateStateToken();
-    setPkceCookie(res, codeVerifier);
-
-    const requestedPrompt = req.query.prompt;
-    const prompt: AtlassianAuthPrompt =
-      requestedPrompt === 'none' || requestedPrompt === 'consent' ? requestedPrompt : 'login';
-
-    res.redirect(buildAtlassianAuthorizationUrl(clientId, redirectUri, codeChallenge, state, prompt));
-  }));
+  router.get(
+    '/atlassian/start',
+    asyncHandler(async (_req, res) => {
+      clearStaleAtlassianRemember(res);
+      throw new AppError(
+        'AtlassianLoginRemoved',
+        'Atlassian sign-in is no longer available. Log in with GitHub, then connect Jira from Integrations.',
+        410,
+        'Use Continue with GitHub, then connect Jira after you are signed in.',
+      );
+    }),
+  );
 
   router.get(
     '/atlassian/jira/connect',
@@ -459,7 +393,7 @@ export function createAuthRouter(): Router {
           sameSite: 'strict',
           path: '/',
         });
-        setAtlassianRememberCookie(res, String(user._id));
+        clearStaleAtlassianRemember(res);
         logAuthSuccess(req, String(user._id), 'atlassian');
 
         res.status(200).json({
@@ -483,12 +417,14 @@ export function createAuthRouter(): Router {
 
       const oauthError = req.query.error;
       if (typeof oauthError === 'string') {
-        const retryPrompt = resolveAtlassianRetryPrompt(oauthError);
-        if (retryPrompt) {
-          res.redirect(`/api/v1/auth/atlassian/start?prompt=${retryPrompt}`);
-          return;
-        }
-        handleAuthFailure(req, { provider: 'atlassian', reason: 'oauth_provider_error', error: oauthError });
+        const frontendUrl = getAtlassianConfig().frontendUrl;
+        clearStaleAtlassianRemember(res);
+        clearPkceCookie(res);
+        clearOAuthLinkUserCookie(res);
+        res.redirect(
+          `${frontendUrl}/login?error=atlassian_oauth&reason=${encodeURIComponent(oauthError)}`,
+        );
+        return;
       }
 
       const code = req.query.code;
@@ -540,7 +476,7 @@ export function createAuthRouter(): Router {
           sameSite: 'strict',
           path: '/',
         });
-        setAtlassianRememberCookie(res, String(user._id));
+        clearStaleAtlassianRemember(res);
         logAuthSuccess(req, String(user._id), 'atlassian');
 
         res.redirect(`${config.frontendUrl}/dashboard`);
