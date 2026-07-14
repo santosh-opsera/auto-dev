@@ -70,7 +70,7 @@ describe('cursor bridge chunk routes', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});

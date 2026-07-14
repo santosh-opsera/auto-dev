@@ -11,6 +11,7 @@ import {
 } from '../fixtures/auth.js';
 import { createApp } from '../index.js';
 import { getLockoutModel } from '../models/lockoutModel.js';
+import { getRateLimitModel } from '../models/rateLimitModel.js';
 import { getSessionModel } from '../models/sessionModel.js';
 import { getUserModel } from '../models/userModel.js';
 import { startMemoryMongo, stopMemoryMongo } from '../testHelpers/memoryServer.js';
@@ -54,7 +55,7 @@ function mergeSetCookieHeaders(...cookieHeaders: Array<string[] | undefined>): s
 describe('auth routes', () => {
   beforeAll(async () => {
     await startMemoryMongo();
-    await ensureIndexes([getUserModel(), getSessionModel(), getLockoutModel()]);
+    await ensureIndexes([getUserModel(), getSessionModel(), getLockoutModel(), getRateLimitModel()]);
   }, 60_000);
 
   afterAll(async () => {
@@ -62,7 +63,7 @@ describe('auth routes', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     await getUserModel().deleteMany({});
     await getSessionModel().deleteMany({});

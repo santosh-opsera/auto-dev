@@ -73,7 +73,7 @@ describe('prd routes', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     process.env.LLM_LOCAL_MOCK_RESPONSE = samplePrdLlmJsonResponse;
     await getUserModel().deleteMany({});

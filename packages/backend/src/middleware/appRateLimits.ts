@@ -5,9 +5,13 @@ import {
   STANDARD_RATE_LIMIT_WINDOW_MS,
 } from '../auth/constants.js';
 import { createRateLimitMiddleware, createResetRateLimitStore } from '../middleware/rateLimit.js';
+import { MongoRateLimitStore } from '../middleware/mongoRateLimitStore.js';
 
-const authRateLimitStore = new Map();
-const standardRateLimitStore = new Map();
+export const AUTH_RATE_LIMIT_BUCKET = 'auth';
+export const STANDARD_RATE_LIMIT_BUCKET = 'standard';
+
+const authRateLimitStore = new MongoRateLimitStore(AUTH_RATE_LIMIT_BUCKET);
+const standardRateLimitStore = new MongoRateLimitStore(STANDARD_RATE_LIMIT_BUCKET);
 
 export const authRateLimitMiddleware = createRateLimitMiddleware(
   {

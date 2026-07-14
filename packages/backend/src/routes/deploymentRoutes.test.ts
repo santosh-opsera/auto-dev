@@ -60,7 +60,7 @@ describe('deployment routes', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     eventBus.clearHistory();
     await getUserModel().deleteMany({});

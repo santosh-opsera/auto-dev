@@ -1,10 +1,10 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AppError } from '../utils/errors.js';
-
-interface RateLimitEntry {
-  count: number;
-  windowStart: number;
-}
+import { asyncHandler } from './errorHandler.js';
+import {
+  calculateRetryAfterSeconds,
+  type RateLimitStore,
+} from './mongoRateLimitStore.js';
 
 export interface RateLimitOptions {
   max: number;
@@ -13,28 +13,48 @@ export interface RateLimitOptions {
   suggestedAction?: string;
 }
 
-export function createRateLimitMiddleware(
-  options: RateLimitOptions,
-  store = new Map<string, RateLimitEntry>(),
-) {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const key = req.ip ?? 'unknown';
-    const now = Date.now();
-    const entry = store.get(key) ?? { count: 0, windowStart: now };
+interface InMemoryRateLimitEntry {
+  count: number;
+  windowStart: number;
+}
 
-    if (now - entry.windowStart >= options.windowMs) {
+/** In-memory fixed-window store for unit tests of the middleware factory. */
+export class InMemoryRateLimitStore implements RateLimitStore {
+  constructor(private readonly entries = new Map<string, InMemoryRateLimitEntry>()) {}
+
+  async hit(clientIp: string, max: number, windowMs: number) {
+    const now = Date.now();
+    const entry = this.entries.get(clientIp) ?? { count: 0, windowStart: now };
+
+    if (now - entry.windowStart >= windowMs) {
       entry.count = 0;
       entry.windowStart = now;
     }
 
     entry.count += 1;
-    store.set(key, entry);
+    this.entries.set(clientIp, entry);
 
-    if (entry.count > options.max) {
-      const retryAfterSeconds = Math.ceil(
-        (options.windowMs - (now - entry.windowStart)) / 1000,
-      );
-      res.setHeader('Retry-After', String(retryAfterSeconds));
+    return {
+      limited: entry.count > max,
+      count: entry.count,
+      retryAfterSeconds: calculateRetryAfterSeconds(entry.windowStart, windowMs, now),
+      windowStart: new Date(entry.windowStart),
+      expiresAt: new Date(entry.windowStart + windowMs),
+    };
+  }
+
+  async reset(): Promise<void> {
+    this.entries.clear();
+  }
+}
+
+export function createRateLimitMiddleware(options: RateLimitOptions, store: RateLimitStore) {
+  return asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const clientIp = req.ip ?? 'unknown';
+    const result = await store.hit(clientIp, options.max, options.windowMs);
+
+    if (result.limited) {
+      res.setHeader('Retry-After', String(result.retryAfterSeconds));
       next(
         new AppError(
           'TooManyRequests',
@@ -47,11 +67,9 @@ export function createRateLimitMiddleware(
     }
 
     next();
-  };
+  });
 }
 
-export function createResetRateLimitStore(store: Map<string, RateLimitEntry>): () => void {
-  return () => {
-    store.clear();
-  };
+export function createResetRateLimitStore(store: RateLimitStore): () => Promise<void> {
+  return () => store.reset();
 }

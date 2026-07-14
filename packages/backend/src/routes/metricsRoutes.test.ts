@@ -70,7 +70,7 @@ describe('metrics routes integration', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     eventBus.clearHistory();
     await getUserModel().deleteMany({});

@@ -70,7 +70,7 @@ describe('pull request routes', () => {
   });
 
   beforeEach(async () => {
-    resetAuthRateLimits();
+    await resetAuthRateLimits();
     await resetLockouts();
     eventBus.clearHistory();
     await getUserModel().deleteMany({});
