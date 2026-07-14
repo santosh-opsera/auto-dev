@@ -47,6 +47,19 @@ export const mockAtlassianTokenResponse = {
   token_type: 'Bearer',
 };
 
+export const mockAtlassianRefreshSuccessResponse = {
+  access_token: 'atlassian_e2e_refreshed_access_token',
+  refresh_token: 'atlassian_e2e_rotated_refresh_token',
+  expires_in: 3600,
+  scope: 'read:me offline_access read:jira-work read:jira-user',
+  token_type: 'Bearer',
+};
+
+export const mockAtlassianRefreshFailureResponse = {
+  error: 'invalid_grant',
+  error_description: 'refresh token is expired or revoked',
+};
+
 export const mockAtlassianUserResponse = {
   account_id: 'atlassian-e2e-001',
   email: 'e2e.alex@example.com',

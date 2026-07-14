@@ -7,6 +7,7 @@ export interface AuthUser {
   integrations?: {
     jira: boolean;
     githubRepos: boolean;
+    atlassianEmail?: string;
   };
 }
 

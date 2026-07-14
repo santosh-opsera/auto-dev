@@ -21,6 +21,24 @@ function getAtlassianConfig(): {
   };
 }
 
+async function clearAtlassianJiraAccess(userId: UserDocument['_id']): Promise<void> {
+  await getUserModel().updateOne(
+    { _id: userId },
+    {
+      $unset: {
+        'atlassian.encryptedAccessToken': 1,
+        'atlassian.encryptedRefreshToken': 1,
+        'atlassian.tokenExpiresAt': 1,
+        'atlassian.scopes': 1,
+      },
+    },
+  );
+}
+
+function isReauthorizeError(error: unknown): error is AppError {
+  return error instanceof AppError && error.error === 'AtlassianReauthorizeRequired';
+}
+
 async function resolveAccessToken(user: UserDocument): Promise<string> {
   const atlassian = user.atlassian;
 
@@ -41,40 +59,57 @@ async function resolveAccessToken(user: UserDocument): Promise<string> {
   }
 
   if (!atlassian.encryptedRefreshToken) {
+    await clearAtlassianJiraAccess(user._id);
     throw new AppError(
-      'AtlassianSessionExpired',
+      'AtlassianReauthorizeRequired',
       'Atlassian session expired.',
       401,
-      'Sign in with Atlassian again to refresh Jira access.',
+      'Reconnect Jira to authorize a new access token.',
     );
   }
 
   const config = getAtlassianConfig();
-  const refreshed = await refreshAtlassianAccessToken({
-    refreshToken: decryptSecret(atlassian.encryptedRefreshToken),
-    clientId: config.clientId,
-    clientSecret: config.clientSecret,
-  });
 
-  await getUserModel().updateOne(
-    { _id: user._id },
-    {
-      $set: {
-        'atlassian.encryptedAccessToken': encryptOAuthToken(refreshed.access_token),
-        ...(refreshed.refresh_token
-          ? { 'atlassian.encryptedRefreshToken': encryptOAuthToken(refreshed.refresh_token) }
-          : {}),
-        ...(refreshed.expires_in
-          ? {
-              'atlassian.tokenExpiresAt': new Date(Date.now() + refreshed.expires_in * 1000),
-            }
-          : {}),
-        ...(refreshed.scope ? { 'atlassian.scopes': refreshed.scope.split(' ') } : {}),
+  try {
+    const refreshed = await refreshAtlassianAccessToken({
+      refreshToken: decryptSecret(atlassian.encryptedRefreshToken),
+      clientId: config.clientId,
+      clientSecret: config.clientSecret,
+    });
+
+    await getUserModel().updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'atlassian.encryptedAccessToken': encryptOAuthToken(refreshed.access_token),
+          ...(refreshed.refresh_token
+            ? { 'atlassian.encryptedRefreshToken': encryptOAuthToken(refreshed.refresh_token) }
+            : {}),
+          ...(refreshed.expires_in
+            ? {
+                'atlassian.tokenExpiresAt': new Date(Date.now() + refreshed.expires_in * 1000),
+              }
+            : {}),
+          ...(refreshed.scope ? { 'atlassian.scopes': refreshed.scope.split(' ') } : {}),
+        },
       },
-    },
-  );
+    );
 
-  return refreshed.access_token;
+    return refreshed.access_token;
+  } catch (error) {
+    await clearAtlassianJiraAccess(user._id);
+
+    if (isReauthorizeError(error)) {
+      throw error;
+    }
+
+    throw new AppError(
+      'AtlassianReauthorizeRequired',
+      'Atlassian refresh token expired or revoked.',
+      401,
+      'Reconnect Jira to authorize a new access token.',
+    );
+  }
 }
 
 export class TicketService {

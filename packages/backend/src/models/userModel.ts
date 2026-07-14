@@ -5,6 +5,8 @@ export type AuthProvider = 'github' | 'atlassian';
 
 export interface ProviderTokens {
   providerUserId: string;
+  /** Provider account email captured at OAuth link time (Atlassian/GitHub). */
+  accountEmail?: string;
   encryptedAccessToken: string;
   encryptedRefreshToken?: string;
   tokenExpiresAt?: Date;
@@ -34,6 +36,7 @@ const userSchema = createBaseSchema({
   github: {
     type: {
       providerUserId: String,
+      accountEmail: String,
       encryptedAccessToken: String,
       encryptedRefreshToken: String,
       tokenExpiresAt: Date,
@@ -44,6 +47,7 @@ const userSchema = createBaseSchema({
   atlassian: {
     type: {
       providerUserId: String,
+      accountEmail: String,
       encryptedAccessToken: String,
       encryptedRefreshToken: String,
       tokenExpiresAt: Date,

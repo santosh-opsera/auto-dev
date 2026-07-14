@@ -16,6 +16,7 @@ export interface TicketIngestionState {
   ticket: TicketResponse | null;
   parseResult: TicketParseResponse | null;
   error: string | null;
+  errorCode: string | null;
   progressMessage: string | null;
   manualFallback: boolean;
 }
@@ -26,6 +27,7 @@ const initialState: TicketIngestionState = {
   ticket: null,
   parseResult: null,
   error: null,
+  errorCode: null,
   progressMessage: null,
   manualFallback: false,
 };
@@ -49,6 +51,7 @@ export function useTicketIngestion() {
       ticket: null,
       parseResult: null,
       error: null,
+      errorCode: null,
       progressMessage: useManualFallback ? 'Fetching ticket via Jira REST fallback…' : 'Fetching ticket from Jira…',
       manualFallback: useManualFallback,
     });
@@ -80,11 +83,13 @@ export function useTicketIngestion() {
           : loadError instanceof Error
             ? loadError.message
             : 'Failed to ingest ticket.';
+      const code = loadError instanceof ApiError ? (loadError.errorCode ?? null) : null;
 
       setState((previous) => ({
         ...previous,
         phase: 'error',
         error: message,
+        errorCode: code,
         progressMessage: null,
       }));
     }

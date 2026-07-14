@@ -4,6 +4,7 @@ import { fetchCurrentUser } from './api/auth';
 import { ApprovalGatePage } from './pages/ApprovalGatePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ConventionsPage } from './pages/ConventionsPage';
+import { IntegrationsPage } from './pages/IntegrationsPage';
 import { LoginPage } from './pages/LoginPage';
 import { PrdReviewPage } from './pages/PrdReviewPage';
 import { RepositoriesPage } from './pages/RepositoriesPage';
@@ -72,6 +73,16 @@ function AppRoutes() {
         element={
           isAuthenticated ? (
             <ConventionsPage onLogoutComplete={() => navigate('/login', { replace: true })} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+      <Route
+        path="/integrations"
+        element={
+          isAuthenticated ? (
+            <IntegrationsPage onLogoutComplete={() => navigate('/login', { replace: true })} />
           ) : (
             <Navigate to="/login" replace />
           )

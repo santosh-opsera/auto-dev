@@ -2,6 +2,32 @@ export const mockAuthUser = {
   email: 'alex.dev@example.com',
   displayName: 'Alex Developer',
   connectedProviders: ['github', 'atlassian'] as Array<'github' | 'atlassian'>,
+  integrations: {
+    jira: true,
+    githubRepos: true,
+    atlassianEmail: 'alex.dev@example.com',
+  },
+};
+
+export const mockGithubOnlyAuthUser = {
+  email: 'alex.dev@example.com',
+  displayName: 'Alex Developer',
+  connectedProviders: ['github'] as Array<'github' | 'atlassian'>,
+  integrations: {
+    jira: false,
+    githubRepos: false,
+  },
+};
+
+export const mockAuthUserWithJira = {
+  email: 'alex.dev@example.com',
+  displayName: 'Alex Developer',
+  connectedProviders: ['github', 'atlassian'] as Array<'github' | 'atlassian'>,
+  integrations: {
+    jira: true,
+    githubRepos: true,
+    atlassianEmail: 'alex.jira@example.com',
+  },
 };
 
 export const mockSessionMetadata = {

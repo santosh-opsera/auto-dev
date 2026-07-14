@@ -140,4 +140,30 @@ describe('ticket routes', () => {
       true,
     );
   });
+
+  it('returns AtlassianReauthorizeRequired when ticket fetch signals re-authorize', async () => {
+    const { AppError } = await import('../utils/errors.js');
+    vi.mocked(ticketService.getTicket).mockRejectedValue(
+      new AppError(
+        'AtlassianReauthorizeRequired',
+        'Atlassian refresh token expired or revoked.',
+        401,
+        'Reconnect Jira to authorize a new access token.',
+      ),
+    );
+
+    const app = createApp();
+    const { sessionCookie } = await loginAsUser(app);
+
+    const response = await request(app)
+      .get('/api/v1/tickets/OPL-1234')
+      .set('Cookie', sessionCookie);
+
+    expect(response.status).toBe(401);
+    expect(response.body).toMatchObject({
+      error: 'AtlassianReauthorizeRequired',
+      message: 'Atlassian refresh token expired or revoked.',
+      suggestedAction: 'Reconnect Jira to authorize a new access token.',
+    });
+  });
 });
