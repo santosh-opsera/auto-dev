@@ -14,6 +14,7 @@ import { WorkflowDetailPage } from './pages/WorkflowDetailPage';
 import { WorkflowsPage } from './pages/WorkflowsPage';
 import { useAuthStore } from './store/authStore';
 import { useLocaleStore } from './store/localeStore';
+import { useThemeStore } from './store/themeStore';
 import './App.css';
 
 function AppRoutes() {
@@ -22,11 +23,16 @@ function AppRoutes() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const detectLocale = useLocaleStore((state) => state.detectLocale);
+  const initTheme = useThemeStore((state) => state.initTheme);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
 
   useEffect(() => {
     detectLocale();
   }, [detectLocale]);
+
+  useEffect(() => {
+    initTheme();
+  }, [initTheme]);
 
   useEffect(() => {
     let active = true;
