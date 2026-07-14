@@ -21,6 +21,32 @@ vi.mock('../api/auth', async () => {
   };
 });
 
+vi.mock('../api/integrations', async () => {
+  const actual = await vi.importActual<typeof import('../api/integrations')>(
+    '../api/integrations',
+  );
+  return {
+    ...actual,
+    fetchIntegrationsStatus: vi.fn().mockResolvedValue({
+      github: {
+        name: 'github',
+        connected: true,
+        tokenValid: true,
+        connectionState: 'connected',
+        lastCheckedAt: '2026-07-14T12:00:00.000Z',
+      },
+      jira: {
+        name: 'jira',
+        connected: true,
+        tokenValid: true,
+        connectionState: 'connected',
+        lastCheckedAt: '2026-07-14T12:00:00.000Z',
+      },
+      checkedAt: '2026-07-14T12:00:00.000Z',
+    }),
+  };
+});
+
 vi.mock('./SessionWarningModal', () => ({
   SessionWarningModal: () => <div data-testid="session-warning-modal" />,
 }));

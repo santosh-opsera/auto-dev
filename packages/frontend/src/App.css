@@ -60,16 +60,37 @@
 }
 
 .integration-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   margin: 1rem 1.5rem 0;
   padding: 0.875rem 1rem;
   border-radius: 0.75rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1e3a8a;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  color: #78350f;
+}
+
+.integration-banner-body {
+  display: grid;
+  gap: 0.35rem;
+  flex: 1;
 }
 
 .integration-banner p {
   margin: 0;
+}
+
+.integration-banner-dismiss {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
 }
 
 @media (max-width: 720px) {

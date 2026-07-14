@@ -1,8 +1,12 @@
 import { Router, type Response } from 'express';
-import { integrationsListResponseSchema } from '@autodev/shared-types';
+import {
+  integrationsListResponseSchema,
+  integrationsStatusResponseSchema,
+} from '@autodev/shared-types';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { requireSession, type AuthenticatedRequest } from '../middleware/requireSession.js';
 import { adapterRegistry } from '../services/integrations/adapterRegistry.js';
+import { getIntegrationsStatus } from '../services/integrations/integrationStatusService.js';
 import { registerDefaultAdapters } from '../services/integrations/registerDefaultAdapters.js';
 
 export function createIntegrationRouter(): Router {
@@ -16,6 +20,15 @@ export function createIntegrationRouter(): Router {
       const payload = integrationsListResponseSchema.parse({
         adapters: adapterRegistry.list(),
       });
+      res.status(200).json(payload);
+    }),
+  );
+
+  router.get(
+    '/status',
+    asyncHandler(requireSession),
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+      const payload = integrationsStatusResponseSchema.parse(getIntegrationsStatus(req.user!));
       res.status(200).json(payload);
     }),
   );

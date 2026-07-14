@@ -958,11 +958,17 @@ export {
   ADAPTER_STATUSES,
   DEFAULT_ADAPTER_HEALTH_CHECK_INTERVAL_MS,
   INTEGRATION_ADAPTER_NAMES,
+  INTEGRATION_CONNECTION_STATES,
+  INTEGRATION_STATUS_PROVIDERS,
   adapterHealthResultSchema,
   adapterStatusSchema,
   integrationAdapterInfoSchema,
   integrationAdapterNameSchema,
+  integrationConnectionStateSchema,
+  integrationProviderStatusSchema,
+  integrationStatusProviderSchema,
   integrationsListResponseSchema,
+  integrationsStatusResponseSchema,
 } from './integrations.js';
 
 export type {
@@ -970,7 +976,11 @@ export type {
   AdapterStatus,
   IntegrationAdapterInfo,
   IntegrationAdapterName,
+  IntegrationConnectionState,
+  IntegrationProviderStatus,
+  IntegrationStatusProvider,
   IntegrationsListResponse,
+  IntegrationsStatusResponse,
 } from './integrations.js';
 
 export {
@@ -980,8 +990,13 @@ export {
   sampleAdapterHealthHealthy,
   sampleAdapterHealthUnhealthy,
   sampleGitHubAdapterInfo,
+  sampleGitHubStatusHealthy,
   sampleIntegrationsListResponse,
+  sampleIntegrationsStatusAllHealthy,
+  sampleIntegrationsStatusGitHubDisconnected,
+  sampleIntegrationsStatusJiraExpired,
   sampleJiraAdapterInfo,
+  sampleJiraStatusHealthy,
   sampleOpseraAdapterInfo,
 } from './fixtures/integrations.js';
 
