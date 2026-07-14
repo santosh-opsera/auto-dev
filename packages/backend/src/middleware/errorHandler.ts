@@ -28,8 +28,7 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   if (err instanceof AppError && err.error === 'AccountLocked') {
-    // Align with LOCKOUT_WINDOW_MS (15 minutes) for client Retry-After guidance.
-    res.setHeader('Retry-After', String(15 * 60));
+    res.setHeader('Retry-After', String(Math.ceil(LOCKOUT_WINDOW_MS / 1000)));
   }
 
   res.status(statusCode).json(body);
