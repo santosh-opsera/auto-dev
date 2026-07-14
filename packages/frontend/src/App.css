@@ -38,6 +38,8 @@
 
 .sidebar-nav {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   width: var(--sidebar-width-expanded);
   padding: var(--sidebar-pad-y) var(--sidebar-pad-x);
   background: var(--sidebar-bg);
@@ -193,6 +195,125 @@
   outline-offset: 2px;
 }
 
+.sidebar-profile {
+  margin-top: auto;
+  padding-top: var(--sidebar-pad-y);
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.sidebar-profile-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: var(--sidebar-radius);
+  background: transparent;
+  color: var(--sidebar-fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar-nav.is-collapsed .sidebar-profile-trigger {
+  justify-content: center;
+  padding: 0.5rem 0.35rem;
+  gap: 0;
+}
+
+.sidebar-profile-trigger:hover {
+  background: var(--sidebar-hover-bg);
+}
+
+.sidebar-profile-trigger:focus-visible {
+  outline: 2px solid var(--sidebar-accent);
+  outline-offset: 2px;
+}
+
+.sidebar-profile-avatar {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-fg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.sidebar-profile-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar-profile-name {
+  font-size: var(--sidebar-font-size);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-profile-secondary {
+  font-size: 0.8125rem;
+  color: var(--sidebar-fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-nav.is-collapsed .sidebar-profile-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sidebar-nav.is-collapsed .sidebar-profile-trigger::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 0.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.375rem;
+  background: #111827;
+  color: var(--sidebar-fg);
+  border: 1px solid var(--sidebar-border);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.sidebar-nav.is-collapsed .sidebar-profile-trigger:hover::after,
+.sidebar-nav.is-collapsed .sidebar-profile-trigger:focus-visible::after {
+  opacity: 1;
+}
+
+.sidebar-profile.is-empty {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  color: var(--sidebar-fg-muted);
+  font-size: 0.8125rem;
+}
+
 .integration-banner {
   display: flex;
   align-items: flex-start;
@@ -321,6 +442,75 @@
 
 .session-warning-modal::backdrop {
   background: rgba(15, 23, 42, 0.45);
+}
+
+.profile-details-modal {
+  border: none;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  width: min(100%, 32rem);
+}
+
+.profile-details-modal::backdrop {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.profile-details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-details-header h2 {
+  margin: 0;
+}
+
+.profile-details-close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #475569;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.profile-details-close:hover {
+  background: #f1f5f9;
+}
+
+.profile-details-close:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.profile-details-list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+}
+
+.profile-details-list dt {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.profile-details-list dd {
+  margin: 0.25rem 0 0;
+}
+
+.profile-details-empty {
+  margin: 0;
+  color: #64748b;
 }
 
 .session-warning-actions {
