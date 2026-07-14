@@ -4,8 +4,8 @@ import { isLockedOut, recordAuthFailure } from '../../auth/lockoutService.js';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
 
-export function ensureNotLocked(req: Request): void {
-  if (isLockedOut(getClientIp(req))) {
+export async function ensureNotLocked(req: Request): Promise<void> {
+  if (await isLockedOut(getClientIp(req))) {
     void auditService.logSafe({
       resource: 'auth/sessions',
       operation: 'lockout',
@@ -21,7 +21,10 @@ export function ensureNotLocked(req: Request): void {
   }
 }
 
-export function handleAuthFailure(req: Request, metadata?: Record<string, unknown>): never {
+export async function handleAuthFailure(
+  req: Request,
+  metadata?: Record<string, unknown>,
+): Promise<never> {
   void auditService.logSafe({
     resource: 'auth/sessions',
     operation: 'login_failed',
@@ -29,7 +32,7 @@ export function handleAuthFailure(req: Request, metadata?: Record<string, unknow
     ipAddress: getClientIp(req),
     newValue: metadata,
   });
-  recordAuthFailure(getClientIp(req));
+  await recordAuthFailure(getClientIp(req));
   throw new AppError(
     'AuthenticationFailed',
     'Authentication failed.',

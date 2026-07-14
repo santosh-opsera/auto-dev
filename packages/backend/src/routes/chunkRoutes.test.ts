@@ -68,7 +68,7 @@ describe('chunk routes', () => {
 
   beforeEach(async () => {
     resetAuthRateLimits();
-    resetLockouts();
+    await resetLockouts();
     process.env.LLM_LOCAL_MOCK_RESPONSE = sampleChunkLlmJsonResponse;
     eventBus.clearHistory();
     await getUserModel().deleteMany({});

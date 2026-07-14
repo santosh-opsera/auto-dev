@@ -237,10 +237,10 @@ export function createAuthRouter(): Router {
       const rotated = await rotateRefreshToken(sessionId, refreshToken);
 
       if (!rotated) {
-        handleAuthFailure(req, { reason: 'invalid_refresh_token' });
+        return await handleAuthFailure(req, { reason: 'invalid_refresh_token' });
       }
 
-      clearAuthFailures(getClientIp(req));
+      await clearAuthFailures(getClientIp(req));
       setSessionCookie(res, sessionId);
       res.cookie(REFRESH_COOKIE_NAME, rotated.refreshToken, {
         httpOnly: true,

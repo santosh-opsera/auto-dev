@@ -18,6 +18,7 @@ import {
   type SessionMetadata,
 } from '../../auth/sessionService.js';
 import type { UserRecord } from '../../models/userModel.js';
+import { AppError } from '../../utils/errors.js';
 import {
   ensureNotLocked,
   handleAuthFailure,
@@ -53,7 +54,7 @@ export interface OAuthCallbackHandlerDeps {
   linkProvider: (userId: string, profile: OAuthProfile) => Promise<UserRecord | null>;
   createUserSession: (userId: string) => Promise<CreatedSession>;
   touchUserSession: (sessionId: string) => Promise<{ userId: string } | null>;
-  clearFailures: (ip: string) => void;
+  clearFailures: (ip: string) => void | Promise<void>;
 }
 
 export interface RedirectCallbackOptions {
@@ -142,11 +143,11 @@ export async function handleOAuthRedirectCallback(
     deps,
   } = options;
 
-  ensureNotLocked(req);
+  await ensureNotLocked(req);
 
   const params = resolveCodeAndVerifier(req, 'query');
   if (!params) {
-    handleAuthFailure(req, { provider, reason: 'missing_oauth_parameters' });
+    return await handleAuthFailure(req, { provider, reason: 'missing_oauth_parameters' });
   }
 
   try {
@@ -165,10 +166,10 @@ export async function handleOAuthRedirectCallback(
       const linked = await deps.linkProvider(linkUserId, profile);
 
       if (!linked) {
-        handleAuthFailure(req, { provider, reason: 'link_user_not_found' });
+        return await handleAuthFailure(req, { provider, reason: 'link_user_not_found' });
       }
 
-      deps.clearFailures(getClientIp(req));
+      await deps.clearFailures(getClientIp(req));
       clearPkceCookie(res);
       clearOAuthLinkUserCookie(res);
       logAuthSuccess(req, linkUserId, provider);
@@ -180,7 +181,7 @@ export async function handleOAuthRedirectCallback(
     const user = await deps.upsertUser(profile);
     const session = await deps.createUserSession(String(user._id));
 
-    deps.clearFailures(getClientIp(req));
+    await deps.clearFailures(getClientIp(req));
     clearPkceCookie(res);
     setSessionCookie(res, session.sessionId);
     setRefreshCookie(res, session.refreshToken);
@@ -188,8 +189,11 @@ export async function handleOAuthRedirectCallback(
     logAuthSuccess(req, String(user._id), provider);
 
     res.redirect(`${config.frontendUrl}${loginRedirectPath}`);
-  } catch {
-    handleAuthFailure(req, { provider });
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    await handleAuthFailure(req, { provider });
   }
 }
 
@@ -198,11 +202,11 @@ export async function handleOAuthJsonLoginCallback(
 ): Promise<void> {
   const { req, res, provider, config, afterLogin, deps } = options;
 
-  ensureNotLocked(req);
+  await ensureNotLocked(req);
 
   const params = resolveCodeAndVerifier(req, 'body');
   if (!params) {
-    handleAuthFailure(req, { provider, reason: 'missing_oauth_parameters' });
+    return await handleAuthFailure(req, { provider, reason: 'missing_oauth_parameters' });
   }
 
   try {
@@ -217,7 +221,7 @@ export async function handleOAuthJsonLoginCallback(
     const user = await deps.upsertUser(profile);
     const session = await deps.createUserSession(String(user._id));
 
-    deps.clearFailures(getClientIp(req));
+    await deps.clearFailures(getClientIp(req));
     clearPkceCookie(res);
     setSessionCookie(res, session.sessionId);
     setRefreshCookie(res, session.refreshToken);
@@ -232,8 +236,11 @@ export async function handleOAuthJsonLoginCallback(
       },
       session: session.metadata,
     });
-  } catch {
-    handleAuthFailure(req, { provider });
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    await handleAuthFailure(req, { provider });
   }
 }
 
