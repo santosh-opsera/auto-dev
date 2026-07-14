@@ -31,7 +31,7 @@ export const sampleDockerBuildOutput = `#1 [internal] load build definition from
 #1 transferring dockerfile: 512B done
 #2 [internal] load .dockerignore
 #2 transferring context: 64B done
-#3 [1/5] FROM docker.io/library/node:20-alpine
+#3 [1/5] FROM docker.io/library/node:22.23-alpine3.18
 #3 DONE 0.1s
 #4 [2/5] WORKDIR /app
 #4 DONE 0.0s
