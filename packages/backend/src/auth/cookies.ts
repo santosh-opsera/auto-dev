@@ -3,6 +3,7 @@ import {
   ATLASSIAN_REMEMBER_COOKIE_NAME,
   ATLASSIAN_REMEMBER_MS,
   OAUTH_LINK_USER_COOKIE_NAME,
+  OAUTH_RETURN_PATH_COOKIE_NAME,
   PKCE_COOKIE_NAME,
   SESSION_COOKIE_NAME,
   SESSION_IDLE_MS,
@@ -61,4 +62,30 @@ export function setOAuthLinkUserCookie(res: Response, userId: string): void {
 
 export function clearOAuthLinkUserCookie(res: Response): void {
   res.clearCookie(OAUTH_LINK_USER_COOKIE_NAME, getLaxCookieOptions(OAUTH_LINK_USER_MAX_AGE_MS));
+}
+
+const OAUTH_RETURN_PATH_MAX_AGE_MS = 10 * 60 * 1000;
+
+/** Allow only same-origin relative paths (block open redirects). */
+export function sanitizeOAuthReturnPath(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('\\')) {
+    return null;
+  }
+  return trimmed;
+}
+
+export function setOAuthReturnPathCookie(res: Response, returnPath: string): void {
+  const safe = sanitizeOAuthReturnPath(returnPath);
+  if (!safe) {
+    return;
+  }
+  res.cookie(OAUTH_RETURN_PATH_COOKIE_NAME, safe, getLaxCookieOptions(OAUTH_RETURN_PATH_MAX_AGE_MS));
+}
+
+export function clearOAuthReturnPathCookie(res: Response): void {
+  res.clearCookie(OAUTH_RETURN_PATH_COOKIE_NAME, getLaxCookieOptions(OAUTH_RETURN_PATH_MAX_AGE_MS));
 }

@@ -2,6 +2,8 @@ export const SESSION_COOKIE_NAME = 'autodev_session';
 export const PKCE_COOKIE_NAME = 'autodev_pkce_verifier';
 export const ATLASSIAN_REMEMBER_COOKIE_NAME = 'autodev_atlassian_uid';
 export const OAUTH_LINK_USER_COOKIE_NAME = 'autodev_oauth_link_uid';
+/** Optional post-OAuth frontend path (e.g. /tickets) for connect/re-auth return context. */
+export const OAUTH_RETURN_PATH_COOKIE_NAME = 'autodev_oauth_return_path';
 
 export const SESSION_IDLE_MS = 24 * 60 * 60 * 1000;
 export const SESSION_WARNING_MS = 5 * 60 * 1000;

@@ -17,6 +17,7 @@ export interface TicketIngestionState {
   parseResult: TicketParseResponse | null;
   error: string | null;
   errorCode: string | null;
+  suggestedAction: string | null;
   progressMessage: string | null;
 }
 
@@ -27,6 +28,7 @@ const initialState: TicketIngestionState = {
   parseResult: null,
   error: null,
   errorCode: null,
+  suggestedAction: null,
   progressMessage: null,
 };
 
@@ -50,6 +52,7 @@ export function useTicketIngestion() {
       parseResult: null,
       error: null,
       errorCode: null,
+      suggestedAction: null,
       progressMessage: 'Fetching ticket from Jira…',
     });
 
@@ -79,12 +82,15 @@ export function useTicketIngestion() {
             ? loadError.message
             : 'Failed to ingest ticket.';
       const code = loadError instanceof ApiError ? (loadError.errorCode ?? null) : null;
+      const suggestedAction =
+        loadError instanceof ApiError ? (loadError.suggestedAction ?? null) : null;
 
       setState((previous) => ({
         ...previous,
         phase: 'error',
         error: message,
         errorCode: code,
+        suggestedAction,
         progressMessage: null,
       }));
     }
