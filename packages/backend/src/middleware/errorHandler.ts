@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
+import { LOCKOUT_WINDOW_MS } from '../auth/constants.js';
 import { AppError, toErrorResponse } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 import { githubApiClient } from '../services/github/githubApiClient.js';
@@ -24,6 +25,11 @@ export const errorHandler: ErrorRequestHandler = (
   if (err instanceof AppError && err.error === 'GitHubCircuitOpen') {
     const retryAfter = githubApiClient.getCircuitBreaker().getRetryAfterSeconds() ?? 30;
     res.setHeader('Retry-After', String(retryAfter));
+  }
+
+  if (err instanceof AppError && err.error === 'AccountLocked') {
+    // Align with LOCKOUT_WINDOW_MS (15 minutes) for client Retry-After guidance.
+    res.setHeader('Retry-After', String(15 * 60));
   }
 
   res.status(statusCode).json(body);
