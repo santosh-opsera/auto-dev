@@ -1,7 +1,9 @@
 /**
- * Shared RegExp safety checks (ReDoS heuristics).
+ * Shared RegExp safety checks (ReDoS heuristics) + guarded compile.
  * Used by convention validation and backend createSafeRegExp.
  */
+
+import { RegExpValidator } from '@eslint-community/regexpp';
 
 export const MAX_REGEXP_PATTERN_LENGTH = 200;
 
@@ -40,6 +42,15 @@ export function describeRegExpSafetyIssue(issue: RegExpSafetyIssue): string {
   }
 }
 
+function hasValidRegexSyntax(pattern: string): boolean {
+  try {
+    new RegExpValidator().validatePattern(pattern);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function findRegExpSafetyIssue(pattern: string): RegExpSafetyIssue | null {
   if (!pattern) {
     return 'empty';
@@ -60,11 +71,7 @@ export function findRegExpSafetyIssue(pattern: string): RegExpSafetyIssue | null
     return 'excessive_quantifiers';
   }
 
-  try {
-    // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp
-    // Syntax probe only; callers must use createSafeRegExp / isSafeRegExpPattern gates.
-    RegExp(pattern);
-  } catch {
+  if (!hasValidRegexSyntax(pattern)) {
     return 'invalid_syntax';
   }
 
@@ -73,4 +80,44 @@ export function findRegExpSafetyIssue(pattern: string): RegExpSafetyIssue | null
 
 export function isSafeRegExpPattern(pattern: string): boolean {
   return findRegExpSafetyIssue(pattern) === null;
+}
+
+export class UnsafeRegExpError extends Error {
+  readonly issue: RegExpSafetyIssue;
+
+  constructor(issue: RegExpSafetyIssue, pattern: string) {
+    super(
+      `${describeRegExpSafetyIssue(issue)} Refusing to compile pattern ` +
+        `(length ${pattern.length}): ${JSON.stringify(pattern.slice(0, 80))}${
+          pattern.length > 80 ? '…' : ''
+        }`,
+    );
+    this.name = 'UnsafeRegExpError';
+    this.issue = issue;
+  }
+}
+
+/**
+ * Compile a RegExp only after length and ReDoS heuristic checks.
+ * Single intentional non-literal compile site for the monorepo.
+ */
+export function createSafeRegExp(pattern: string, flags?: string): RegExp {
+  const issue = findRegExpSafetyIssue(pattern);
+  if (issue) {
+    throw new UnsafeRegExpError(issue, pattern);
+  }
+  try {
+    return flags === undefined
+      ? new RegExp(pattern) // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
+      : new RegExp(pattern, flags); // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp
+  } catch {
+    throw new UnsafeRegExpError('invalid_syntax', pattern);
+  }
+}
+
+export function assertSafeRegExpPattern(pattern: string): void {
+  const issue = findRegExpSafetyIssue(pattern);
+  if (issue) {
+    throw new UnsafeRegExpError(issue, pattern);
+  }
 }

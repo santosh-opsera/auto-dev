@@ -1,4 +1,4 @@
-import { isValidRegexPattern } from '@autodev/shared-types';
+import { createSafeRegExp, isValidRegexPattern } from '@autodev/shared-types';
 
 const SAMPLE_BRANCH_NAMES = [
   'feature/OPL-1234',
@@ -28,9 +28,7 @@ export function previewBranchName(pattern: string): string {
   }
 
   try {
-    // nosemgrep: javascript.lang.security.audit.detect-non-literal-regexp
-    // Preview-only; pattern already passed isValidRegexPattern (ReDoS heuristics).
-    const regex = new RegExp(pattern);
+    const regex = createSafeRegExp(pattern);
     const match = SAMPLE_BRANCH_NAMES.find((candidate) => regex.test(candidate));
     return match ?? 'No sample branch matched — adjust the pattern or try ^(feature|bugfix)/OPL-\\d+$';
   } catch {

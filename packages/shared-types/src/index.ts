@@ -135,6 +135,9 @@ export type {
 
 export {
   MAX_REGEXP_PATTERN_LENGTH,
+  UnsafeRegExpError,
+  assertSafeRegExpPattern,
+  createSafeRegExp,
   describeRegExpSafetyIssue,
   findRegExpSafetyIssue,
   isSafeRegExpPattern,
