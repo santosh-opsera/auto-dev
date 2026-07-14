@@ -12,6 +12,7 @@ export const NAV_ITEMS = [
   { to: '/workflows', label: 'Workflows', icon: 'workflows' },
   { to: '/conventions', label: 'Conventions', icon: 'conventions' },
   { to: '/integrations', label: 'Integrations', icon: 'integrations' },
+  { to: '/ai-marketplace', label: 'AI Marketplace', icon: 'aiMarketplace' },
 ] as const;
 
 type NavIcon = (typeof NAV_ITEMS)[number]['icon'];
@@ -66,6 +67,12 @@ function NavItemIcon({ name }: { name: NavIcon }) {
       <>
         <path d="M8 8h3v3H8zM13 13h3v3h-3z" />
         <path d="M11 9.5h2.5V12M13 14.5H10.5V12" />
+      </>
+    ),
+    aiMarketplace: (
+      <>
+        <path d="M12 3.5 13.8 8.2 18.5 10 13.8 11.8 12 16.5 10.2 11.8 5.5 10 10.2 8.2z" />
+        <path d="M18 15.5 18.7 17.3 20.5 18 18.7 18.7 18 20.5 17.3 18.7 15.5 18 17.3 17.3z" />
       </>
     ),
   };
