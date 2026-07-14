@@ -12,6 +12,7 @@ export interface AuthUser {
 }
 
 export interface SessionMetadata {
+  sessionId?: string;
   remainingMs: number;
   warning?: boolean;
   expiresAt?: string;
