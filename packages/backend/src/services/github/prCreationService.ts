@@ -7,8 +7,12 @@ import type {
   ReviewerAssignmentRules,
 } from '@autodev/shared-types';
 import { labelForChangeType } from '@autodev/shared-types';
-import { decryptSecret } from '@autodev/infrastructure';
-import { isRetryableHttpStatus } from '../../lib/retry.js';
+import {
+  decryptSecret,
+  eventBus,
+  isRetryableHttpStatus,
+  withRetry,
+} from '@autodev/infrastructure';
 import type { UserDocument } from '../../models/userModel.js';
 import {
   getConventionSettingsModel,
@@ -20,7 +24,6 @@ import { getChunkTestReportModel } from '../../models/chunkTestReportModel.js';
 import { getWorkflowModel, type WorkflowRecord } from '../../models/workflowModel.js';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
-import { eventBus } from '@autodev/infrastructure';
 import { conventionService } from '../conventions/conventionService.js';
 import { userHasGitHubRepoScopes } from './githubScopes.js';
 import { GitHubApiClient, githubApiClient } from './githubApiClient.js';
@@ -36,33 +39,17 @@ import {
 } from './prHelpers.js';
 
 const RATE_LIMIT_WARN_THRESHOLD = 50;
+/** GitHub-specific backoff schedule for the canonical withRetry helper. */
+const GITHUB_RETRY_DELAYS_MS =
+  process.env.NODE_ENV === 'test' ? ([0, 0, 0] as const) : ([1000, 2000, 4000] as const);
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-async function withGitHubRetry<T>(
-  operation: () => Promise<T>,
-  delaysMs: readonly number[] = process.env.NODE_ENV === 'test' ? [0, 0] : [1000, 2000, 4000],
-): Promise<T> {
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt <= delaysMs.length; attempt += 1) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error;
+function withGitHubApiRetry<T>(operation: () => Promise<T>): Promise<T> {
+  return withRetry(operation, GITHUB_RETRY_DELAYS_MS, {
+    shouldRetry: (error) => {
       const statusCode = error instanceof AppError ? error.statusCode : 0;
-      if (!isRetryableHttpStatus(statusCode) || attempt >= delaysMs.length) {
-        throw error;
-      }
-      await sleep(delaysMs[attempt] ?? 0);
-    }
-  }
-
-  throw lastError;
+      return isRetryableHttpStatus(statusCode);
+    },
+  });
 }
 
 function resolveGitHubAccessToken(user: UserDocument): string {
@@ -299,7 +286,7 @@ export class PrCreationService {
 
     let pullRequest;
     try {
-      pullRequest = await withGitHubRetry(() =>
+      pullRequest = await withGitHubApiRetry(() =>
         this.client.createPullRequest(accessToken, owner, repo, {
           title,
           head: headBranch,
@@ -320,7 +307,7 @@ export class PrCreationService {
     }
 
     try {
-      await withGitHubRetry(() =>
+      await withGitHubApiRetry(() =>
         this.client.requestPullRequestReviewers(
           accessToken,
           owner,
@@ -329,7 +316,7 @@ export class PrCreationService {
           reviewers,
         ),
       );
-      await withGitHubRetry(() =>
+      await withGitHubApiRetry(() =>
         this.client.addPullRequestLabels(accessToken, owner, repo, pullRequest.number, [label]),
       );
     } catch (error) {

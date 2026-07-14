@@ -4,7 +4,7 @@ import {
   DEFAULT_RETRY_DELAYS_MS,
   isRetryableHttpStatus,
   withRetry,
-} from '../../lib/retry.js';
+} from '@autodev/infrastructure';
 import { generateCodeChallenge, generateCodeVerifier } from '../../auth/pkce.js';
 import { AppError } from '../../utils/errors.js';
 import type { OAuthProfile } from './userAuthService.js';

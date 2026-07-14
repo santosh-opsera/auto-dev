@@ -1,6 +1,7 @@
 export const DEFAULT_RETRY_DELAYS_MS = [1000, 2000, 4000] as const;
 
-function sleep(ms: number): Promise<void> {
+/** Resolve after `ms` milliseconds (exported for shared sleep usage). */
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });

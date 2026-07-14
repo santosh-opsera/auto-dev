@@ -16,7 +16,7 @@ import { getApprovalRequestModel } from '../../models/approvalRequestModel.js';
 import { getCodebaseContextModel } from '../../models/codebaseContextModel.js';
 import { getPrdModel, type PrdRecord } from '../../models/prdModel.js';
 import { getTicketIntentModel } from '../../models/ticketIntentModel.js';
-import { withRetry } from '../../lib/retry.js';
+import { withRetry } from '@autodev/infrastructure';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
 import { llmAdapter } from '../llm/llmAdapter.js';

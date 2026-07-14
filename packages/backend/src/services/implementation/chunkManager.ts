@@ -16,7 +16,7 @@ import {
 } from '../../models/implementationChunkModel.js';
 import { getPrdModel } from '../../models/prdModel.js';
 import { getWorkflowModel, type WorkflowRecord } from '../../models/workflowModel.js';
-import { withRetry } from '../../lib/retry.js';
+import { withRetry } from '@autodev/infrastructure';
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
 import { eventBus } from '@autodev/infrastructure';
