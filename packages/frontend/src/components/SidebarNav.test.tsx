@@ -83,7 +83,19 @@ describe('SidebarNav', () => {
       'Workflows',
       'Conventions',
       'Integrations',
+      'AI Marketplace',
     ]);
+  });
+
+  it('highlights the AI Marketplace item on /ai-marketplace', () => {
+    renderSidebar('/ai-marketplace');
+
+    const marketplace = screen.getByRole('link', { name: 'AI Marketplace' });
+    const dashboard = screen.getByRole('link', { name: 'Dashboard' });
+
+    expect(marketplace).toHaveClass('is-active');
+    expect(marketplace).toHaveAttribute('href', '/ai-marketplace');
+    expect(dashboard).not.toHaveClass('is-active');
   });
 
   it('highlights the active navigation item', () => {

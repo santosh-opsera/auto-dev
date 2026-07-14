@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser } from './api/auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AiMarketplacePage } from './pages/AiMarketplacePage';
 import { ApprovalGatePage } from './pages/ApprovalGatePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ConventionsPage } from './pages/ConventionsPage';
@@ -82,6 +83,7 @@ function AppRoutes() {
       <Route element={<ProtectedRoute onLogoutComplete={handleLogoutComplete} />}>
         <Route path="/conventions" element={<ConventionsPage />} />
         <Route path="/integrations" element={<IntegrationsPage />} />
+        <Route path="/ai-marketplace" element={<AiMarketplacePage />} />
         <Route path="/repositories" element={<RepositoriesPage />} />
         <Route path="/tickets" element={<TicketIngestPage />} />
         <Route path="/approvals/:requestId" element={<ApprovalGatePage />} />
