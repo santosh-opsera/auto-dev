@@ -26,4 +26,14 @@ describe('Node 22 runtime pins (WO-026)', () => {
     expect(source).toContain('createCipheriv');
     expect(source).not.toMatch(/\bcreateCipher\b(?!iv)/);
   });
+
+  it('CI workflow enforces Node 22 and rejects node:20 images', () => {
+    const workflow = readFileSync(join(repoRoot, '.github/workflows/ci.yml'), 'utf8');
+    expect(workflow).toMatch(/node-version-file:\s*['"]?\.nvmrc['"]?/);
+    expect(workflow).toContain('npm ci');
+    expect(workflow).toContain('npm run build');
+    expect(workflow).toContain('npm test');
+    expect(workflow).toContain('node:20');
+    expect(readFileSync(join(repoRoot, '.npmrc'), 'utf8')).toContain('engine-strict=true');
+  });
 });
