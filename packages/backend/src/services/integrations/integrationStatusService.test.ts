@@ -23,7 +23,7 @@ describe('getIntegrationsStatus', () => {
       connectedProviders: ['github'],
       github: undefined,
       atlassian: mockUserWithJiraConnection.atlassian,
-    } as UserDocument;
+    } as unknown as UserDocument;
 
     const status = getIntegrationsStatus(user);
 
@@ -47,7 +47,7 @@ describe('getIntegrationsStatus', () => {
         scopes: ['read:user', 'user:email', 'repo'],
         tokenExpiresAt: new Date(Date.now() + 86_400_000),
       },
-    } as UserDocument;
+    } as unknown as UserDocument;
 
     const status = getIntegrationsStatus(user);
 
@@ -69,7 +69,7 @@ describe('getIntegrationsStatus', () => {
         tokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
       },
       connectedProviders: ['github', 'atlassian'],
-    } as UserDocument;
+    } as unknown as UserDocument;
 
     const status = getIntegrationsStatus(user);
 

@@ -69,7 +69,7 @@ export function createConventionRouter(): Router {
     asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
       const settings = await conventionService.createVersion(
         String(req.user!._id),
-        req.params.id,
+        String(Array.isArray(req.params.id) ? req.params.id[0] : req.params.id),
         req.body,
         String(req.user!._id),
       );

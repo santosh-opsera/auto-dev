@@ -195,9 +195,10 @@ describe('ProtectedRoute integration', () => {
 
   it('delivers DomainEvent SSE payloads across navigation without reconnecting', async () => {
     const received: string[] = [];
-    const onEvent = (event: { type?: string }) => {
-      if (event.type) {
-        received.push(event.type);
+    const onEvent = (event: unknown) => {
+      const typed = event as { type?: string };
+      if (typed.type) {
+        received.push(typed.type);
       }
     };
 

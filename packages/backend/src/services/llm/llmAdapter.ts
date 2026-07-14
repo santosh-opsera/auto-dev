@@ -46,7 +46,7 @@ export class LlmAdapterService implements LlmAdapter {
     ],
     private readonly budget = new TokenBudgetManager(),
     private readonly cache: LlmResponseCache = llmResponseCache,
-    private readonly retryDelaysMs: readonly number[] = process.env.NODE_ENV === 'test' ? [0] : undefined,
+    private readonly retryDelaysMs: readonly number[] = process.env.NODE_ENV === 'test' ? [0] : [250, 500, 1000],
   ) {
     for (const provider of this.providers) {
       this.breakers.set(provider.name, new CircuitBreaker());

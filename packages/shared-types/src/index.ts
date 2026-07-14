@@ -131,6 +131,7 @@ export type {
   ConventionSettingsInput,
   ConventionSettingsListResponse,
   ConventionSettingsResponse,
+  ReviewerAssignmentRules,
 } from './conventions.js';
 
 export {

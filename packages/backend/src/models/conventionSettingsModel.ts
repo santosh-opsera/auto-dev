@@ -1,12 +1,8 @@
 import mongoose, { type HydratedDocument, type Model } from 'mongoose';
+import type { ReviewerAssignmentRules } from '@autodev/shared-types';
 import { createBaseSchema, type AuditFields } from '../database/baseSchema.js';
 
-export type ReviewerAssignmentMode = 'round-robin' | 'code-owner-based' | 'manual-list';
-
-export interface ReviewerAssignmentRules {
-  mode: ReviewerAssignmentMode;
-  reviewers?: string[];
-}
+export type { ReviewerAssignmentRules };
 
 export interface ConventionSettingsDocument extends AuditFields {
   userId: string;

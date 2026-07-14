@@ -6,8 +6,8 @@ import type {
 import {
   conventionSettingsRepository,
   toConventionSnapshot,
-  type ConventionSettingsRecord,
 } from '../../repositories/conventionSettingsRepository.js';
+import type { ConventionSettingsRecord } from '../../models/conventionSettingsModel.js';
 import { auditService } from '../audit/auditService.js';
 import { AppError } from '../../utils/errors.js';
 import {

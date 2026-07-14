@@ -77,6 +77,7 @@ export const conventionSettingsInputSchema = z.object({
 });
 
 export type ConventionSettingsInput = z.infer<typeof conventionSettingsInputSchema>;
+export type ReviewerAssignmentRules = z.infer<typeof reviewerAssignmentRulesSchema>;
 
 export const conventionSettingsResponseSchema = conventionSettingsInputSchema.extend({
   id: z.string(),

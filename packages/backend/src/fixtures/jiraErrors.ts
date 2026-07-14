@@ -6,4 +6,4 @@ export const mockJiraErrorBodies = {
   rateLimited: { message: 'Rate limit exceeded' },
   badGateway: { message: 'Bad Gateway' },
   unavailable: { message: 'Service Unavailable' },
-} as const;
+};

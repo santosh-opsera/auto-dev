@@ -42,7 +42,7 @@ interface ConventionSetupWizardProps {
   variables: string[];
   onChange: (form: ConventionSettingsInput) => void;
   onStepChange: (index: number) => void;
-  onSubmit: () => void;
+  onSubmit: (sectionId: ConventionSectionId) => void;
   isSubmitting: boolean;
   isFirstTime: boolean;
 }

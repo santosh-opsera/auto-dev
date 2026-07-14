@@ -88,7 +88,7 @@ describe('EventBus', () => {
             ...sampleChunkProgressEvent.payload,
             progressPercent: index % 101,
           },
-        },
+        } as typeof sampleChunkProgressEvent,
         { awaitHandlers: true },
       );
     }
@@ -96,6 +96,6 @@ describe('EventBus', () => {
     const history = bus.getHistory();
     expect(history).toHaveLength(100);
     expect(history[0]?.metadata.eventId).toBe('event-5');
-    expect(history.at(-1)?.metadata.eventId).toBe('event-104');
+    expect(history[history.length - 1]?.metadata.eventId).toBe('event-104');
   });
 });
