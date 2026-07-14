@@ -24,6 +24,7 @@
     "test:e2e:mocks": "npm run mocks -w @autodev/e2e",
     "validate:node22": "bash scripts/validate-node22.sh",
     "lint": "npm run lint --workspaces --if-present",
+    "lint:boundaries": "npm run lint:boundaries -w @autodev/backend",
     "format": "prettier --write \"packages/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx,json}\"",
     "prepare": "husky"
@@ -35,6 +36,8 @@
   "license": "ISC",
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-boundaries": "^7.0.2",
     "husky": "^9.1.7",
     "prettier": "^3.9.4"
   }

@@ -1,17 +1,32 @@
-import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import prettier from 'eslint-config-prettier';
+/**
+ * Boundary-only ESLint config (WO-034).
+ * Used by `npm run lint:boundaries` so architectural rules are checked
+ * without also failing on unrelated typed lint debt.
+ */
 import boundaries from 'eslint-plugin-boundaries';
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  prettier,
   {
-    ignores: ['dist/**', 'node_modules/**', 'eslint.config.js', 'vitest.config.ts'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      'eslint.config.js',
+      'eslint.boundaries.config.js',
+      'vitest.config.ts',
+      '**/*.test.ts',
+      '**/fixtures/**',
+      '**/testHelpers/**',
+    ],
   },
   {
+    files: ['src/**/*.{ts,tsx}'],
+    linterOptions: {
+      // Main eslint.config.js owns typed rules / disable-directives.
+      reportUnusedDisableDirectives: 'off',
+    },
     languageOptions: {
+      parser: tseslint.parser,
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
@@ -19,6 +34,7 @@ export default tseslint.config(
     },
     plugins: {
       boundaries,
+      '@typescript-eslint': tseslint.plugin,
     },
     settings: {
       'import/resolver': {
@@ -37,13 +53,8 @@ export default tseslint.config(
         { type: 'config', pattern: 'src/config/**' },
       ],
       'boundaries/include': ['src/**/*.{ts,tsx,js,jsx}'],
-      'boundaries/ignore': ['**/*.test.ts', '**/fixtures/**', '**/testHelpers/**'],
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/explicit-function-return-type': 'warn',
-      '@typescript-eslint/no-explicit-any': 'error',
-      // Layer policy: no upward imports (controller ← service ← model/repository/util).
       'boundaries/dependencies': [
         'error',
         {
