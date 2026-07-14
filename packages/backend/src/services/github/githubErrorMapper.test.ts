@@ -9,4 +9,13 @@ describe('mapGitHubApiError', () => {
     expect(mapGitHubApiError(422).error).toBe('GitHubValidationFailed');
     expect(mapGitHubApiError(429).error).toBe('GitHubRateLimited');
   });
+
+  it('maps 403 rate-limit messages to GitHubRateLimited with reset hint', () => {
+    const resetAtMs = Date.parse('2026-07-14T12:30:00.000Z');
+    const error = mapGitHubApiError(403, 'API rate limit exceeded', { resetAtMs });
+
+    expect(error.error).toBe('GitHubRateLimited');
+    expect(error.statusCode).toBe(403);
+    expect(error.suggestedAction).toContain('2026-07-14T12:30:00.000Z');
+  });
 });

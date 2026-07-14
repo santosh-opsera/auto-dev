@@ -29,8 +29,19 @@ export const githubRepositorySchema = z.object({
 
 export type GitHubRepository = z.infer<typeof githubRepositorySchema>;
 
+export const githubRateLimitStatusSchema = z.object({
+  limit: z.number().int().nonnegative(),
+  remaining: z.number().int().nonnegative(),
+  resetAt: z.string().datetime(),
+  queuedRequests: z.number().int().nonnegative(),
+});
+
+export type GitHubRateLimitStatus = z.infer<typeof githubRateLimitStatusSchema>;
+
 export const repositoryListResponseSchema = z.object({
   repositories: z.array(githubRepositorySchema),
+  rateLimitWarning: z.string().optional(),
+  rateLimit: githubRateLimitStatusSchema.optional(),
 });
 
 export type RepositoryListResponse = z.infer<typeof repositoryListResponseSchema>;
@@ -87,12 +98,3 @@ export const repositoryFileResponseSchema = z.object({
 });
 
 export type RepositoryFileResponse = z.infer<typeof repositoryFileResponseSchema>;
-
-export const githubRateLimitStatusSchema = z.object({
-  limit: z.number().int().nonnegative(),
-  remaining: z.number().int().nonnegative(),
-  resetAt: z.string().datetime(),
-  queuedRequests: z.number().int().nonnegative(),
-});
-
-export type GitHubRateLimitStatus = z.infer<typeof githubRateLimitStatusSchema>;

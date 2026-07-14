@@ -296,7 +296,9 @@ export class GitHubApiClient {
         } catch {
           bodyText = undefined;
         }
-        throw mapGitHubApiError(response.status, bodyText);
+        throw mapGitHubApiError(response.status, bodyText, {
+          resetAtMs: this.rateLimiter.getSnapshot().resetAt || undefined,
+        });
       }
 
       this.circuitBreaker.recordSuccess();

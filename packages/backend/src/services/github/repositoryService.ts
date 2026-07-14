@@ -14,6 +14,9 @@ import { getRepositoryConnectionModel } from '../../models/repositoryConnectionM
 import { userHasGitHubRepoScopes } from './githubScopes.js';
 import { GitHubApiClient, githubApiClient } from './githubApiClient.js';
 
+/** Warn when GitHub API remaining quota drops below this threshold. */
+export const REPO_LIST_RATE_LIMIT_WARN_THRESHOLD = 50;
+
 function resolveGitHubAccessToken(user: UserDocument): string {
   const github = user.github;
 
@@ -56,6 +59,22 @@ function toConnection(record: {
   };
 }
 
+function formatResetRelative(resetAtMs: number, nowMs: number = Date.now()): string {
+  if (!resetAtMs) {
+    return 'unknown time';
+  }
+  const minutes = Math.max(1, Math.ceil((resetAtMs - nowMs) / 60_000));
+  return `about ${String(minutes)} minute${minutes === 1 ? '' : 's'} (${new Date(resetAtMs).toISOString()})`;
+}
+
+function buildRateLimitWarning(rateLimit: GitHubRateLimitStatus): string | undefined {
+  if (rateLimit.remaining >= REPO_LIST_RATE_LIMIT_WARN_THRESHOLD) {
+    return undefined;
+  }
+
+  return `GitHub API rate limit is low (${String(rateLimit.remaining)} of ${String(rateLimit.limit)} remaining). Resets in ${formatResetRelative(Date.parse(rateLimit.resetAt))}.`;
+}
+
 export class RepositoryService {
   constructor(private readonly client: GitHubApiClient = githubApiClient) {}
 
@@ -94,7 +113,14 @@ export class RepositoryService {
   async listRepositories(user: UserDocument): Promise<RepositoryListResponse> {
     const accessToken = resolveGitHubAccessToken(user);
     const repositories = await this.client.listRepositories(accessToken);
-    return { repositories };
+    const rateLimit = this.getRateLimitStatus();
+    const rateLimitWarning = buildRateLimitWarning(rateLimit);
+
+    return {
+      repositories,
+      rateLimit,
+      ...(rateLimitWarning ? { rateLimitWarning } : {}),
+    };
   }
 
   async connectRepository(

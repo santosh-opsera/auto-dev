@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { sampleGitHubRepositories } from './fixtures/repositories.js';
+import {
+  mockGitHubApiOrganizationsResponse,
+  mockGitHubApiOrgRepositoryResponse,
+  mockGitHubApiRateLimitWarningHeaders,
+  sampleGitHubRateLimitStatus,
+  sampleGitHubRepositories,
+} from './fixtures/repositories.js';
 import {
   githubRepositorySchema,
   repositoryConnectResponseSchema,
@@ -7,15 +13,21 @@ import {
 } from './repositories.js';
 
 describe('repository schemas', () => {
-  it('validates repository list responses', () => {
+  it('validates repository list responses including rate-limit metadata', () => {
     const payload = repositoryListResponseSchema.parse({
       repositories: sampleGitHubRepositories,
+      rateLimit: sampleGitHubRateLimitStatus,
+      rateLimitWarning: 'GitHub API rate limit is low (42 of 5000 remaining).',
     });
 
-    expect(payload.repositories).toHaveLength(2);
+    expect(payload.repositories).toHaveLength(3);
     expect(githubRepositorySchema.parse(sampleGitHubRepositories[0]).fullName).toBe(
       'santosh-opsera/auto-dev',
     );
+    expect(payload.rateLimit?.remaining).toBe(42);
+    expect(mockGitHubApiOrganizationsResponse[0]?.login).toBe('acme-corp');
+    expect(mockGitHubApiOrgRepositoryResponse[0]?.full_name).toBe('acme-corp/shared-lib');
+    expect(Number(mockGitHubApiRateLimitWarningHeaders['x-ratelimit-remaining'])).toBe(42);
   });
 
   it('validates connect responses', () => {

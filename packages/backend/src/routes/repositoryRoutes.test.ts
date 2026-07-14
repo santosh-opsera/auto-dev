@@ -79,13 +79,21 @@ describe('repository routes', () => {
     });
   });
 
-  it('lists repositories for authenticated users', async () => {
+  it('lists repositories for authenticated users after OAuth with optional rate-limit warning', async () => {
     vi.spyOn(repositoryService, 'listRepositories').mockResolvedValue({
       repositories: sampleGitHubRepositories,
+      rateLimit: {
+        limit: 5000,
+        remaining: 42,
+        resetAt: '2026-07-14T12:30:00.000Z',
+        queuedRequests: 0,
+      },
+      rateLimitWarning: 'GitHub API rate limit is low (42 of 5000 remaining).',
     });
 
     const app = createApp();
-    const { sessionCookie } = await loginAsUser(app);
+    const { sessionCookie, login } = await loginAsUser(app);
+    expect(login.status).toBe(200);
 
     const response = await request(app)
       .get('/api/v1/repositories')
@@ -93,6 +101,8 @@ describe('repository routes', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.repositories[0].fullName).toBe('santosh-opsera/auto-dev');
+    expect(response.body.rateLimitWarning).toMatch(/rate limit is low/i);
+    expect(response.body.rateLimit.remaining).toBe(42);
   });
 
   it('connects a repository and returns tree/file data', async () => {
