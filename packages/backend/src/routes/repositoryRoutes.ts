@@ -47,11 +47,13 @@ export function createRepositoryRouter(): Router {
         page: number;
         perPage: number;
         q?: string;
+        refresh: boolean;
       };
       const payload = await repositoryService.listRepositories(req.user!, {
         page: query.page,
         perPage: query.perPage,
         q: query.q,
+        refresh: query.refresh,
       });
       repositoryListResponseSchema.parse(payload);
       res.status(200).json(payload);

@@ -96,6 +96,7 @@ describe('RepositoriesPage', () => {
     expect(screen.getByRole('heading', { name: /GitHub rate limit warning/i })).toBeInTheDocument();
     expect(screen.getByText(/42 of 5000 remaining/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Load more' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeInTheDocument();
     expect(screen.getByText(/Showing 1 of 45 repositories/i)).toBeInTheDocument();
   });
 

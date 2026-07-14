@@ -322,6 +322,7 @@ export {
   sampleGitHubRateLimitStatus,
   sampleGitHubRepositories,
   sampleRepositoryFile,
+  sampleRepositoryListCacheDocument,
   sampleRepositoryPagination,
   sampleRepositoryTree,
 } from './fixtures/repositories.js';

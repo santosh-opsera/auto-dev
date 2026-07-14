@@ -41,11 +41,12 @@ describe('repository schemas', () => {
   });
 
   it('defaults repository list query pagination params', () => {
-    expect(repositoryListQuerySchema.parse({})).toEqual({ page: 1, perPage: 30 });
-    expect(repositoryListQuerySchema.parse({ page: '2', perPage: '50', q: 'auto' })).toEqual({
+    expect(repositoryListQuerySchema.parse({})).toEqual({ page: 1, perPage: 30, refresh: false });
+    expect(repositoryListQuerySchema.parse({ page: '2', perPage: '50', q: 'auto', refresh: 'true' })).toEqual({
       page: 2,
       perPage: 50,
       q: 'auto',
+      refresh: true,
     });
   });
 

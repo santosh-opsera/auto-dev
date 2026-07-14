@@ -46,6 +46,7 @@ export const COLLECTION_DEFAULT_CLASSIFICATION = {
   oauth_tokens: 'restricted',
   audit_events: 'confidential',
   codebase_contexts: 'internal',
+  github_repository_list_cache: 'internal',
   ai_interaction_logs: 'confidential',
   llm_cache: 'confidential',
   conventions: 'internal',

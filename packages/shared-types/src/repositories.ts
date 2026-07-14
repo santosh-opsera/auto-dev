@@ -42,6 +42,11 @@ export const repositoryListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   perPage: z.coerce.number().int().min(1).max(100).default(30),
   q: z.string().trim().max(200).optional(),
+  refresh: z
+    .union([z.boolean(), z.enum(['true', 'false', '1', '0'])])
+    .optional()
+    .transform((value) => value === true || value === 'true' || value === '1')
+    .default(false),
 });
 
 export type RepositoryListQuery = z.infer<typeof repositoryListQuerySchema>;
@@ -60,6 +65,10 @@ export const repositoryListResponseSchema = z.object({
   pagination: repositoryPaginationSchema,
   rateLimitWarning: z.string().optional(),
   rateLimit: githubRateLimitStatusSchema.optional(),
+  cachedAt: z.string().datetime().optional(),
+  cacheExpiresAt: z.string().datetime().optional(),
+  fromCache: z.boolean().optional(),
+  cacheWarning: z.string().optional(),
 });
 
 export type RepositoryListResponse = z.infer<typeof repositoryListResponseSchema>;

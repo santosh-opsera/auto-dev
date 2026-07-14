@@ -149,6 +149,15 @@ export const sampleRepositoryPagination = {
   hasNextPage: false,
 };
 
+/** Cached Mongo document fixture for repository list TTL cache tests. */
+export const sampleRepositoryListCacheDocument = {
+  userId: 'user-cache-1',
+  repositories: sampleGitHubRepositories,
+  cachedAt: '2026-07-14T12:00:00.000Z',
+  freshUntil: '2026-07-14T12:05:00.000Z',
+  expiresAt: '2026-07-15T12:00:00.000Z',
+};
+
 export const mockGitHubApiTreeResponse = {
   sha: 'tree-sha',
   tree: [
