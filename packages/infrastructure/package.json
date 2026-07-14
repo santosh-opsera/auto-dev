@@ -9,15 +9,19 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc",
     "test": "vitest run",
     "lint": "eslint ."
   },
   "dependencies": {
     "@autodev/shared-types": "*"
   },
+  "peerDependencies": {
+    "mongoose": "^9.7.4"
+  },
   "devDependencies": {
     "@types/node": "^26.1.1",
+    "mongoose": "^9.7.4",
     "typescript": "^6.0.3",
     "vitest": "^3.2.4"
   }

@@ -5,7 +5,9 @@ import {
   type DataClassification,
   getClassificationHandling,
 } from '@autodev/shared-types';
+import type { AuditFields } from '@autodev/infrastructure';
 
+export type { AuditFields };
 export { DATA_CLASSIFICATIONS, type DataClassification, getClassificationHandling };
 
 /**
@@ -19,14 +21,6 @@ export { DATA_CLASSIFICATIONS, type DataClassification, getClassificationHandlin
  *
  * Models should set `dataClassification` to the collection's default tier when creating docs.
  */
-export interface AuditFields {
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy?: string;
-  updatedBy?: string;
-  dataClassification: DataClassification;
-}
-
 export const auditFieldDefinition = {
   createdBy: { type: String, required: false },
   updatedBy: { type: String, required: false },

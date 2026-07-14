@@ -19,6 +19,8 @@ import {
   cryptographicallyErase,
   encryptWithPerRecordDek,
   ERASED_DEK_MARKER,
+  systemClock,
+  type Clock,
 } from '@autodev/infrastructure';
 import { getAiInteractionLogModel } from '../../models/aiInteractionLogModel.js';
 import { getAuditLogModel } from '../../models/auditLogModel.js';
@@ -40,8 +42,6 @@ import { getWorkflowModel, type WorkflowRecord } from '../../models/workflowMode
 import { AppError } from '../../utils/errors.js';
 import { auditService } from '../audit/auditService.js';
 import { getAvailableTransitions } from '../orchestration/workflowStateMachine.js';
-import type { Clock } from '../classification/retentionJob.js';
-import { systemClock } from '../classification/retentionJob.js';
 import type { IntervalTimer } from '../integrations/types.js';
 import { defaultIntervalTimer } from '../integrations/types.js';
 
