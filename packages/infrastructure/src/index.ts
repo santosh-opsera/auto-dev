@@ -30,3 +30,6 @@ export {
   wrapDek,
   type WrappedEncryptedPayload,
 } from './encryption.js';
+export { type AuditFields } from './auditFields.js';
+export { BaseRepository } from './baseRepository.js';
+export { systemClock, type Clock } from './clock.js';

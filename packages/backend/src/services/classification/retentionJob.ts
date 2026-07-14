@@ -10,14 +10,14 @@ import { getCodebaseContextModel } from '../../models/codebaseContextModel.js';
 import { logger } from '../../utils/logger.js';
 import type { IntervalTimer } from '../integrations/types.js';
 import { defaultIntervalTimer } from '../integrations/types.js';
+import { systemClock, type Clock } from '@autodev/infrastructure';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Default daily schedule: 24 hours. */
 export const DAILY_RETENTION_INTERVAL_MS = DAY_MS;
 
-export type Clock = () => Date;
-
-export const systemClock: Clock = () => new Date();
+export type { Clock };
+export { systemClock };
 
 export function retentionCutoff(category: RetentionCategory, now: Date): Date {
   const days = RETENTION_POLICY_DAYS[category];

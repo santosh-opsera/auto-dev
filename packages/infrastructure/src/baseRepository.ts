@@ -1,5 +1,5 @@
 import type { Model, UpdateQuery } from 'mongoose';
-import type { AuditFields } from './baseSchema.js';
+import type { AuditFields } from './auditFields.js';
 
 export class BaseRepository<T extends AuditFields> {
   constructor(private readonly model: Model<T>) {}

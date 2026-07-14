@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { BaseRepository } from './baseRepository.js';
+import { BaseRepository } from '@autodev/infrastructure';
 import { ensureIndexes } from './indexes.js';
 import { sampleUserDocuments, seedDocuments } from '../fixtures/database.js';
 import { getUserModel, type UserDocument, type UserRecord } from '../models/userModel.js';
