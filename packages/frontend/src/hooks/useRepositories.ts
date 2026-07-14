@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { CodebaseAnalysisResponse, GitHubRepository, RepositoryConnection } from '@autodev/shared-types';
+import type { CodebaseAnalysisResponse, GitHubRateLimitStatus, GitHubRepository, RepositoryConnection } from '@autodev/shared-types';
 import { ApiError } from '../api/client';
 import {
   analyzeRepository,
@@ -14,6 +14,9 @@ interface RepositoryState {
   connected: RepositoryConnection[];
   loading: boolean;
   error: string | null;
+  errorCode: string | null;
+  rateLimitWarning: string | null;
+  rateLimit: GitHubRateLimitStatus | null;
   connectingKey: string | null;
   analyzingKey: string | null;
   analysisResults: Record<string, CodebaseAnalysisResponse>;
@@ -24,12 +27,16 @@ const initialState: RepositoryState = {
   connected: [],
   loading: true,
   error: null,
+  errorCode: null,
+  rateLimitWarning: null,
+  rateLimit: null,
   connectingKey: null,
   analyzingKey: null,
   analysisResults: {},
 };
 
 interface UseRepositoriesOptions {
+  /** When false, skip GitHub available-repo auto-load (Connect GitHub banner path). */
   fetchAvailable?: boolean;
 }
 
@@ -37,15 +44,25 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
   const [state, setState] = useState<RepositoryState>(initialState);
 
   const refresh = useCallback(async (): Promise<void> => {
-    setState((previous) => ({ ...previous, loading: true, error: null }));
+    setState((previous) => ({
+      ...previous,
+      loading: true,
+      error: null,
+      errorCode: null,
+      rateLimitWarning: null,
+    }));
 
     try {
       const connectedResponse = await listConnectedRepositories();
       let available: GitHubRepository[] = [];
+      let rateLimitWarning: string | null = null;
+      let rateLimit: GitHubRateLimitStatus | null = null;
 
       if (fetchAvailable) {
         const availableResponse = await listGitHubRepositories();
         available = availableResponse.repositories;
+        rateLimitWarning = availableResponse.rateLimitWarning ?? null;
+        rateLimit = availableResponse.rateLimit ?? null;
       }
 
       setState((previous) => ({
@@ -53,6 +70,8 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
         available,
         connected: connectedResponse.connections,
         loading: false,
+        rateLimitWarning,
+        rateLimit,
       }));
     } catch (loadError) {
       const message =
@@ -66,6 +85,7 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
         ...previous,
         loading: false,
         error: message,
+        errorCode: loadError instanceof ApiError ? (loadError.errorCode ?? null) : null,
       }));
     }
   }, [fetchAvailable]);
@@ -78,7 +98,7 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
 
   const connect = useCallback(async (repository: GitHubRepository): Promise<void> => {
     const key = repositoryKey(repository);
-    setState((previous) => ({ ...previous, connectingKey: key, error: null }));
+    setState((previous) => ({ ...previous, connectingKey: key, error: null, errorCode: null }));
 
     try {
       const response = await connectRepository(repository.owner, repository.name);
@@ -104,6 +124,7 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
         ...previous,
         connectingKey: null,
         error: message,
+        errorCode: connectError instanceof ApiError ? (connectError.errorCode ?? null) : null,
       }));
     }
   }, []);
@@ -111,7 +132,7 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
   const analyze = useCallback(
     async (connection: RepositoryConnection, ticketKey?: string): Promise<void> => {
       const key = `${connection.owner}/${connection.repo}`;
-      setState((previous) => ({ ...previous, analyzingKey: key, error: null }));
+      setState((previous) => ({ ...previous, analyzingKey: key, error: null, errorCode: null }));
 
       try {
         const response = await analyzeRepository(connection.owner, connection.repo, {
@@ -139,6 +160,7 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
           ...previous,
           analyzingKey: null,
           error: message,
+          errorCode: analyzeError instanceof ApiError ? (analyzeError.errorCode ?? null) : null,
         }));
       }
     },

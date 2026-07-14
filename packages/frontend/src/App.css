@@ -468,6 +468,19 @@
   color: #dc2626;
 }
 
+.rate-limit-warning {
+  border-left: 4px solid #d97706;
+}
+
+.rate-limit-warning h2 {
+  margin-top: 0;
+}
+
+.rate-limit-warning p {
+  margin-bottom: 0;
+  color: #92400e;
+}
+
 .save-success {
   margin: 0.75rem 0 0;
   color: #15803d;

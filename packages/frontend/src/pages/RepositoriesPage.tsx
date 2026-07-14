@@ -14,6 +14,8 @@ export function RepositoriesPage() {
     connected,
     loading,
     error,
+    errorCode,
+    rateLimitWarning,
     connectingKey,
     analyzingKey,
     analysisResults,
@@ -22,6 +24,8 @@ export function RepositoriesPage() {
     connect,
     analyze,
   } = useRepositories({ fetchAvailable: githubReposReady });
+
+  const isRateLimitError = errorCode === 'GitHubRateLimited';
 
   return (
     <main className="repositories-page">
@@ -51,8 +55,16 @@ export function RepositoriesPage() {
         </section>
       ) : null}
 
+      {rateLimitWarning && !needsGitHubConnect ? (
+        <section className="profile-card rate-limit-warning" role="status" aria-live="polite">
+          <h2>GitHub rate limit warning</h2>
+          <p>{rateLimitWarning}</p>
+        </section>
+      ) : null}
+
       {error && !needsGitHubConnect ? (
         <section className="profile-card" role="alert">
+          <h2>{isRateLimitError ? 'GitHub rate limit reached' : 'Unable to load repositories'}</h2>
           <p className="page-error">{error}</p>
           <button type="button" className="secondary-button" onClick={() => void refresh()}>
             Retry
@@ -108,7 +120,7 @@ export function RepositoriesPage() {
         <section className="profile-card" aria-labelledby="available-heading">
           <h2 id="available-heading">Available from GitHub</h2>
           {loading ? <p>Loading GitHub repositories…</p> : null}
-          {!loading && available.length === 0 ? (
+          {!loading && available.length === 0 && !error ? (
             <p>No repositories returned from GitHub for this account.</p>
           ) : null}
           {!loading && available.length > 0 ? (

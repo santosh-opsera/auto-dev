@@ -1,4 +1,5 @@
 import type {
+  GitHubRateLimitStatus,
   GitHubRepository,
   RepositoryFileResponse,
   RepositoryTreeEntry,
@@ -23,6 +24,15 @@ export const sampleGitHubRepositories: GitHubRepository[] = [
     defaultBranch: 'main',
     htmlUrl: 'https://github.com/santosh-opsera/platform-ui',
   },
+  {
+    id: 3,
+    name: 'shared-lib',
+    fullName: 'acme-corp/shared-lib',
+    owner: 'acme-corp',
+    private: true,
+    defaultBranch: 'main',
+    htmlUrl: 'https://github.com/acme-corp/shared-lib',
+  },
 ];
 
 export const sampleRepositoryTree: RepositoryTreeEntry[] = [
@@ -42,6 +52,7 @@ export const sampleRepositoryFile: RepositoryFileResponse = {
   size: 512,
 };
 
+/** Personal / affiliation repos returned by GET /user/repos. */
 export const mockGitHubApiRepositoryResponse = [
   {
     id: 1,
@@ -52,7 +63,60 @@ export const mockGitHubApiRepositoryResponse = [
     default_branch: 'main',
     html_url: 'https://github.com/santosh-opsera/auto-dev',
   },
+  {
+    id: 2,
+    name: 'platform-ui',
+    full_name: 'santosh-opsera/platform-ui',
+    owner: { login: 'santosh-opsera' },
+    private: true,
+    default_branch: 'main',
+    html_url: 'https://github.com/santosh-opsera/platform-ui',
+  },
 ];
+
+/** Organizations returned by GET /user/orgs. */
+export const mockGitHubApiOrganizationsResponse = [{ login: 'acme-corp', id: 99 }];
+
+/** Org repos returned by GET /orgs/{org}/repos. */
+export const mockGitHubApiOrgRepositoryResponse = [
+  {
+    id: 3,
+    name: 'shared-lib',
+    full_name: 'acme-corp/shared-lib',
+    owner: { login: 'acme-corp' },
+    private: true,
+    default_branch: 'main',
+    html_url: 'https://github.com/acme-corp/shared-lib',
+  },
+];
+
+/** Healthy quota headers after a successful auto-load. */
+export const mockGitHubApiRateLimitHeaders = {
+  'x-ratelimit-limit': '5000',
+  'x-ratelimit-remaining': '4990',
+  'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 3600),
+};
+
+/** Near-exhaustion warning threshold (< 50 remaining). */
+export const mockGitHubApiRateLimitWarningHeaders = {
+  'x-ratelimit-limit': '5000',
+  'x-ratelimit-remaining': '42',
+  'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 900),
+};
+
+/** Exhausted quota — GitHub often returns 403 with these headers. */
+export const mockGitHubApiRateLimitExhaustedHeaders = {
+  'x-ratelimit-limit': '5000',
+  'x-ratelimit-remaining': '0',
+  'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 1200),
+};
+
+export const sampleGitHubRateLimitStatus: GitHubRateLimitStatus = {
+  limit: 5000,
+  remaining: 42,
+  resetAt: new Date(Date.now() + 900_000).toISOString(),
+  queuedRequests: 0,
+};
 
 export const mockGitHubApiTreeResponse = {
   sha: 'tree-sha',

@@ -305,8 +305,14 @@ export type {
 
 export {
   mockGitHubApiFileResponse,
+  mockGitHubApiOrganizationsResponse,
+  mockGitHubApiOrgRepositoryResponse,
+  mockGitHubApiRateLimitExhaustedHeaders,
+  mockGitHubApiRateLimitHeaders,
+  mockGitHubApiRateLimitWarningHeaders,
   mockGitHubApiRepositoryResponse,
   mockGitHubApiTreeResponse,
+  sampleGitHubRateLimitStatus,
   sampleGitHubRepositories,
   sampleRepositoryFile,
   sampleRepositoryTree,
