@@ -1,20 +1,14 @@
 import { useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { DomainEvent } from '@autodev/shared-types';
-import { SessionWarningModal } from '../components/SessionWarningModal';
 import { ApprovalExpiryCountdown } from '../components/approvals/ApprovalExpiryCountdown';
 import { ApprovalProgressBar } from '../components/approvals/ApprovalProgressBar';
 import { DivergenceComparisonCard } from '../components/approvals/DivergenceComparisonCard';
 import { GapApprovalCard } from '../components/approvals/GapApprovalCard';
 import { useApprovalGate } from '../hooks/useApprovalGate';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
-import { useSSE } from '../hooks/useSSE';
+import { useSSESubscription } from '../hooks/useSSESubscription';
 
-interface ApprovalGatePageProps {
-  onLogoutComplete: () => void;
-}
-
-export function ApprovalGatePage({ onLogoutComplete }: ApprovalGatePageProps) {
+export function ApprovalGatePage() {
   const { requestId } = useParams<{ requestId: string }>();
   const {
     phase,
@@ -33,8 +27,6 @@ export function ApprovalGatePage({ onLogoutComplete }: ApprovalGatePageProps) {
     refresh,
   } = useApprovalGate(requestId);
 
-  useSessionHeartbeat(true);
-
   const onSseEvent = useCallback(
     (event: DomainEvent) => {
       handleSseEvent(event);
@@ -42,7 +34,7 @@ export function ApprovalGatePage({ onLogoutComplete }: ApprovalGatePageProps) {
     [handleSseEvent],
   );
 
-  useSSE({ enabled: Boolean(requestId), onEvent: onSseEvent });
+  useSSESubscription(onSseEvent, Boolean(requestId));
 
   const handleProceed = (): void => {
     const confirmed = window.confirm(
@@ -57,8 +49,6 @@ export function ApprovalGatePage({ onLogoutComplete }: ApprovalGatePageProps) {
 
   return (
     <main className="approvals-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>Approval gate</h1>

@@ -1,28 +1,16 @@
 import { Link } from 'react-router-dom';
 import { getGitHubReposConnectUrl, getJiraConnectUrl } from '../api/auth';
-import { SessionWarningModal } from '../components/SessionWarningModal';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
-import { useSSE } from '../hooks/useSSE';
 import { useAuthStore } from '../store/authStore';
 
-interface IntegrationsPageProps {
-  onLogoutComplete: () => void;
-}
-
-export function IntegrationsPage({ onLogoutComplete }: IntegrationsPageProps) {
+export function IntegrationsPage() {
   const user = useAuthStore((state) => state.user);
   const jiraConnected = user?.integrations?.jira ?? false;
   const githubReposReady = user?.integrations?.githubRepos ?? false;
   const hasAtlassianProvider = user?.connectedProviders.includes('atlassian') === true;
   const atlassianEmail = user?.integrations?.atlassianEmail;
 
-  useSessionHeartbeat(true);
-  useSSE({ enabled: true });
-
   return (
     <main className="integrations-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>Integrations</h1>

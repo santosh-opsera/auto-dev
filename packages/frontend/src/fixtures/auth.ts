@@ -30,16 +30,27 @@ export const mockAuthUserWithJira = {
   },
 };
 
+/** Authenticated session with ample time remaining. */
 export const mockSessionMetadata = {
   remainingMs: 86_400_000,
   warning: false,
   expiresAt: '2026-07-10T12:00:00.000Z',
 };
 
+/** Session expiring within 5 minutes (warning threshold). */
 export const mockWarningSessionMetadata = {
   remainingMs: 240_000,
   warning: true,
   expiresAt: '2026-07-09T12:04:00.000Z',
+};
+
+/** Alias fixtures for ProtectedRoute / session lifecycle tests. */
+export const authenticatedSession = mockSessionMetadata;
+export const expiringSession = mockWarningSessionMetadata;
+export const expiredSession = {
+  remainingMs: 0,
+  warning: true,
+  expiresAt: '2026-07-09T12:00:00.000Z',
 };
 
 export const mockMeResponse = {

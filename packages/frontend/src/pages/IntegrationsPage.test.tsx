@@ -1,6 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   mockGithubOnlyAuthUser,
   mockAuthUserWithJira,
@@ -8,18 +8,6 @@ import {
 } from '../fixtures/auth';
 import { useAuthStore } from '../store/authStore';
 import { IntegrationsPage } from './IntegrationsPage';
-
-vi.mock('../hooks/useSessionHeartbeat', () => ({
-  useSessionHeartbeat: vi.fn(),
-}));
-
-vi.mock('../hooks/useSSE', () => ({
-  useSSE: vi.fn(),
-}));
-
-vi.mock('../components/SessionWarningModal', () => ({
-  SessionWarningModal: () => null,
-}));
 
 afterEach(() => {
   cleanup();
@@ -36,7 +24,7 @@ describe('IntegrationsPage', () => {
 
     render(
       <MemoryRouter>
-        <IntegrationsPage onLogoutComplete={() => undefined} />
+        <IntegrationsPage />
       </MemoryRouter>,
     );
 
@@ -50,7 +38,7 @@ describe('IntegrationsPage', () => {
 
     render(
       <MemoryRouter>
-        <IntegrationsPage onLogoutComplete={() => undefined} />
+        <IntegrationsPage />
       </MemoryRouter>,
     );
 

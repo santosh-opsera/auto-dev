@@ -1,21 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { SessionWarningModal } from '../components/SessionWarningModal';
 import { PrdApprovedBadge } from '../components/prd/PrdApprovedBadge';
 import { PrdRejectForm } from '../components/prd/PrdRejectForm';
 import { PrdSectionPanels } from '../components/prd/PrdSectionPanels';
 import { PrdVersionHistory } from '../components/prd/PrdVersionHistory';
 import { usePrdReview } from '../hooks/usePrdReview';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
 import { useLocaleStore } from '../store/localeStore';
 import { formatDate } from '../utils/localeFormat';
 
 interface PrdReviewPageProps {
-  onLogoutComplete: () => void;
   mode: 'byId' | 'byTicket';
 }
 
-export function PrdReviewPage({ onLogoutComplete, mode }: PrdReviewPageProps) {
+export function PrdReviewPage({ mode }: PrdReviewPageProps) {
   const navigate = useNavigate();
   const { id, ticketKey } = useParams<{ id?: string; ticketKey?: string }>();
   const [showRejectForm, setShowRejectForm] = useState(false);
@@ -25,14 +22,10 @@ export function PrdReviewPage({ onLogoutComplete, mode }: PrdReviewPageProps) {
     mode === 'byId' ? { prdId: id } : { ticketKey },
   );
 
-  useSessionHeartbeat(true);
-
   const statusLabel = review.prd?.status.replace('_', ' ') ?? 'unknown';
 
   return (
     <main className="prd-review-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>PRD review</h1>

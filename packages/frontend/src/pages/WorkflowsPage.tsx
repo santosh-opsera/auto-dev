@@ -1,18 +1,12 @@
 import { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import type { DomainEvent } from '@autodev/shared-types';
-import { SessionWarningModal } from '../components/SessionWarningModal';
 import { WorkflowList } from '../components/workflows/WorkflowList';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
-import { useSSE } from '../hooks/useSSE';
+import { useSSESubscription } from '../hooks/useSSESubscription';
 import { useWorkflows } from '../hooks/useWorkflows';
 import { WORKFLOW_FILTER_OPTIONS } from '../utils/workflowHelpers';
 
-interface WorkflowsPageProps {
-  onLogoutComplete: () => void;
-}
-
-export function WorkflowsPage({ onLogoutComplete }: WorkflowsPageProps) {
+export function WorkflowsPage() {
   const {
     phase,
     error,
@@ -28,8 +22,6 @@ export function WorkflowsPage({ onLogoutComplete }: WorkflowsPageProps) {
     refresh,
   } = useWorkflows();
 
-  useSessionHeartbeat(true);
-
   const onSseEvent = useCallback(
     (event: DomainEvent) => {
       handleSseEvent(event);
@@ -37,12 +29,10 @@ export function WorkflowsPage({ onLogoutComplete }: WorkflowsPageProps) {
     [handleSseEvent],
   );
 
-  useSSE({ enabled: true, onEvent: onSseEvent });
+  useSSESubscription(onSseEvent);
 
   return (
     <main className="workflows-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>Workflows</h1>

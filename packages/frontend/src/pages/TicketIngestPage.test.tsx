@@ -9,14 +9,6 @@ import {
 import { useAuthStore } from '../store/authStore';
 import { TicketIngestPage } from './TicketIngestPage';
 
-vi.mock('../hooks/useSessionHeartbeat', () => ({
-  useSessionHeartbeat: vi.fn(),
-}));
-
-vi.mock('../hooks/useSSE', () => ({
-  useSSE: vi.fn(),
-}));
-
 vi.mock('../hooks/useTicketIngestion', () => ({
   useTicketIngestion: () => ({
     phase: 'idle',
@@ -35,10 +27,6 @@ vi.mock('../hooks/useTicketIngestion', () => ({
     handleSseProgress: vi.fn(),
     resolveGap: vi.fn(),
   }),
-}));
-
-vi.mock('../components/SessionWarningModal', () => ({
-  SessionWarningModal: () => null,
 }));
 
 vi.mock('../api/auth', async () => {
@@ -72,7 +60,7 @@ describe('TicketIngestPage Connect Jira prompt', () => {
 
     render(
       <MemoryRouter>
-        <TicketIngestPage onLogoutComplete={() => undefined} />
+        <TicketIngestPage />
       </MemoryRouter>,
     );
 
@@ -86,7 +74,7 @@ describe('TicketIngestPage Connect Jira prompt', () => {
 
     render(
       <MemoryRouter>
-        <TicketIngestPage onLogoutComplete={() => undefined} />
+        <TicketIngestPage />
       </MemoryRouter>,
     );
 

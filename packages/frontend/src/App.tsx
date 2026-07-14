@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { fetchCurrentUser } from './api/auth';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { ApprovalGatePage } from './pages/ApprovalGatePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ConventionsPage } from './pages/ConventionsPage';
@@ -62,118 +63,28 @@ function AppRoutes() {
     );
   }
 
+  const handleLogoutComplete = (): void => {
+    navigate('/login', { replace: true });
+  };
+
   return (
     <Routes>
       <Route
         path="/login"
         element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
       />
-      <Route
-        path="/conventions"
-        element={
-          isAuthenticated ? (
-            <ConventionsPage onLogoutComplete={() => navigate('/login', { replace: true })} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/integrations"
-        element={
-          isAuthenticated ? (
-            <IntegrationsPage onLogoutComplete={() => navigate('/login', { replace: true })} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/repositories"
-        element={
-          isAuthenticated ? (
-            <RepositoriesPage onLogoutComplete={() => navigate('/login', { replace: true })} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/tickets"
-        element={
-          isAuthenticated ? (
-            <TicketIngestPage onLogoutComplete={() => navigate('/login', { replace: true })} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/approvals/:requestId"
-        element={
-          isAuthenticated ? (
-            <ApprovalGatePage onLogoutComplete={() => navigate('/login', { replace: true })} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/prd/:id"
-        element={
-          isAuthenticated ? (
-            <PrdReviewPage
-              mode="byId"
-              onLogoutComplete={() => navigate('/login', { replace: true })}
-            />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/tickets/:ticketKey/prd"
-        element={
-          isAuthenticated ? (
-            <PrdReviewPage
-              mode="byTicket"
-              onLogoutComplete={() => navigate('/login', { replace: true })}
-            />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/workflows"
-        element={
-          isAuthenticated ? (
-            <WorkflowsPage onLogoutComplete={() => navigate('/login', { replace: true })} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/workflows/:id"
-        element={
-          isAuthenticated ? (
-            <WorkflowDetailPage onLogoutComplete={() => navigate('/login', { replace: true })} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          isAuthenticated ? (
-            <DashboardPage onLogoutComplete={() => navigate('/login', { replace: true })} />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
+      <Route element={<ProtectedRoute onLogoutComplete={handleLogoutComplete} />}>
+        <Route path="/conventions" element={<ConventionsPage />} />
+        <Route path="/integrations" element={<IntegrationsPage />} />
+        <Route path="/repositories" element={<RepositoriesPage />} />
+        <Route path="/tickets" element={<TicketIngestPage />} />
+        <Route path="/approvals/:requestId" element={<ApprovalGatePage />} />
+        <Route path="/prd/:id" element={<PrdReviewPage mode="byId" />} />
+        <Route path="/tickets/:ticketKey/prd" element={<PrdReviewPage mode="byTicket" />} />
+        <Route path="/workflows" element={<WorkflowsPage />} />
+        <Route path="/workflows/:id" element={<WorkflowDetailPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Route>
       <Route path="*" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
     </Routes>
   );

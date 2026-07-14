@@ -1,16 +1,9 @@
 import { Link } from 'react-router-dom';
 import { getGitHubReposConnectUrl } from '../api/auth';
-import { SessionWarningModal } from '../components/SessionWarningModal';
 import { useRepositories } from '../hooks/useRepositories';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
-import { useSSE } from '../hooks/useSSE';
 import { useAuthStore } from '../store/authStore';
 
-interface RepositoriesPageProps {
-  onLogoutComplete: () => void;
-}
-
-export function RepositoriesPage({ onLogoutComplete }: RepositoriesPageProps) {
+export function RepositoriesPage() {
   const user = useAuthStore((state) => state.user);
   const githubReposReady = user?.integrations?.githubRepos ?? false;
   const needsGitHubConnect = user !== null && !githubReposReady;
@@ -30,13 +23,8 @@ export function RepositoriesPage({ onLogoutComplete }: RepositoriesPageProps) {
     analyze,
   } = useRepositories({ fetchAvailable: githubReposReady });
 
-  useSessionHeartbeat(true);
-  useSSE({ enabled: true });
-
   return (
     <main className="repositories-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>Repository connections</h1>

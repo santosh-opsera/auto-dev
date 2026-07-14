@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import type { DomainEvent } from '@autodev/shared-types';
 import { fetchCurrentUser, getJiraConnectUrl } from '../api/auth';
-import { SessionWarningModal } from '../components/SessionWarningModal';
 import { TicketEmptyState } from '../components/tickets/TicketEmptyState';
 import { TicketErrorState } from '../components/tickets/TicketErrorState';
 import { TicketGapList } from '../components/tickets/TicketGapList';
 import { TicketIntentPanel } from '../components/tickets/TicketIntentPanel';
 import { TicketKeyForm } from '../components/tickets/TicketKeyForm';
 import { TicketParsingSkeleton } from '../components/tickets/TicketParsingSkeleton';
-import { useSessionHeartbeat } from '../hooks/useSessionHeartbeat';
-import { useSSE } from '../hooks/useSSE';
+import { useSSESubscription } from '../hooks/useSSESubscription';
 import { useTicketIngestion } from '../hooks/useTicketIngestion';
 import { useAuthStore } from '../store/authStore';
 
@@ -22,11 +21,7 @@ const REAUTHORIZE_ERROR_CODES = new Set([
   'AtlassianRefreshInvalid',
 ]);
 
-interface TicketIngestPageProps {
-  onLogoutComplete: () => void;
-}
-
-export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
+export function TicketIngestPage() {
   const {
     phase,
     ticketKey,
@@ -60,8 +55,6 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
   const jiraConnectUrl = getJiraConnectUrl(TICKETS_RETURN_PATH);
   const connectJiraLabel = needsReauthorize ? 'Re-authorize Jira' : 'Connect Jira';
 
-  useSessionHeartbeat(true);
-
   useEffect(() => {
     const oauthError = searchParams.get('error');
     const reason = searchParams.get('reason');
@@ -86,7 +79,7 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
   }, [searchParams, setAuth, setSearchParams]);
 
   const onSseEvent = useCallback(
-    (event: { type: string; payload: { ticketKey?: string; summary?: string } }) => {
+    (event: DomainEvent) => {
       if (event.type === 'TICKET_PARSED' && event.payload.ticketKey) {
         handleSseProgress(
           event.payload.ticketKey,
@@ -97,7 +90,7 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
     [handleSseProgress],
   );
 
-  useSSE({ enabled: true, onEvent: onSseEvent });
+  useSSESubscription(onSseEvent);
 
   const isLoading = phase === 'fetching' || phase === 'parsing';
 
@@ -108,8 +101,6 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
 
   return (
     <main className="tickets-page">
-      <SessionWarningModal onLogoutComplete={onLogoutComplete} />
-
       <header className="dashboard-header">
         <div>
           <h1>Ticket ingestion</h1>
