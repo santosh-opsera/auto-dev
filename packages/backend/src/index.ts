@@ -186,7 +186,7 @@ export function createApp(): Application {
   return app;
 }
 
-const PORT = Number(process.env.PORT) || 3001;
+const PORT = Number(process.env.PORT) || 3002;
 
 async function startServer(): Promise<void> {
   const mongoUri = process.env.MONGODB_URI;

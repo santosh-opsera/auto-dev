@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 
 function getAllowedOrigin(): string {
-  return process.env.FRONTEND_URL ?? 'http://localhost:3000';
+  return process.env.FRONTEND_URL ?? 'http://localhost:3001';
 }
 
 export function corsMiddleware(req: Request, res: Response, next: NextFunction): void {

@@ -11,7 +11,7 @@ describe('corsMiddleware', () => {
   });
 
   it('allows configured frontend origin and handles preflight', async () => {
-    process.env.FRONTEND_URL = 'http://localhost:3000';
+    process.env.FRONTEND_URL = 'http://localhost:3001';
 
     const app = express();
     app.use(corsMiddleware);
@@ -21,20 +21,20 @@ describe('corsMiddleware', () => {
 
     const preflight = await request(app)
       .options('/resource')
-      .set('Origin', 'http://localhost:3000');
+      .set('Origin', 'http://localhost:3001');
 
     expect(preflight.status).toBe(204);
-    expect(preflight.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+    expect(preflight.headers['access-control-allow-origin']).toBe('http://localhost:3001');
 
     const response = await request(app)
       .get('/resource')
-      .set('Origin', 'http://localhost:3000');
+      .set('Origin', 'http://localhost:3001');
 
-    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3000');
+    expect(response.headers['access-control-allow-origin']).toBe('http://localhost:3001');
   });
 
   it('does not reflect disallowed origins', async () => {
-    process.env.FRONTEND_URL = 'http://localhost:3000';
+    process.env.FRONTEND_URL = 'http://localhost:3001';
 
     const app = express();
     app.use(corsMiddleware);

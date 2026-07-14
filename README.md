@@ -6,8 +6,8 @@ AI-powered SDLC automation platform — npm workspaces monorepo.
 
 ```
 packages/
-├── backend/        # Express API (port 3001)
-├── frontend/       # React + Vite (port 3000)
+├── backend/        # Express API (port 3002)
+├── frontend/       # React + Vite (port 3001)
 └── shared-types/   # Shared Zod schemas and TypeScript types
 ```
 
@@ -37,8 +37,8 @@ docker-compose up
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start backend + frontend concurrently |
-| `npm run dev:backend` | Backend only (port 3001) |
-| `npm run dev:frontend` | Frontend only (port 3000) |
+| `npm run dev:backend` | Backend only (port 3002) |
+| `npm run dev:frontend` | Frontend only (port 3001) |
 | `npm test` | Run all package tests |
 | `npm run lint` | Lint all packages |
 | `npm run build` | Build all packages |
@@ -46,7 +46,7 @@ docker-compose up
 ## Health Check
 
 ```bash
-curl http://localhost:3001/api/v1/health
+curl http://localhost:3002/api/v1/health
 ```
 
 ## Environment

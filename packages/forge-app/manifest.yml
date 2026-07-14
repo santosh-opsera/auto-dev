@@ -16,7 +16,7 @@ permissions:
   external:
     fetch:
       backend:
-        - address: http://localhost:3001
+        - address: http://localhost:3002
         - address: https://api.autodev.local
 app:
   runtime:

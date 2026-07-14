@@ -63,7 +63,7 @@ Mock mode is the default. To run against Compose instead:
 1. `docker compose up` (Mongo + backend + frontend)
 2. Start mocks: `npm run test:e2e:mocks`
 3. Point adapters at mock base URLs when those env knobs are available
-4. `E2E_BASE_URL=http://localhost:3000 npm run test:e2e:ui`
+4. `E2E_BASE_URL=http://localhost:3001 npm run test:e2e:ui`
 
 ## Layout
 

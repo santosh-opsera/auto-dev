@@ -216,7 +216,7 @@ describe('auth routes', () => {
       );
 
     expect(callback.status).toBe(302);
-    expect(callback.headers.location).toBe('http://localhost:3000/tickets');
+    expect(callback.headers.location).toBe('http://localhost:3001/tickets');
 
     const me = await request(app)
       .get('/api/v1/auth/me')
@@ -265,7 +265,7 @@ describe('auth routes', () => {
       );
 
     expect(callback.status).toBe(302);
-    expect(callback.headers.location).toBe('http://localhost:3000/repositories');
+    expect(callback.headers.location).toBe('http://localhost:3001/repositories');
 
     const me = await request(app)
       .get('/api/v1/auth/me')

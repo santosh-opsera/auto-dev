@@ -74,8 +74,8 @@ function getAtlassianConfig(): {
     clientId: process.env.ATLASSIAN_CLIENT_ID ?? 'atlassian-client-id',
     clientSecret: process.env.ATLASSIAN_CLIENT_SECRET ?? 'atlassian-client-secret',
     redirectUri:
-      process.env.ATLASSIAN_REDIRECT_URI ?? 'http://localhost:3001/api/v1/auth/atlassian/callback',
-    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+      process.env.ATLASSIAN_REDIRECT_URI ?? 'http://localhost:3002/api/v1/auth/atlassian/callback',
+    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3001',
   };
 }
 
@@ -89,8 +89,8 @@ function getGitHubConfig(): {
     clientId: process.env.GITHUB_CLIENT_ID ?? 'github-client-id',
     clientSecret: process.env.GITHUB_CLIENT_SECRET ?? 'github-client-secret',
     redirectUri:
-      process.env.GITHUB_REDIRECT_URI ?? 'http://localhost:3001/api/v1/auth/github/callback',
-    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+      process.env.GITHUB_REDIRECT_URI ?? 'http://localhost:3002/api/v1/auth/github/callback',
+    frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3001',
   };
 }
 
