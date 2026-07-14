@@ -19,7 +19,7 @@ import {
   cryptographicallyErase,
   encryptWithPerRecordDek,
   ERASED_DEK_MARKER,
-} from '../../lib/encryption.js';
+} from '@autodev/infrastructure';
 import { getAiInteractionLogModel } from '../../models/aiInteractionLogModel.js';
 import { getAuditLogModel } from '../../models/auditLogModel.js';
 import { getConventionSettingsModel } from '../../models/conventionSettingsModel.js';

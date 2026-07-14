@@ -10,7 +10,7 @@ import type {
 } from '@autodev/shared-types';
 import { canTransitionChunkStatus } from '@autodev/shared-types';
 import { defaultConventionTemplates } from '../../fixtures/conventionDefaults.js';
-import { decryptSecret } from '../../lib/encryption.js';
+import { decryptSecret } from '@autodev/infrastructure';
 import type { UserDocument } from '../../models/userModel.js';
 import {
   getImplementationChunkModel,

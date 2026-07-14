@@ -8,7 +8,7 @@ import type {
   RepositoryListResponse,
   RepositoryTreeResponse,
 } from '@autodev/shared-types';
-import { decryptSecret } from '../../lib/encryption.js';
+import { decryptSecret } from '@autodev/infrastructure';
 import { AppError } from '../../utils/errors.js';
 import type { UserDocument } from '../../models/userModel.js';
 import { getRepositoryConnectionModel } from '../../models/repositoryConnectionModel.js';

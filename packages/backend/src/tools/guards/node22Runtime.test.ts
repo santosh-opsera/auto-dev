@@ -22,7 +22,7 @@ describe('Node 22 runtime pins (WO-026)', () => {
     expect(typeof crypto.createCipheriv).toBe('function');
     expect(typeof (crypto as { createCipher?: unknown }).createCipher).toBe('undefined');
 
-    const source = readFileSync(join(repoRoot, 'packages/backend/src/lib/encryption.ts'), 'utf8');
+    const source = readFileSync(join(repoRoot, 'packages/infrastructure/src/encryption.ts'), 'utf8');
     expect(source).toContain('createCipheriv');
     expect(source).not.toMatch(/\bcreateCipher\b(?!iv)/);
   });

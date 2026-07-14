@@ -25,7 +25,7 @@ import {
   encryptRestricted,
   encryptWithPerRecordDek,
   type WrappedEncryptedPayload,
-} from '../../lib/encryption.js';
+} from '@autodev/infrastructure';
 import { maskEmail, maskName, maskPiiInText } from '../../lib/piiMasking.js';
 import { runRetentionPurge, startDailyRetentionJob } from './retentionJob.js';
 

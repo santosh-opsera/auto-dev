@@ -11,7 +11,7 @@ import {
   sampleExpectedCommitMessage,
   samplePrdSections,
 } from '@autodev/shared-types';
-import { encryptSecret } from '../../lib/encryption.js';
+import { encryptSecret } from '@autodev/infrastructure';
 import {
   getImplementationChunkModel,
   type ImplementationChunkRecord,

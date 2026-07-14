@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { SESSION_IDLE_MS, SESSION_WARNING_MS } from '../auth/constants.js';
-import { encryptSecret, hashValue } from '../lib/encryption.js';
+import { encryptSecret, hashValue } from '@autodev/infrastructure';
 import { getSessionModel, type SessionDocument } from '../models/sessionModel.js';
 import { sseManager } from '../services/events/sseManager.js';
 

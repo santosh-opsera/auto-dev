@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   cryptographicallyErase,
+  cryptographicallyEraseSecret,
   decryptConfidentialField,
   decryptConfidentialFields,
   decryptRestricted,
@@ -8,11 +9,15 @@ import {
   decryptWithPerRecordDek,
   encryptConfidentialField,
   encryptConfidentialFields,
+  encryptOAuthToken,
   encryptRestricted,
   encryptSecret,
   encryptWithPerRecordDek,
   ERASED_DEK_MARKER,
+  getKek,
   hashValue,
+  unwrapDek,
+  wrapDek,
 } from './encryption.js';
 
 describe('encryption', () => {
@@ -24,10 +29,20 @@ describe('encryption', () => {
     expect(decrypted).toBe('github-access-token');
   });
 
-  it('exposes Restricted aliases for AES-256-GCM at-rest encryption', () => {
+  it('accepts an explicit KEK secret via getKek / encryptSecret', () => {
+    const key = 'unit-test-encryption-key';
+    expect(getKek(key).equals(getKek(key))).toBe(true);
+
+    const encrypted = encryptSecret('token', key);
+    expect(decryptSecret(encrypted, key)).toBe('token');
+    expect(() => decryptSecret(encrypted, 'other-key')).toThrow();
+  });
+
+  it('exposes Restricted and OAuth aliases for AES-256-GCM at-rest encryption', () => {
     const encrypted = encryptRestricted('gho_oauth_token');
     expect(encrypted).not.toContain('gho_oauth_token');
     expect(decryptRestricted(encrypted)).toBe('gho_oauth_token');
+    expect(decryptSecret(encryptOAuthToken('gho_oauth_token'))).toBe('gho_oauth_token');
   });
 
   it('rejects ciphertext with a short auth tag', () => {
@@ -71,10 +86,17 @@ describe('encryption', () => {
     expect(payload.erased).toBe(false);
     expect(decryptWithPerRecordDek(payload)).toBe('user-profile-secret');
 
-    const erased = cryptographicallyErase(payload);
+    const erased = cryptographicallyEraseSecret(payload);
     expect(erased.erased).toBe(true);
     expect(erased.wrappedDek).toBe(ERASED_DEK_MARKER);
     expect(erased.ciphertext).toBe(payload.ciphertext);
     expect(() => decryptWithPerRecordDek(erased)).toThrow(/destroyed/);
+    expect(cryptographicallyErase(payload).erased).toBe(true);
+  });
+
+  it('wraps and unwraps DEK material', () => {
+    const dek = Buffer.alloc(32, 7);
+    const wrapped = wrapDek(dek);
+    expect(unwrapDek(wrapped).equals(dek)).toBe(true);
   });
 });

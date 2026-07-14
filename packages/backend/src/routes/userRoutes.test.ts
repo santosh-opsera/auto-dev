@@ -14,7 +14,7 @@ import {
 } from '../fixtures/auth.js';
 import { resetAuthRateLimits } from '../middleware/appRateLimits.js';
 import { resetLockouts } from '../auth/lockoutService.js';
-import { encryptSecret } from '../lib/encryption.js';
+import { encryptSecret } from '@autodev/infrastructure';
 import { getAiInteractionLogModel, buildAiInteractionExpiryDate } from '../models/aiInteractionLogModel.js';
 import { getAuditLogModel } from '../models/auditLogModel.js';
 import { getConventionSettingsModel } from '../models/conventionSettingsModel.js';
@@ -25,7 +25,7 @@ import { getUserModel } from '../models/userModel.js';
 import { getWorkflowModel } from '../models/workflowModel.js';
 import { ensureIndexes } from '../database/indexes.js';
 import { startMemoryMongo, stopMemoryMongo } from '../testHelpers/memoryServer.js';
-import { encryptWithPerRecordDek } from '../lib/encryption.js';
+import { encryptWithPerRecordDek } from '@autodev/infrastructure';
 import { DataSubjectRightsService } from '../services/gdpr/dataSubjectRightsService.js';
 import { auditService } from '../services/audit/auditService.js';
 

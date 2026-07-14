@@ -5,7 +5,7 @@ import {
   sampleRepositoryListCacheDocument,
 } from '@autodev/shared-types';
 import { ensureIndexes } from '../../database/indexes.js';
-import { encryptSecret } from '../../lib/encryption.js';
+import { encryptSecret } from '@autodev/infrastructure';
 import {
   buildRepositoryListCacheTimestamps,
   getRepositoryListCacheModel,

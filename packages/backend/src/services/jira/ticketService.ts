@@ -1,4 +1,4 @@
-import { decryptSecret } from '../../lib/encryption.js';
+import { decryptSecret } from '@autodev/infrastructure';
 import { withRetry, isRetryableHttpStatus } from '../../lib/retry.js';
 import { AppError } from '../../utils/errors.js';
 import type { UserDocument } from '../../models/userModel.js';
