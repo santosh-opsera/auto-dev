@@ -52,7 +52,6 @@ import {
   handleOAuthRedirectCallback,
 } from '../services/auth/oauthCallbackHandler.js';
 import { auditService } from '../services/audit/auditService.js';
-import { sseManager } from '../services/events/sseManager.js';
 
 /**
  * Atlassian sign-in resume is retired (GitHub-only login). Clear stale remember cookie.
@@ -286,11 +285,8 @@ export function createAuthRouter(): Router {
       const sessionMetadata = sessionId ? await touchSession(sessionId) : null;
 
       if (sessionId && typeof sessionId === 'string') {
+        // invalidateSession closes SSE clients for the session's user
         await invalidateSession(sessionId);
-      }
-
-      if (sessionMetadata?.userId) {
-        sseManager.closeUserConnections(sessionMetadata.userId);
       }
 
       void auditService.logSafe({
@@ -319,6 +315,8 @@ export function createAuthRouter(): Router {
       const metadata = await touchSession(sessionId);
 
       if (!metadata) {
+        // Tear down any SSE clients owned by this session's user
+        await invalidateSession(sessionId);
         throw new AppError(
           'SessionExpired',
           'Session expired.',

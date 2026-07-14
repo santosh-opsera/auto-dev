@@ -215,6 +215,7 @@ describe('auth routes', () => {
     expect(heartbeat.status).toBe(401);
     expect(body.error).toBe('SessionExpired');
     expect(body.suggestedAction.toLowerCase()).toMatch(/re-authenticate|sign in/);
+    expect(await getSessionModel().findOne({ sessionId: session!.sessionId }).lean().exec()).toBeNull();
   });
 
   it('heartbeat returns 401 without creating a session when cookie is missing', async () => {
@@ -256,6 +257,7 @@ describe('auth routes', () => {
     const expired = await request(app).post('/api/v1/auth/heartbeat').set('Cookie', cookies);
     expect(expired.status).toBe(401);
     expect((expired.body as { error: string }).error).toBe('SessionExpired');
+    expect(await getSessionModel().findOne({ sessionId: initial!.sessionId }).lean().exec()).toBeNull();
   });
 
   it('logs out and clears the session cookie', async () => {

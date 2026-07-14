@@ -1,14 +1,28 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import mongoose from 'mongoose';
+import type { Response } from 'express';
 import { SESSION_IDLE_MS, SESSION_WARNING_MS } from './constants.js';
 import {
   buildSessionMetadata,
   createSession,
+  invalidateSession,
   touchSession,
 } from './sessionService.js';
 import { ensureIndexes } from '../database/indexes.js';
 import { getSessionModel } from '../models/sessionModel.js';
+import { sseManager } from '../services/events/sseManager.js';
 import { startMemoryMongo, stopMemoryMongo } from '../testHelpers/memoryServer.js';
+
+function createMockResponse(): Response {
+  return {
+    writableEnded: false,
+    destroyed: false,
+    write: vi.fn().mockReturnValue(true),
+    writeHead: vi.fn(),
+    end: vi.fn(),
+    on: vi.fn(),
+  } as unknown as Response;
+}
 
 describe('sessionService touchSession', () => {
   const userId = new mongoose.Types.ObjectId().toHexString();
@@ -24,6 +38,7 @@ describe('sessionService touchSession', () => {
 
   beforeEach(async () => {
     await getSessionModel().deleteMany({});
+    sseManager.closeAllConnections();
   });
 
   it('atomically extends expiresAt for a valid session', async () => {
@@ -73,5 +88,18 @@ describe('sessionService touchSession', () => {
     expect(metadata.remainingMs).toBeLessThan(300_000);
     expect(metadata.warning).toBe(true);
     expect(metadata.expiresAt).toEqual(nearExpiry);
+  });
+
+  it('invalidateSession deletes the session and closes SSE clients for the user', async () => {
+    const { sessionId } = await createSession(userId);
+    const response = createMockResponse();
+    sseManager.registerConnection(userId, response);
+    expect(sseManager.getConnectionCount(userId)).toBe(1);
+
+    await invalidateSession(sessionId);
+
+    expect(await getSessionModel().findOne({ sessionId }).lean().exec()).toBeNull();
+    expect(response.end).toHaveBeenCalled();
+    expect(sseManager.getConnectionCount(userId)).toBe(0);
   });
 });

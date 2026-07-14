@@ -1,12 +1,36 @@
 import type { DomainEvent } from '@autodev/shared-types';
-import { sampleChunkProgressEvent } from '@autodev/shared-types';
+import {
+  sampleChunkProgressEvent,
+  samplePrCreatedEvent,
+  sampleTicketParsedEvent,
+  sampleWorkflowFailedEvent,
+  sampleWorkflowTransitionedEvent,
+} from '@autodev/shared-types';
+
+/** DomainEvent fixtures matching shared-types schemas for frontend SSE tests. */
+export const domainEventFixtures = {
+  ticketParsed: sampleTicketParsedEvent,
+  chunkProgress: sampleChunkProgressEvent,
+  workflowTransitioned: sampleWorkflowTransitionedEvent,
+  workflowFailed: sampleWorkflowFailedEvent,
+  prCreated: samplePrCreatedEvent,
+} as const satisfies Record<string, DomainEvent>;
+
+export const mockSseDomainEvents: DomainEvent[] = Object.values(domainEventFixtures);
+
+export function formatSseDataFrame(event: DomainEvent): string {
+  return [
+    `id: ${event.metadata.eventId}`,
+    `event: ${event.type}`,
+    `data: ${JSON.stringify(event)}`,
+    '',
+  ].join('\n');
+}
 
 export const mockSseStreamChunks = [
   'retry: 30000\n\n',
   ': heartbeat\n\n',
-  `id: ${sampleChunkProgressEvent.metadata.eventId}\n`,
-  `event: ${sampleChunkProgressEvent.type}\n`,
-  `data: ${JSON.stringify(sampleChunkProgressEvent)}\n\n`,
+  ...mockSseDomainEvents.map((event) => `${formatSseDataFrame(event)}\n`),
 ];
 
 export const mockSseStream = mockSseStreamChunks.join('');
