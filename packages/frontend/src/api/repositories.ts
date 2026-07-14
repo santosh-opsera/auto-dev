@@ -22,6 +22,9 @@ export async function listGitHubRepositories(
   if (query.q?.trim()) {
     params.set('q', query.q.trim());
   }
+  if (query.refresh) {
+    params.set('refresh', 'true');
+  }
 
   const suffix = params.toString();
   return apiFetch<RepositoryListResponse>(

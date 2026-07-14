@@ -18,6 +18,8 @@ export function RepositoriesPage() {
     error,
     errorCode,
     rateLimitWarning,
+    cacheWarning,
+    cachedAt,
     pagination,
     searchQuery,
     connectingKey,
@@ -71,6 +73,13 @@ export function RepositoriesPage() {
         <section className="profile-card rate-limit-warning" role="status" aria-live="polite">
           <h2>GitHub rate limit warning</h2>
           <p>{rateLimitWarning}</p>
+        </section>
+      ) : null}
+
+      {cacheWarning && !needsGitHubConnect ? (
+        <section className="profile-card rate-limit-warning" role="status" aria-live="polite">
+          <h2>Showing cached repositories</h2>
+          <p>{cacheWarning}</p>
         </section>
       ) : null}
 
@@ -144,8 +153,21 @@ export function RepositoriesPage() {
               <button type="submit" className="secondary-button">
                 Apply filter
               </button>
+              <button
+                type="button"
+                className="secondary-button"
+                disabled={loading}
+                onClick={() => void refresh()}
+              >
+                Refresh
+              </button>
             </div>
           </form>
+          {cachedAt && !loading ? (
+            <p className="field-hint" role="status">
+              Cache updated {new Date(cachedAt).toLocaleString()}
+            </p>
+          ) : null}
           {loading ? <p>Loading GitHub repositories…</p> : null}
           {!loading && available.length === 0 && !error ? (
             <p>

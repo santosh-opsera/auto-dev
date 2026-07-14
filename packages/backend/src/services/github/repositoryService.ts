@@ -1,5 +1,6 @@
 import type {
   GitHubRateLimitStatus,
+  GitHubRepository,
   RepositoryConnectResponse,
   RepositoryConnection,
   ConnectedRepositoryListResponse,
@@ -11,6 +12,11 @@ import { decryptSecret } from '../../lib/encryption.js';
 import { AppError } from '../../utils/errors.js';
 import type { UserDocument } from '../../models/userModel.js';
 import { getRepositoryConnectionModel } from '../../models/repositoryConnectionModel.js';
+import {
+  buildRepositoryListCacheTimestamps,
+  getRepositoryListCacheModel,
+  REPOSITORY_LIST_CACHE_TTL_MS,
+} from '../../models/repositoryListCacheModel.js';
 import { userHasGitHubRepoScopes } from './githubScopes.js';
 import { GitHubApiClient, githubApiClient } from './githubApiClient.js';
 
@@ -75,6 +81,34 @@ function buildRateLimitWarning(rateLimit: GitHubRateLimitStatus): string | undef
   return `GitHub API rate limit is low (${String(rateLimit.remaining)} of ${String(rateLimit.limit)} remaining). Resets in ${formatResetRelative(Date.parse(rateLimit.resetAt))}.`;
 }
 
+function paginateRepositories(
+  allRepositories: GitHubRepository[],
+  options: { page: number; perPage: number; q?: string },
+): Pick<RepositoryListResponse, 'repositories' | 'pagination'> {
+  const query = options.q?.trim().toLowerCase();
+  const filtered = query
+    ? allRepositories.filter(
+        (repository) =>
+          repository.fullName.toLowerCase().includes(query) ||
+          repository.name.toLowerCase().includes(query),
+      )
+    : allRepositories;
+
+  const totalCount = filtered.length;
+  const start = (options.page - 1) * options.perPage;
+  const repositories = filtered.slice(start, start + options.perPage);
+
+  return {
+    repositories,
+    pagination: {
+      page: options.page,
+      perPage: options.perPage,
+      totalCount,
+      hasNextPage: start + repositories.length < totalCount,
+    },
+  };
+}
+
 export class RepositoryService {
   constructor(private readonly client: GitHubApiClient = githubApiClient) {}
 
@@ -110,41 +144,89 @@ export class RepositoryService {
     return toConnection(record);
   }
 
+  async invalidateRepositoryListCache(userId: string): Promise<void> {
+    await getRepositoryListCacheModel().deleteOne({ userId }).exec();
+  }
+
   async listRepositories(
     user: UserDocument,
-    options: { page?: number; perPage?: number; q?: string } = {},
+    options: { page?: number; perPage?: number; q?: string; refresh?: boolean } = {},
   ): Promise<RepositoryListResponse> {
     const page = options.page ?? 1;
     const perPage = options.perPage ?? 30;
-    const accessToken = resolveGitHubAccessToken(user);
-    const allRepositories = await this.client.listRepositories(accessToken);
+    const userId = String(user._id);
+    const forceRefresh = options.refresh === true;
+    const now = new Date();
 
-    const query = options.q?.trim().toLowerCase();
-    const filtered = query
-      ? allRepositories.filter(
-          (repository) =>
-            repository.fullName.toLowerCase().includes(query) ||
-            repository.name.toLowerCase().includes(query),
-        )
-      : allRepositories;
+    if (!forceRefresh) {
+      const cached = await getRepositoryListCacheModel().findOne({ userId }).exec();
+      if (cached && cached.freshUntil > now) {
+        const rateLimit = this.getRateLimitStatus();
+        const rateLimitWarning = buildRateLimitWarning(rateLimit);
+        return {
+          ...paginateRepositories(cached.repositories, { page, perPage, q: options.q }),
+          rateLimit,
+          ...(rateLimitWarning ? { rateLimitWarning } : {}),
+          cachedAt: cached.cachedAt.toISOString(),
+          cacheExpiresAt: cached.freshUntil.toISOString(),
+          fromCache: true,
+        };
+      }
+    } else {
+      await this.invalidateRepositoryListCache(userId);
+    }
 
-    const totalCount = filtered.length;
-    const start = (page - 1) * perPage;
-    const repositories = filtered.slice(start, start + perPage);
-    const rateLimit = this.getRateLimitStatus();
-    const rateLimitWarning = buildRateLimitWarning(rateLimit);
+    try {
+      const accessToken = resolveGitHubAccessToken(user);
+      const allRepositories = await this.client.listRepositories(accessToken);
+      const timestamps = buildRepositoryListCacheTimestamps(now);
 
-    return {
-      repositories,
-      pagination: {
-        page,
-        perPage,
-        totalCount,
-        hasNextPage: start + repositories.length < totalCount,
-      },
-      rateLimit,
-      ...(rateLimitWarning ? { rateLimitWarning } : {}),
-    };
+      await getRepositoryListCacheModel().findOneAndUpdate(
+        { userId },
+        {
+          $set: {
+            userId,
+            repositories: allRepositories,
+            cachedAt: timestamps.cachedAt,
+            freshUntil: timestamps.freshUntil,
+            expiresAt: timestamps.expiresAt,
+            updatedBy: userId,
+            dataClassification: 'internal',
+          },
+          $setOnInsert: {
+            createdBy: userId,
+          },
+        },
+        { upsert: true, new: true },
+      );
+
+      const rateLimit = this.getRateLimitStatus();
+      const rateLimitWarning = buildRateLimitWarning(rateLimit);
+
+      return {
+        ...paginateRepositories(allRepositories, { page, perPage, q: options.q }),
+        rateLimit,
+        ...(rateLimitWarning ? { rateLimitWarning } : {}),
+        cachedAt: timestamps.cachedAt.toISOString(),
+        cacheExpiresAt: timestamps.freshUntil.toISOString(),
+        fromCache: false,
+      };
+    } catch (error) {
+      const stale = await getRepositoryListCacheModel().findOne({ userId }).exec();
+      if (stale && stale.repositories.length > 0) {
+        const rateLimit = this.getRateLimitStatus();
+        return {
+          ...paginateRepositories(stale.repositories, { page, perPage, q: options.q }),
+          rateLimit,
+          cachedAt: stale.cachedAt.toISOString(),
+          cacheExpiresAt: stale.freshUntil.toISOString(),
+          fromCache: true,
+          cacheWarning: `GitHub is unavailable or rate-limited. Showing cached repositories from ${stale.cachedAt.toISOString()}. Data may be outdated.`,
+        };
+      }
+
+      throw error;
+    }
   }
 
   async connectRepository(
@@ -227,3 +309,5 @@ export class RepositoryService {
 }
 
 export const repositoryService = new RepositoryService();
+
+export { REPOSITORY_LIST_CACHE_TTL_MS };

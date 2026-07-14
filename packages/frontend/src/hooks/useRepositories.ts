@@ -23,6 +23,10 @@ interface RepositoryState {
   error: string | null;
   errorCode: string | null;
   rateLimitWarning: string | null;
+  cacheWarning: string | null;
+  cachedAt: string | null;
+  cacheExpiresAt: string | null;
+  fromCache: boolean;
   rateLimit: GitHubRateLimitStatus | null;
   pagination: RepositoryPagination | null;
   searchQuery: string;
@@ -39,6 +43,10 @@ const initialState: RepositoryState = {
   error: null,
   errorCode: null,
   rateLimitWarning: null,
+  cacheWarning: null,
+  cachedAt: null,
+  cacheExpiresAt: null,
+  fromCache: false,
   rateLimit: null,
   pagination: null,
   searchQuery: '',
@@ -56,20 +64,34 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
   const [state, setState] = useState<RepositoryState>(initialState);
 
   const loadPage = useCallback(
-    async (page: number, append: boolean, searchQuery: string): Promise<void> => {
+    async (
+      page: number,
+      append: boolean,
+      searchQuery: string,
+      options: { refresh?: boolean } = {},
+    ): Promise<void> => {
       setState((previous) => ({
         ...previous,
         loading: !append,
         loadingMore: append,
         error: null,
         errorCode: null,
-        ...(append ? {} : { rateLimitWarning: null }),
+        ...(append
+          ? {}
+          : {
+              rateLimitWarning: null,
+              cacheWarning: null,
+            }),
       }));
 
       try {
         const connectedResponse = await listConnectedRepositories();
         let available: GitHubRepository[] = [];
         let rateLimitWarning: string | null = null;
+        let cacheWarning: string | null = null;
+        let cachedAt: string | null = null;
+        let cacheExpiresAt: string | null = null;
+        let fromCache = false;
         let rateLimit: GitHubRateLimitStatus | null = null;
         let pagination: RepositoryPagination | null = null;
 
@@ -78,9 +100,14 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
             page,
             perPage: 30,
             q: searchQuery.trim() || undefined,
+            refresh: options.refresh === true,
           });
           available = availableResponse.repositories;
           rateLimitWarning = availableResponse.rateLimitWarning ?? null;
+          cacheWarning = availableResponse.cacheWarning ?? null;
+          cachedAt = availableResponse.cachedAt ?? null;
+          cacheExpiresAt = availableResponse.cacheExpiresAt ?? null;
+          fromCache = availableResponse.fromCache === true;
           rateLimit = availableResponse.rateLimit ?? null;
           pagination = availableResponse.pagination;
         }
@@ -92,6 +119,10 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
           loading: false,
           loadingMore: false,
           rateLimitWarning: append ? previous.rateLimitWarning : rateLimitWarning,
+          cacheWarning: append ? previous.cacheWarning : cacheWarning,
+          cachedAt: cachedAt ?? previous.cachedAt,
+          cacheExpiresAt: cacheExpiresAt ?? previous.cacheExpiresAt,
+          fromCache,
           rateLimit: rateLimit ?? previous.rateLimit,
           pagination,
         }));
@@ -116,7 +147,7 @@ export function useRepositories({ fetchAvailable = true }: UseRepositoriesOption
   );
 
   const refresh = useCallback(async (): Promise<void> => {
-    await loadPage(1, false, state.searchQuery);
+    await loadPage(1, false, state.searchQuery, { refresh: true });
   }, [loadPage, state.searchQuery]);
 
   const loadMore = useCallback(async (): Promise<void> => {

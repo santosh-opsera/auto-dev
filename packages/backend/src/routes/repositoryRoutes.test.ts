@@ -142,7 +142,7 @@ describe('repository routes', () => {
     expect(response.status).toBe(200);
     expect(repositoryService.listRepositories).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ page: 2, perPage: 50 }),
+      expect.objectContaining({ page: 2, perPage: 50, refresh: false }),
     );
     expect(response.body.pagination).toEqual({
       page: 2,
@@ -150,6 +150,35 @@ describe('repository routes', () => {
       totalCount: 150,
       hasNextPage: true,
     });
+  });
+
+  it('passes refresh=true to invalidate repository list cache', async () => {
+    vi.spyOn(repositoryService, 'listRepositories').mockResolvedValue({
+      repositories: sampleGitHubRepositories,
+      pagination: {
+        page: 1,
+        perPage: 30,
+        totalCount: sampleGitHubRepositories.length,
+        hasNextPage: false,
+      },
+      fromCache: false,
+      cachedAt: '2026-07-14T12:00:00.000Z',
+      cacheExpiresAt: '2026-07-14T12:05:00.000Z',
+    });
+
+    const app = createApp();
+    const { sessionCookie } = await loginAsUser(app);
+
+    const response = await request(app)
+      .get('/api/v1/repositories?refresh=true')
+      .set('Cookie', sessionCookie);
+
+    expect(response.status).toBe(200);
+    expect(repositoryService.listRepositories).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ refresh: true }),
+    );
+    expect(response.body.fromCache).toBe(false);
   });
 
   it('connects a repository and returns tree/file data', async () => {
