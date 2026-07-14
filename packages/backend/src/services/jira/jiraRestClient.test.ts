@@ -1,8 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { sampleJiraIssueResponse } from '@autodev/shared-types';
 import { JiraRestClient } from './jiraRestClient.js';
+import { mockJiraErrorBodies } from '../../fixtures/jiraErrors.js';
 
-describe('JiraRestClient integration', () => {
+describe('JiraRestClient', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
@@ -42,5 +43,24 @@ describe('JiraRestClient integration', () => {
     });
 
     expect(issue.key).toBe('OPL-1234');
+  });
+
+  it.each([
+    [401, 'AtlassianTokenExpired', mockJiraErrorBodies.unauthorized],
+    [403, 'JiraPermissionDenied', mockJiraErrorBodies.forbidden],
+    [404, 'JiraTicketNotFound', mockJiraErrorBodies.notFound],
+    [429, 'JiraRateLimited', mockJiraErrorBodies.rateLimited],
+    [502, 'JiraNetworkError', mockJiraErrorBodies.badGateway],
+    [503, 'JiraNetworkError', mockJiraErrorBodies.unavailable],
+  ] as const)('classifies HTTP %s as %s', async (status, errorCode, body) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify(body), { status })),
+    );
+
+    const client = new JiraRestClient();
+    await expect(
+      client.getIssue({ cloudId: 'cloud-1', ticketKey: 'OPL-1', accessToken: 'token' }),
+    ).rejects.toMatchObject({ error: errorCode });
   });
 });

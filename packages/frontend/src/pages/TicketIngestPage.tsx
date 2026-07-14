@@ -50,7 +50,9 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
   const user = useAuthStore((state) => state.user);
   const setAuth = useAuthStore((state) => state.setAuth);
   const jiraConnected = user?.integrations?.jira ?? false;
-  const needsReauthorize = errorCode !== null && REAUTHORIZE_ERROR_CODES.has(errorCode);
+  const needsReauthorize =
+    errorCode !== null &&
+    (REAUTHORIZE_ERROR_CODES.has(errorCode) || errorCode === 'AtlassianTokenExpired');
   const needsFirstTimeConnect =
     errorCode === 'JiraNotConnected' || (user !== null && !jiraConnected && !needsReauthorize);
   const needsJiraConnect = needsFirstTimeConnect || needsReauthorize;
@@ -167,6 +169,7 @@ export function TicketIngestPage({ onLogoutComplete }: TicketIngestPageProps) {
         <TicketErrorState
           error={error}
           ticketKey={ticketKey}
+          errorCode={errorCode}
           suggestedAction={suggestedAction}
           onRetry={() => void retry()}
           onConnectJira={
