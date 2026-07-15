@@ -1,9 +1,18 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useThemeStore } from '../store/themeStore';
 import { LoginPage } from './LoginPage';
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('LoginPage', () => {
   beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.removeAttribute('data-theme');
+    useThemeStore.setState({ theme: 'light' });
+
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
@@ -26,5 +35,22 @@ describe('LoginPage', () => {
         expect.objectContaining({ method: 'GET', credentials: 'include' }),
       );
     });
+  });
+
+  it('shows a theme toggle that switches appearance before sign-in', () => {
+    render(<LoginPage />);
+
+    const toggle = screen.getByRole('button', { name: 'Switch to dark theme' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(toggle);
+
+    expect(useThemeStore.getState().theme).toBe('dark');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(localStorage.getItem('autodev_theme')).toBe('dark');
+    expect(screen.getByRole('button', { name: 'Switch to light theme' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });

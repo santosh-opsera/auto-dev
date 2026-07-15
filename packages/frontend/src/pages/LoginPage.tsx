@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { getOAuthStartUrl, prepareLoginPage } from '../api/auth';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export function LoginPage() {
   useEffect(() => {
@@ -12,6 +13,9 @@ export function LoginPage() {
 
   return (
     <main className="auth-page">
+      <div className="auth-page-theme-toggle">
+        <ThemeToggle collapsed={false} />
+      </div>
       <section aria-labelledby="login-heading" className="auth-card">
         <h1 id="login-heading">Sign in to AutoDev</h1>
         <p>Connect your GitHub account to start automating SDLC workflows.</p>
