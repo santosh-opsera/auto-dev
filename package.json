@@ -27,6 +27,7 @@
     "lint:boundaries": "npm run lint:boundaries -w @autodev/backend",
     "format": "prettier --write \"packages/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx,json}\"",
+    "deploy": "npm run build -w @autodev/frontend && npm run deploy -w @autodev/frontend",
     "prepare": "husky"
   },
   "repository": {
@@ -38,6 +39,7 @@
     "concurrently": "^9.2.1",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^7.0.2",
+    "gh-pages": "^6.3.0",
     "husky": "^9.1.7",
     "prettier": "^3.9.4"
   }
