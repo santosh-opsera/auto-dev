@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.secrets/
+*.log
+.DS_Store
+Thumbs.db
+coverage/
+.turbo/
+.forge-commit-ready
+
+# Security scan artifacts
+*-report.json
+npm-audit.json
+*-stderr.txt
+security-report-*.html
+security-report-*.md
+package-leakage-report.json
+precommit-scan-*.md
+
+# E2E artifacts
+packages/e2e/playwright-report/
+packages/e2e/test-results/
+packages/e2e/blob-report/
+*.tsbuildinfo
