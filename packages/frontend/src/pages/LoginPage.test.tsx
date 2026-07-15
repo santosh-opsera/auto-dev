@@ -16,6 +16,7 @@ describe('LoginPage', () => {
   it('renders only the Continue with GitHub button', async () => {
     render(<LoginPage />);
 
+    expect(screen.getByRole('img', { name: 'AutoDev' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Continue with GitHub' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continue with Atlassian' })).not.toBeInTheDocument();

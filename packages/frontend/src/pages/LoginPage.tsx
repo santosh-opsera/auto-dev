@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { getOAuthStartUrl, prepareLoginPage } from '../api/auth';
+import { AutoDevLogo } from '../components/AutoDevLogo';
 
 export function LoginPage() {
   useEffect(() => {
@@ -13,6 +14,7 @@ export function LoginPage() {
   return (
     <main className="auth-page">
       <section aria-labelledby="login-heading" className="auth-card">
+        <AutoDevLogo className="auth-card-logo" />
         <h1 id="login-heading">Sign in to AutoDev</h1>
         <p>Connect your GitHub account to start automating SDLC workflows.</p>
 

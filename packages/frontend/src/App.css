@@ -585,6 +585,32 @@
   box-shadow: var(--shadow-card);
 }
 
+.auth-card-logo {
+  display: block;
+  width: min(100%, 10.5rem);
+  height: auto;
+  margin: 0 auto 1.25rem;
+  color: var(--color-text);
+}
+
+.auth-card-logo .auth-logo__badge {
+  fill: var(--color-primary);
+}
+
+.auth-card-logo .auth-logo__badge-text {
+  fill: var(--color-primary-fg);
+}
+
+.auth-card-logo .auth-logo__wordmark {
+  fill: currentColor;
+}
+
+@media (max-width: 480px) {
+  .auth-card-logo {
+    width: min(100%, 8.5rem);
+  }
+}
+
 .auth-card h1,
 .dashboard-header h1 {
   margin: 0 0 0.5rem;
