@@ -27,7 +27,10 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run build -w @autodev/shared-types -w @autodev/frontend
+      - name: Build frontend for GitHub Pages
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+        run: npm run build -w @autodev/shared-types -w @autodev/frontend
 
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
