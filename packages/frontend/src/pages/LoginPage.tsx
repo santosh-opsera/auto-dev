@@ -17,7 +17,7 @@ export function LoginPage() {
         <ThemeToggle collapsed={false} />
       </div>
       <section aria-labelledby="login-heading" className="auth-card">
-        <h1 id="login-heading">Sign in to AutoDev</h1>
+        <h1 id="login-heading">Sign in</h1>
         <p>Connect your GitHub account to start automating SDLC workflows.</p>
 
         <div className="oauth-buttons">

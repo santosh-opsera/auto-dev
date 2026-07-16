@@ -25,7 +25,7 @@ describe('LoginPage', () => {
   it('renders only the Continue with GitHub button', async () => {
     render(<LoginPage />);
 
-    expect(screen.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
     const githubButton = screen.getByRole('button', { name: 'Continue with GitHub' });
     expect(githubButton).toBeInTheDocument();
     expect(screen.getByTestId('github-sign-in-icon')).toBeInTheDocument();

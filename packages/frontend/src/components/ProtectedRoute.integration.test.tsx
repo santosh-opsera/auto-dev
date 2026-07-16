@@ -164,7 +164,7 @@ describe('ProtectedRoute integration', () => {
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
         <Routes>
-          <Route path="/login" element={<h1>Sign in to AutoDev</h1>} />
+          <Route path="/login" element={<h1>Sign in</h1>} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<PageWithSubscription label="Dashboard" onEvent={() => undefined} />} />
             <Route path="/tickets" element={<PageWithSubscription label="Tickets" onEvent={() => undefined} />} />
@@ -205,7 +205,7 @@ describe('ProtectedRoute integration', () => {
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
         <Routes>
-          <Route path="/login" element={<h1>Sign in to AutoDev</h1>} />
+          <Route path="/login" element={<h1>Sign in</h1>} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<PageWithSubscription label="Dashboard" onEvent={onEvent} />} />
             <Route path="/tickets" element={<PageWithSubscription label="Tickets" onEvent={onEvent} />} />
@@ -260,7 +260,7 @@ describe('ProtectedRoute integration', () => {
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
         <Routes>
-          <Route path="/login" element={<h1>Sign in to AutoDev</h1>} />
+          <Route path="/login" element={<h1>Sign in</h1>} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<PageWithSubscription label="Dashboard" onEvent={() => undefined} />} />
           </Route>
@@ -276,7 +276,7 @@ describe('ProtectedRoute integration', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Modal logout' }));
 
     await vi.waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
     });
 
     expect(source.closed).toBe(true);
@@ -292,7 +292,7 @@ describe('ProtectedRoute integration', () => {
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
         <Routes>
-          <Route path="/login" element={<h1>Sign in to AutoDev</h1>} />
+          <Route path="/login" element={<h1>Sign in</h1>} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<PageWithSubscription label="Dashboard" onEvent={() => undefined} />} />
           </Route>
@@ -307,7 +307,7 @@ describe('ProtectedRoute integration', () => {
     const source = MockEventSource.instances[0]!;
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
     });
 
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
