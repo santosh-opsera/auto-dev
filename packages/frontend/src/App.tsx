@@ -98,9 +98,18 @@ function AppRoutes() {
   );
 }
 
+/** Strip trailing slash — React Router basename must not end with `/`. */
+function routerBasename(): string | undefined {
+  const base = import.meta.env.BASE_URL;
+  if (!base || base === '/') {
+    return undefined;
+  }
+  return base.replace(/\/$/, '');
+}
+
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={routerBasename()}>
       <AppRoutes />
     </BrowserRouter>
   );
