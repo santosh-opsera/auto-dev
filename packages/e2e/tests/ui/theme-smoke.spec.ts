@@ -59,7 +59,7 @@ test.describe('UI · light/dark theme switcher (STL-3)', () => {
 
     await page.goto('login');
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
-    await expect(page.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
     await page.screenshot({ path: `${ARTIFACT_DIR}/stl-3-login-dark.png`, fullPage: true });
   });
 });

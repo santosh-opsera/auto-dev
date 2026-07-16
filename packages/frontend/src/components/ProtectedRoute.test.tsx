@@ -86,7 +86,7 @@ function renderProtected(initialPath = '/dashboard') {
   return render(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
-        <Route path="/login" element={<h1>Sign in to AutoDev</h1>} />
+        <Route path="/login" element={<h1>Sign in</h1>} />
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<StubPage label="Dashboard" />} />
           <Route path="/tickets" element={<StubPage label="Tickets" />} />
@@ -136,7 +136,7 @@ describe('ProtectedRoute', () => {
     renderProtected('/dashboard');
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
     });
 
     expect(Date.now() - started).toBeLessThan(500);

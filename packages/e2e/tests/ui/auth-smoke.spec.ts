@@ -5,7 +5,7 @@ import { warningSessionMetadata } from '../../fixtures/auth.js';
 test.describe('UI · auth session smoke', () => {
   test('login page renders OAuth entry points without real secrets', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Continue with GitHub' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Continue with Atlassian' })).toHaveCount(0);
   });
@@ -18,7 +18,7 @@ test.describe('UI · auth session smoke', () => {
     await expect(dialog.getByRole('heading', { name: 'Session expiring soon' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Log out', exact: true }).click();
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
   });
 
   test('extend session dismisses the warning modal', async ({ page }) => {

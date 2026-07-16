@@ -14,7 +14,7 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
     });
 
     expect(screen.getByRole('button', { name: 'Continue with GitHub' })).toBeInTheDocument();
