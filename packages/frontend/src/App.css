@@ -638,6 +638,10 @@
 }
 
 .oauth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: none;
   border-radius: 0.75rem;
   padding: 0.875rem 1rem;
@@ -645,6 +649,12 @@
   font-weight: 600;
   cursor: pointer;
   color: #ffffff;
+}
+
+.oauth-button-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  line-height: 0;
 }
 
 .oauth-button.github {

@@ -26,7 +26,9 @@ describe('LoginPage', () => {
     render(<LoginPage />);
 
     expect(screen.getByRole('heading', { name: 'Sign in to AutoDev' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue with GitHub' })).toBeInTheDocument();
+    const githubButton = screen.getByRole('button', { name: 'Continue with GitHub' });
+    expect(githubButton).toBeInTheDocument();
+    expect(screen.getByTestId('github-sign-in-icon')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continue with Atlassian' })).not.toBeInTheDocument();
 
     await waitFor(() => {
